@@ -1,0 +1,18 @@
+1 - realize un programa que lea todos los datos ingresados desde stdin, e invierta el orden de las letras en cada  palabra, enviandolo a stdout.
+
+Ejemplo de funcionamiento
+
+# echo -e  "hola mundo \n nos vemos" | ./invierte.py 
+
+aloh odnum 
+son somev
+
+2 - Escriba 3 programas similares. Cada uno pide que se ingrese por teclado un nombre de archivo origen y luego uno destino. Debe abrir ambos archivos, leer el primero y escribirlo en el segundo. (use las funciones disponibles Built-in , en el modulo os, y en el modulo sys respectivamente)
+
+./copia.py
+archivo origen: prueba.txt
+archivo destino: otro.txt
+
+# diff prueba.txt otro.txt
+#
+
