@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 
 import sys
+import signal
+
+def sigint_handle(signum, frame):
+    print("SIGINT(%d) @ line: %d" % (signum, frame.f_lineno))
+    sys.exit(0)
 
 # @arr      array to reverse
 def reverse(arr):
@@ -29,4 +34,5 @@ def main():
         sys.stdout.write("=========" + out + '\n')
 
 if __name__ == "__main__":
+    signal.signal(signal.SIGINT, sigint_handle)
     main()
