@@ -7,11 +7,8 @@ TERM = b"\n\x00\r "
 STDIN = 0
 STDOUT = 1
 
-arch1 = ""
-arch2 = ""
-
-# @fd           file descriptor to read in
-# @exclude      bytearray of characters that cut the reading
+# @fd           file descriptor de donde leer
+# @exclude      bytearray de caracteres que finalizan la lectura
 def recv(fd=STDIN, exclude=TERM):
     ret = bytearray()
     c = b''
@@ -21,42 +18,42 @@ def recv(fd=STDIN, exclude=TERM):
 
     return ret
 
-# @inp      path to file to be copied
-# @out      path to file to be copy of inp file
-def cp(inp, out):
+# @src      path del archivo a ser copiado
+# @dst      path del archivo destino
+def cp(src, dst):
     try:
 
-        inp = os.path.realpath(inp)
-        out = os.path.realpath(out)
+        src = os.path.realpath(src)
+        dst = os.path.realpath(dst)
         c = b''
 
-        if not os.path.isfile(inp):
-            raise IOError("invalid filename/s")
+        if not os.path.isfile(src):
+            raise IOError("%s no existe" % src)
 
-        fd_inp = os.open(inp, os.O_RDONLY)
-        fd_out = os.open(out, os.O_WRONLY | os.O_CREAT)
+        fd_src = os.open(src, os.O_RDONLY)
+        fd_dst = os.open(dst, os.O_WRONLY | os.O_CREAT)
 
-        while c := os.read(fd_inp, 1):
-            os.write(fd_out, c)
+        while c := os.read(fd_src, 1):
+            os.write(fd_dst, c)
 
-        os.fchown(fd_out, os.getuid(), os.getgid())
-        os.fchmod(fd_out, 0o644)
+        os.fchown(fd_dst, os.getuid(), os.getgid())
+        os.fchmod(fd_dst, 0o644)
 
-        os.close(fd_out)
-        os.close(fd_inp)
+        os.close(fd_dst)
+        os.close(fd_src)
     except Exception as err:
         sys.stdout.write(str(err))
         raise
 
 def main():
     try:
-        os.write(STDOUT, b"archivo 1: ")
-        arch1 = recv().decode("utf8")
+        os.write(STDOUT, b"src: ")
+        src = recv().decode("utf8")
 
-        os.write(STDOUT, b"archivo 2: ")
-        arch2 = recv().decode("utf8")
+        os.write(STDOUT, b"dst: ")
+        dst = recv().decode("utf8")
 
-        cp(arch1, arch2)
+        cp(src, dst)
     except Exception:
         sys.exit(1)
 

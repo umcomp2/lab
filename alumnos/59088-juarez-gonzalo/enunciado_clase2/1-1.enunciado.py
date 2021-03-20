@@ -17,10 +17,10 @@ def reverse(arr):
         j -= 1
     return arr
 
-# wrapper around reverse()
-# @line:    line to reverse
+# wrapper para reverse()
+# @line:    string a revertir
 def linereverse(line):
-    linecp = [_ for _ in line]          # python3 line constant (no swap)
+    linecp = [_ for _ in line]          # python3 string constante
     linecp = reverse(linecp)
     linecp = "".join(linecp)
     return linecp

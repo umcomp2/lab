@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
 import os
+import shutil
 
 # @src      path del archivo a ser copiado
 # @dst      path del archivo destino
@@ -9,10 +10,7 @@ def cp(src, dst):
         src = os.path.realpath(src)
         if not os.path.isfile(src):
             raise IOError("%s no existe" % src)
-
-        with open(src, "r") as srchandle, open(dst, "w") as dsthandle:
-            for line in srchandle:
-                dsthandle.write(line)
+        shutil.copyfile(src, dst)
     except Exception as err:
         print(str(err))
         raise

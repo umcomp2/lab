@@ -3,54 +3,47 @@
 import sys
 import os
 import mmap
+import shutil
 
-TERM = b"\n\x00\r "
+TERM = "\n\x00\r "
 STDIN = 0
 STDOUT = 1
 
-arch1 = ""
-arch2 = ""
-
-# @fd           file descriptor to read in
-# @exclude      bytearray of characters that cut the reading
-def recv(fd=STDIN, exclude=TERM):
-    ret = bytearray()
-    c = b''
-
-    while (c := os.read(fd, 1)) and c not in exclude:
-        ret += c
-
+# @fd           file descriptor de donde leer
+# @nbytes       cantidad de bytes a leer
+# @exclude      string de caracteres que se excluyen de los bytes leidos
+def srecvn(fd=STDIN, nbytes=4096, exclude=TERM):
+    ret = os.read(fd, nbytes).decode("utf8")
+    for e in exclude:
+        ret = ret.replace(e, "")
     return ret
 
-# @inp      path to file to be copied
-# @out      path to file to be copy of inp file
-def cp(inp, out):
+# @src      path del archivo a ser copiado
+# @dst      path del archivo destino
+def copy(src, dst):
     try:
-        inp = os.path.realpath(inp)
-        if not os.path.isfile(inp):
-            raise IOError("invalid filename/s")
+        src = os.path.realpath(src)
+        if not os.path.isfile(src):
+            raise IOError("%s no existe" % src)
 
-        fd_inp = os.open(inp, os.O_RDONLY)
-        fd_out = os.open(out, os.O_WRONLY | os.O_CREAT)
+        fd_src = os.open(src, os.O_RDONLY)
+        src_mmap = mmap.mmap(fd_src, 0, prot=mmap.PROT_READ)
 
-        inp_mmap = mmap.mmap(fd_inp, 0, prot=mmap.PROT_READ)
-        os.write(fd_out, inp_mmap)
+        with open(dst, "w") as dsthandle:
+            dsthandle.write(src_mmap[:].decode())
 
-        os.fchown(fd_out, os.getuid(), os.getgid())
-        os.fchmod(fd_out, 0o644)
-
-        os.close(fd_out)
-        os.close(fd_inp)
+        os.close(fd_src)
+        shutil.copystat(src, dst)
     except Exception as err:
         sys.stdout.write(str(err))
         raise
 
 if __name__ == "__main__":
-    sys.stdout.write("archivo 1: ")
+    sys.stdout.write("src: ")
     sys.stdout.flush()
-    arch1 = recv().decode("utf8")
+    src = srecvn()
 
-    sys.stdout.write("archivo 2: ")
+    sys.stdout.write("dst: ")
     sys.stdout.flush()
-    arch2 = recv().decode("utf8")
-    cp(arch1, arch2)
+    dst = srecvn()
+    copy(src, dst)
