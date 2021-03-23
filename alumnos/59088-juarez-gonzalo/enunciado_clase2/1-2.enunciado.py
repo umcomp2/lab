@@ -4,4 +4,4 @@ import sys
 if __name__ == "__main__":
     for line in sys.stdin:
         rev = line[::-1]
-        print(rev)
+        sys.stdout.write(rev + '\n')
