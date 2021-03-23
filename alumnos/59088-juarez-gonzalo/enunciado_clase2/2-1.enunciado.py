@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# el objetivo de esto es spamear syscalls
+
 import os
 import sys
 

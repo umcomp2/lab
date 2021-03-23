@@ -7,7 +7,7 @@ def sigint_handle(signum, frame):
     print("SIGINT(%d) @ line: %d" % (signum, frame.f_lineno))
     sys.exit(0)
 
-# @arr      array to reverse
+# @arr      array a revertir
 def reverse(arr):
     i = 0
     j = len(arr) - 1
