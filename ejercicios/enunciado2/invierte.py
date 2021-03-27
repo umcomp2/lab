@@ -4,7 +4,13 @@ import sys
 a = sys.stdin.read()
 
 def invertir(cod):
-    return str(cod[::-1])
+    for j in cod.splitlines():
+        for i in j.split():
+            sys.stdout.write(i[::-1] + " ")
+    sys.stdout.write("\n")
 
-sys.stdout.write("Palabras invertidas: " + invertir(a))
+def main():
+    var = invertir(a)
 
+if __name__ == '__main__':
+    main()
