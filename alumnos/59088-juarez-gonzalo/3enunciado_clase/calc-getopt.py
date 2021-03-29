@@ -29,8 +29,7 @@ def switch(opt, args):
 
     o = opt[0][0].replace("-","")
     if not args and (o == "h" or o == "help"):
-        help_display()
-        return
+        help_display() # no retorna
 
     if len(args) != 2:
         raise ValueError(usage())
