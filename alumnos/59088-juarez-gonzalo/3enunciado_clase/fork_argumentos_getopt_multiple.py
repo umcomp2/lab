@@ -55,15 +55,21 @@ def main():
         for i in range(0, args.cantidad):
             pid = os.fork()
             if not pid:
-                fc_hijo(lock, args.verboso)
+                fc_hijo(lock, args.verboso) # no retorna
 
-        if os.getpid() == ppid:
-            for i in range(0, args.cantidad):
-                os.waitid(os.P_ALL, 0, os.WEXITED)
+        while os.wait():
+            continue
 
+    except ChildProcessError as err:
+        if err.errno == 10:
+            print("todos los procesos hijos han terminado")
+        else:
+            raise
     except Exception as err:
         sys.stdout.write(str(err))
         usage()
+    finally:
+        sys.exit()
 
 if __name__ == "__main__":
     main()
