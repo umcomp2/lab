@@ -38,7 +38,6 @@ def fc_hijo(lock, v):
     reportar_hijo(r, v)
 
     lock.release()
-    sys.exit(0)
 
 def main():
     try:
@@ -47,6 +46,7 @@ def main():
         parser.add_argument("-v", "--verboso", action="store_true", help="verboso")
         args = parser.parse_args()
 
+        ppid = os.getpid()
         lock = multiprocessing.Lock()
 
         reportar_padre(args.verboso)
@@ -54,10 +54,12 @@ def main():
         for i in range(0, args.cantidad):
             pid = os.fork()
             if not pid:
-                fc_hijo(lock, args.verboso) # no retorna
+                fc_hijo(lock, args.verboso) # retorna
+                break # evita q el hijo siga con el loop
 
-        while os.wait():
-            continue
+        if ppid == os.getpid():
+            while os.wait():
+                continue
 
     except ChildProcessError as err:
         if err.errno == 10:
