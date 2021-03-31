@@ -85,6 +85,6 @@ import os
 while True:
     pid = os.fork()
     if pid == 0:
-        print pid
+        print (getpid())
     else:
         continue
