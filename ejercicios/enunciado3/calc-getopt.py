@@ -2,8 +2,6 @@
 import sys
 import getopt
 
-# Programa de linea de comandos que hace operaciones aritmeticas basicas
-
 
 def main():
     try:
