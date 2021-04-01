@@ -1,5 +1,6 @@
 #!/usr/bin/bash
 
 
-echo -e  "hola mundo \n nos vemos" | ./invierte_os.py
-echo -e  "hola mundo \n nos vemos" | ./invierte_sys.py
+# echo -e  "hola mundo \n nos vemos" | ./invierte_os.py
+# echo -e  "hola mundo \n nos vemos" | ./invierte_sys.py
+./copia_os.py
