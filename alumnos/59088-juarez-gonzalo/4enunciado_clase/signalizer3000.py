@@ -33,8 +33,7 @@ def std2logfile(path, args):
     os.dup2(newfd, 1)
     os.dup2(newfd, 2)
     os.dup2(zerofd, 0)
-    os.write(newfd,
-            bytes("signalizer3000 LOG\nsignalizer pid: %d\n========comienzo del log========\n" % os.getppid(), "utf8"))
+    os.write(newfd, bytes("signalizer3000 LOG\nsignalizer pid: %d\n========comienzo del log========\n" % os.getppid(), "utf8"))
 
     os.close(zerofd)
     os.close(newfd)
@@ -49,17 +48,20 @@ if __name__ == "__main__":
         std2logfile(path, args)
         os.execl(path, cmd, *args)
     print("%s: pid del proceso creado == %d" % (__file__, pid))
+    input()
+    while (0,0) == (status := os.waitpid(pid, os.WNOHANG)):
+        sig = signal.SIGUSR1
 
-    os.wait()
-#    while (0,0) == (status := os.waitpid(pid, os.WNOHANG)):
-#        sig = signal.SIGUSR1
-#
-#        print("qué señal enviar SIGUSR1 ó SIGUSR2? [ 1 | 2 ]: ", end="")
-#        inp = int(input())
-#
-#        if inp != 1 and inp != 2:
-#            print("%s: numero invalido" % __file__)
-#            continue
-#        if inp == 2:
-#            sig = signal.SIGUSR2
-#        os.kill(pid, sig)
+        print("qué señal enviar SIGUSR1 ó SIGUSR2? [ 1 | 2 ]: ", end="")
+        inp = int(input())
+
+        #if inp != 1 and inp != 2:
+        #    print("%s: numero invalido" % __file__)
+        #    continue
+        if inp == 2:
+            sig = signal.SIGUSR2
+        elif inp == 1:
+            sig = signal.SIGUSR2
+        else:
+            sig = signal.SIGKILL
+        os.kill(pid, sig)
