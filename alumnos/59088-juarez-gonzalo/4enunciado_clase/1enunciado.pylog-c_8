@@ -1,0 +1,23 @@
+signalizer3000 LOG
+signalizer pid: 3935
+========comienzo del log========
+['/home/gonzalo/lab/alumnos/59088-juarez-gonzalo/4enunciado_clase/1enunciado.py', '-c', '8']
+3936
+['/home/gonzalo/lab/alumnos/59088-juarez-gonzalo/4enunciado_clase/1enunciado.py', '-c', '8']
+3936
+['/home/gonzalo/lab/alumnos/59088-juarez-gonzalo/4enunciado_clase/1enunciado.py', '-c', '8']
+3936
+['/home/gonzalo/lab/alumnos/59088-juarez-gonzalo/4enunciado_clase/1enunciado.py', '-c', '8']
+3936
+['/home/gonzalo/lab/alumnos/59088-juarez-gonzalo/4enunciado_clase/1enunciado.py', '-c', '8']
+3936
+['/home/gonzalo/lab/alumnos/59088-juarez-gonzalo/4enunciado_clase/1enunciado.py', '-c', '8']
+3936
+['/home/gonzalo/lab/alumnos/59088-juarez-gonzalo/4enunciado_clase/1enunciado.py', '-c', '8']
+3936
+['/home/gonzalo/lab/alumnos/59088-juarez-gonzalo/4enunciado_clase/1enunciado.py', '-c', '8']
+3936
+  PID TTY          TIME CMD
+ 3406 pts/2    00:00:00 bash
+ 3935 pts/2    00:00:00 python3
+ 3936 pts/2    00:00:00 ps
