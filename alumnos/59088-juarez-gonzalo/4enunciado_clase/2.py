@@ -1,96 +1,115 @@
 #!/usr/bin/env python3
+
 import os
 import sys
-import stat
-import mmap
 import signal
+import mmap
 import struct
 
 import getopt
 
 RWSIZE = 256
 STDIN_NO = 0
-STDOUT_NO = 1
 
-fpid = 0
-spid = 0
+maponymous = None
+MMAPSIZE = 1 << 20
 
-def rot13(binput):
+def usagendie():
+    print("Usage: %s -f <path_to_file>" % __file__)
+    sys.exit(1)
+
+# ======================= IO WORKER =======================
+
+def iowk_SIGUSR1_handler(signum, frame):
+    global maponymous
+    maponymous.seek(0, os.SEEK_SET)
+    sys.stdout.buffer.write(maponymous.read())
+    os._exit(os.EX_OK)
+
+def io_worker():
+    global maponymous
+    rb = b""
+    while (rb := os.read(STDIN_NO, RWSIZE)) != b"":
+        maponymous.write(rb)
+
+    os.kill(os.getppid(), signal.SIGUSR1)
+    signal.pause()
+
+# ======================= ROT WORKER =======================
+
+def rot13(bstr):
+    alpha_r = ord("z") - ord("a")
     out = bytearray()
-    rango_alpha = ord("z") - ord("a")
+    c = b""
 
-    for i in range(len(binput)):
-        a = binput[i]
-        if ord("A") <= binput[i] and binput[i] <= ord("Z"):                   # está en el alfabeto y es mayúsucla
-            a = (binput[i] - ord("A") + 13) % rango_alpha + ord("A")
-        elif ord("a") <= binput[i] and binput[i] <= ord("z"):                 # está en el alfabeto y es minúscula
-            a = (binput[i] - ord("a") + 13) % rango_alpha + ord("a")
-        else:                                                                 # es simbolo desconocido, se deja como tal
-            out += (binput[i]).to_bytes(1, byteorder="big")
-            continue
-        out += struct.pack("b", a)
+    for b in bstr:
+        if ord("A") <= b and b <= ord("Z"):
+            c = (b - ord("A") + 13) % alpha_r + ord("A")
+            c = struct.pack("b", c)
+        elif ord("a") <= b and b <= ord("z"):
+            c = (b - ord("A") + 13) % alpha_r + ord("a")
+            c = struct.pack("b", c)
+        else:
+            c = b.to_bytes(1, byteorder="big")
+        out += c
     return out
 
-def primer_hijo(fname):
-
-    fd = os.open(fname, os.O_CREAT | os.O_TRUNC | os.O_RDWR, stat.S_IRUSR | stat.S_IWUSR)
-    os.write(STDOUT_NO, b"\t(Apretar Ctrl-D para terminar la lectura\n)")
-
-    while (rbytes := os.read(STDIN_NO, RWSIZE)) != b"":
-        os.write(fd, rbytes)
-    os.close(fd)
-
-    os.kill(os.getppid(), signal.SIGUSR1)
-    signal.sigwait([signal.SIGUSR1])
-
-    fd = os.open(fname, os.O_RDONLY)
-    while (rbytes := os.read(fd, RWSIZE)) != b"":
-        os.write(STDOUT_NO, rbytes)
-    os.kill(os.getppid(), signal.SIGUSR1)
-
-    sys.exit(0)
-
-def segundo_hijo(fname):
-    signal.sigwait([signal.SIGUSR2])
-
-    fd = os.open(fname, os.O_RDWR)
-    fmmap = mmap.mmap(fd, 0)
-    r13 = rot13(fmmap.read())
-    fmmap.seek(0, os.SEEK_SET)
-    fmmap.write(r13)
-
-    fmmap.close()
-    os.close(fd)
-
+def rotwk_SIGUSR1_handler(signum, frame):
+    global maponymous
+    rotted = rot13(maponymous.read())
+    maponymous.seek(0, os.SEEK_SET)
+    maponymous.write(rotted)
     os.kill(os.getppid(), signal.SIGUSR2)
-    sys.exit(0)
+    print("rot handler")
+    os._exit(os.EX_OK)
 
-def SIGUSR1_handler(signum, frame):
-    os.kill(spid, signal.SIGUSR2)
 
-def SIGUSR2_handler(signum, frame):
-    os.kill(fpid, signal.SIGUSR1)
+def rot_worker():
+    signal.pause()
+
+# ======================= "PARENT" =======================
+
+# se pierde la señal si se ejecuta el handler antes que pid_rot
+def prnt_SIGUSR1_handler(signum, frame):
+    global pid_rot
+    os.kill(pid_rot, signal.SIGUSR1)
+
+# se pierde la señal si se ejecuta el handler antes que pid_rot
+def prnt_SIGUSR2_handler(signum, frame):
+    global pid_io
+    os.kill(pid_io, signal.SIGUSR1)
 
 if __name__ == "__main__":
     try:
         opt, args = getopt.getopt(sys.argv[1:], "f:", "file=")
         if len(opt) < 1 or len(opt[0]) < 2:
             raise ValueError("faltan argumentos")
-        fname = opt[0][1]
-        signal.signal(signal.SIGUSR1, SIGUSR1_handler)
-        signal.signal(signal.SIGUSR2, SIGUSR2_handler)
+        fpath = opt[0][1]
 
-        fpid = os.fork()
-        if not fpid:
-            primer_hijo(fname)
+        maponymous = mmap.mmap(-1, MMAPSIZE)
+        signal.signal(signal.SIGUSR2, prnt_SIGUSR2_handler)
+        signal.signal(signal.SIGUSR1, prnt_SIGUSR1_handler)
 
-        spid = os.fork()
-        if not spid:
-            segundo_hijo(fname)
+        pid_io = os.fork()
+        if not pid_io:
+            signal.signal(signal.SIGUSR1, iowk_SIGUSR1_handler)
+            io_worker()
+
+        pid_rot = os.fork()
+        if not pid_rot:
+            signal.signal(signal.SIGUSR1, rotwk_SIGUSR1_handler)
+            rot_worker()
 
         while os.wait():
             continue
     except ChildProcessError as err:
         if err.errno == 10:
-            print("=============FIN ROT13=================")
-            print("exit status de hijos recolectado")
+            print("exit status de procesos hijos recolectado")
+        else:
+            raise
+    except ValueError as err:
+        if str(err) == "faltan argumentos":
+            usagendie()
+        raise
+    except Exception as err:
+        print(err)
