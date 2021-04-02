@@ -5,18 +5,18 @@ import getopt
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:],
+        optlist, args = getopt.getopt(sys.argv[1:],
                                    'srmdph', 
                                    ["suma", "resta", "multiplicacion", "division", "ptencia", "help"])
     except getopt.GetoptError as err:
         print(err)
         ayuda()         # Muestra una ayuda(help)
-        sys.exit(2)     # Salida por error
+        sys.exit(1)     # Salida por error
 
     for i in range(len(args)):
         args[i] = float(args[i])
 
-    for option in opts:
+    for option in optlist:
         if option[0] in ("-h", "--help"):
             ayuda()
         elif option[0] in ("-s", "--suma"):
