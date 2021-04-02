@@ -74,7 +74,6 @@ def prnt_SIGUSR1_handler(signum, frame):
     global pid_rot
     os.kill(pid_rot, signal.SIGUSR1)
 
-# se pierde la señal si se ejecuta el handler antes que pid_rot
 def prnt_SIGUSR2_handler(signum, frame):
     global pid_io
     os.kill(pid_io, signal.SIGUSR1)
@@ -111,5 +110,3 @@ if __name__ == "__main__":
         if str(err) == "faltan argumentos":
             usagendie()
         raise
-    except Exception as err:
-        print(err)
