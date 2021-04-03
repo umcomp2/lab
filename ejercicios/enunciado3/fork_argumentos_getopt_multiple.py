@@ -41,7 +41,7 @@ def main():
             print("--------Padre--------")
             print("PID padre {}".format(os.getpid()))
             os.wait()
-            print("Termino el hijo")
+            print("\nTermino el hijo\n")
 
 def promedio(n, m):
     return (n+m)/2
