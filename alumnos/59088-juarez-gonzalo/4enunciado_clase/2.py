@@ -31,6 +31,8 @@ PIDSIZE = 4
 NCHLD = 2
 CHLDMAPSIZE = PIDSIZE*NCHLD
 
+# entonces python inicializa a 0 la region mmap asi que no hay beneficio de lazy-paging/on-demand paging
+# quizas 1MiB es mucho entonces porque es 1MiB a puro page fault, pero bueno hacer algo más dinámico estemmmmm pppppereza
 DMAPSIZE = 1 << 20 # 1MiB en hackerman
 
 IOWK_IDX = 0
