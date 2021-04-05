@@ -100,7 +100,7 @@ def rot13(b_arr):
 # ROTCALL sirve para saber si ya se llamó al sighandler de rot_wk
 # si rot_wk ejecuta antes que io_wk() entonces signal.pause() aparece en rot_wk()
 # si ejecuta después entonces rwk_handler es llamado propiamente al ser un
-# sighandler heredado del padre por aparente SIGHAND en la implementación de fork de python
+# sighandler heredado del padre por aparente CLONE_SIGHAND en la implementación de fork de python
 ROTCALL = 0
 
 def rwk_handler(signum, frame):
@@ -147,7 +147,7 @@ if __name__ == "__main__":
         if not shm:
             raise Exception("No hay suficiente memoria")
 
-        # setear la señal en el padre porque aparentemente hay un SIGHAND de por medio en alguna parte del fork.
+        # setear la señal en el padre porque aparentemente hay un CLONE_SIGHAND de por medio en alguna parte del fork.
         # asi que el hijo hereda del padre los sighandlers. con esto me aseguro que aunque el hijo aún no haya
         # corrido va a poder manejar la señal adecuadamente.
         signal.signal(signal.SIGUSR1, rwk_handler)
