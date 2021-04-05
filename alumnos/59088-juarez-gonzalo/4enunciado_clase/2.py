@@ -22,6 +22,7 @@ import getopt
 # PBAGRAVQB QRY NEPUVIB
 
 STDIN_NO = 0
+EOF = b""
 RWSIZE = 256
 
 # hardcodeo de sizeof(int),
@@ -63,7 +64,7 @@ def io_wk():
     print("Hijo 1 escribiendo...")
 
     shm.seek(CHLDMAPSIZE, os.SEEK_SET)
-    while (rb := os.read(STDIN_NO, RWSIZE)) != b"":
+    while (rb := os.read(STDIN_NO, RWSIZE)) != EOF:
         shm.write(rb)
 
     os.kill(spid, signal.SIGUSR1)
@@ -85,13 +86,13 @@ def rot13(b_arr):
     c = b""
 
     for b in b_arr:
-        if ord("A") <= b and b <= ord("Z"):
+        if ord("A") <= b and b <= ord("Z"):                 # está en el alfabeto, es mayúscula
             c = (b - ord("A") + 13) % r_alpha + ord("A")
             c = struct.pack("b", c)
-        elif ord("a") <= b and b <= ord("z"):
+        elif ord("a") <= b and b <= ord("z"):               # está en el alfabeto, es minúscula
             c = (b - ord("A") + 13) % r_alpha + ord("a")
             c = struct.pack("b", c)
-        else:
+        else:                                               # no está en el alfabeto, lo pasamos a bytes y dejamos como tal
             c = b.to_bytes(1, byteorder="big")
         out += c
     return out
