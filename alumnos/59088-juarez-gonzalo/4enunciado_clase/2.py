@@ -90,7 +90,7 @@ def rot13(b_arr):
             c = (b - ord("A") + 13) % r_alpha + ord("A")
             c = struct.pack("b", c)
         elif ord("a") <= b and b <= ord("z"):               # está en el alfabeto, es minúscula
-            c = (b - ord("A") + 13) % r_alpha + ord("a")
+            c = (b - ord("a") + 13) % r_alpha + ord("a")
             c = struct.pack("b", c)
         else:                                               # no está en el alfabeto, lo pasamos a bytes y dejamos como tal
             c = b.to_bytes(1, byteorder="big")
