@@ -35,41 +35,48 @@ DMAPSIZE = 1 << 20 # 1MiB en hackerman
 IOWK_IDX = 0
 ROTWK_IDX = 1
 
-# ======================= mmaped_struct ======================
-#   el mmaped_struct se vería así en C
-#       struct mmaped_struct {
+# ======================= shm ======================
+#   shm se vería así en C
+#       struct shm {
 #           int siblings[NCHLD];
 #           unsigned char data[DMAPSIZE];
 #       };
-#   por lo tanto
-#   mmaped_struct + sizeof(int) * NCHLD = data     ó bien en python      mmaped_struct[CHILDMAPSIZE:] = data
+#   por lo tanto:
+#       shm + sizeof(int) * NCHLD = data     ó bien en python      shm[CHILDMAPSIZE:] = data
+#   y:
+#       shm = shm.siblings = siblings        ó bien en python      shm[:CHILDMAPSIZE] = siblings
+#
+#   en python es posible moverse a offsets puntuales por una zona mapeada usando indexado como si fuera
+#   una lista. o bien escribir o leer a partir de un offset predeterminado usando foo.read() o foo.write()
+#   es posible llamar foo.seek(IDX, os.SEEK_SET) para asegurar la posición absoluta en la region mmapeada
 
-mmaped_struct = None # debe ser mapeado en main
+# debe ser asignado a una region de memoria mmapeada  en algun lugar
+# si se reasigna en algun lugar toda la aplicacion ve el cambio asi que kuidao
+shm = None
 
 # ======================= IO WORKER ======================
 
 def io_wk():
-    global mmaped_struct
-    spid = struct.unpack("II", mmaped_struct[:CHLDMAPSIZE])[ROTWK_IDX]
+    global shm
+    spid = struct.unpack("II", shm[:CHLDMAPSIZE])[ROTWK_IDX]
 
     print("Hijo 1 escribiendo...")
 
-    mmaped_struct.seek(CHLDMAPSIZE, os.SEEK_SET)
+    shm.seek(CHLDMAPSIZE, os.SEEK_SET)
     while (rb := os.read(STDIN_NO, RWSIZE)) != b"":
-        mmaped_struct.write(rb)
+        shm.write(rb)
 
     os.kill(spid, signal.SIGUSR1)
     signal.sigwait([signal.SIGUSR1])
+
     print("Hijo 1 leyendo...")
 
-    mmaped_struct.seek(CHLDMAPSIZE, os.SEEK_SET)
-    sys.stdout.write(mmaped_struct.read().decode())
+    shm.seek(CHLDMAPSIZE, os.SEEK_SET)
+    sys.stdout.write(shm.read().decode())
 
     sys.exit(0)
 
 # ======================= ROT WORKER ======================
-
-ROTCALL = 0
 
 # @b_arr     bytearray con datos a pasar por rot13
 def rot13(b_arr):
@@ -89,18 +96,24 @@ def rot13(b_arr):
         out += c
     return out
 
+# ROTCALL sirve para saber si ya se llamó al sighandler de rot_wk
+# si rot_wk ejecuta antes que io_wk() entonces signal.pause() aparece en rot_wk()
+# si ejecuta después entonces rwk_handler es llamado propiamente al ser un
+# sighandler heredado del padre por aparente SIGHAND en la implementación de fork de python
+ROTCALL = 0
 
 def rwk_handler(signum, frame):
-    print("Hijo 2 reemplazando...")
     global ROTCALL
-    global mmaped_struct
+    global shm
     ROTCALL |= 1
-    spid = struct.unpack("II", mmaped_struct[:CHLDMAPSIZE])[IOWK_IDX]
-    data = mmaped_struct[CHLDMAPSIZE:]
+    spid = struct.unpack("II", shm[:CHLDMAPSIZE])[IOWK_IDX]
+    data = shm[CHLDMAPSIZE:]
+
+    print("Hijo 2 reemplazando...")
 
     rotted = rot13(data)
-    mmaped_struct.seek(CHLDMAPSIZE, os.SEEK_SET)
-    mmaped_struct.write(rotted)
+    shm.seek(CHLDMAPSIZE, os.SEEK_SET)
+    shm.write(rotted)
 
     os.kill(spid, signal.SIGUSR1)
 
@@ -128,11 +141,14 @@ if __name__ == "__main__":
         fpath = arg_parse()
         pidstruct = b""
 
-        mmaped_struct = mmap.mmap(-1, CHLDMAPSIZE + DMAPSIZE)
+        shm = mmap.mmap(-1, CHLDMAPSIZE + DMAPSIZE)
         # creo que python no falla en esto pero ni idea no está de más, después leo bien la documentación de mmap
-        if not mmaped_struct:
+        if not shm:
             raise Exception("No hay suficiente memoria")
 
+        # setear la señal en el padre porque aparentemente hay un SIGHAND de por medio en alguna parte del fork.
+        # asi que el hijo hereda del padre los sighandlers. con esto me aseguro que aunque el hijo aún no haya
+        # corrido va a poder manejar la señal adecuadamente.
         signal.signal(signal.SIGUSR1, rwk_handler)
         rotwk = os.fork()
         if not rotwk:
@@ -143,9 +159,9 @@ if __name__ == "__main__":
             io_wk() # no retorna
 
         # python complica mucho compartir estructuras de datos (con clase Manager y eso)
-        # yo solo quiero pasar numeros enteros asi que no pienso complicarla
+        # yo solo quiero pasar numeros enteros asi que no pienso complicarla (ver shm arriba)
         pidstruct = struct.pack("II", iowk, rotwk)
-        mmaped_struct.write(pidstruct)
+        shm.write(pidstruct)
 
         while os.wait():
             continue
@@ -153,6 +169,6 @@ if __name__ == "__main__":
         if err.errno == 10:
             pass
     finally:
-        if mmaped_struct:
-            mmaped_struct.close()
+        if shm:
+            shm.close()
         sys.exit(0)
