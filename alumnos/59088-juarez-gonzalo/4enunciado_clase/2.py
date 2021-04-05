@@ -29,11 +29,13 @@ RWSIZE = 256
 # sys.getsizeof(int) se refiere a int de python q son +400bytes en mi compu jajajsj
 PIDSIZE = 4
 NCHLD = 2
-CHLDMAPSIZE = PIDSIZE*NCHLD
 
 # entonces python inicializa a 0 la region mmap asi que no hay beneficio de lazy-paging/on-demand paging
 # quizas 1MiB es mucho entonces porque es 1MiB a puro page fault, pero bueno hacer algo más dinámico estemmmmm pppppereza
+PGSIZE = 4 << 10 # tamaño de página en x86 y x86_64 linux
 DMAPSIZE = 1 << 20 # 1MiB en hackerman
+CHLDMAPSIZE = PIDSIZE*NCHLD
+MMAPSIZE = (DMAPSIZE | CHLDMAPSIZE) & ~(PGSIZE-1)
 
 IOWK_IDX = 0
 ROTWK_IDX = 1
@@ -148,7 +150,7 @@ if __name__ == "__main__":
         pidstruct = b""
         fpath = arg_parse()
 
-        shm = mmap.mmap(-1, CHLDMAPSIZE + DMAPSIZE)
+        shm = mmap.mmap(-1, MMAPSIZE)
         # creo que python no falla en esto pero ni idea no está de más, después leo bien la documentación de mmap
         if not shm:
             raise Exception("No hay suficiente memoria")
