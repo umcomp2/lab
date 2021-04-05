@@ -130,6 +130,9 @@ def rot_wk():
 
 # ======================= MAIN ======================
 
+def usage():
+    print("Usage: %s -f <path_to_file>" % __file__)
+
 def arg_parse():
     opt, args = getopt.getopt(sys.argv[1:], "f:", "file=")
 
@@ -141,8 +144,9 @@ def arg_parse():
 
 if __name__ == "__main__":
     try:
-        fpath = arg_parse()
+        exitcode = 0
         pidstruct = b""
+        fpath = arg_parse()
 
         shm = mmap.mmap(-1, CHLDMAPSIZE + DMAPSIZE)
         # creo que python no falla en esto pero ni idea no está de más, después leo bien la documentación de mmap
@@ -169,9 +173,12 @@ if __name__ == "__main__":
         while os.wait():
             continue
     except ChildProcessError as err:
-        if err.errno == 10:
-            pass
+        if err.errno != 10:
+            exitcode = 1
+    except ValueError as err:
+        exitcode = 1
+        usage()
     finally:
         if shm:
             shm.close()
-        sys.exit(0)
+        sys.exit(exitcode)
