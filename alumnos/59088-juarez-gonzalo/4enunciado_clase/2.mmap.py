@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import os
 import sys
-import stat
 import signal
 
 import mmap
@@ -23,7 +22,6 @@ import getopt
 # PBAGRAVQB QRY NEPUVIB
 
 STDIN_NO = 0
-STDOUT_NO = 1
 EOF = b""
 RWSIZE = 256
 
@@ -31,42 +29,56 @@ RWSIZE = 256
 # sys.getsizeof(int) se refiere a int de python q son +400bytes en mi compu jajajsj
 PIDSIZE = 4
 NCHLD = 2
+
+# entonces python inicializa a 0 la region mmap asi que no hay beneficio de lazy-paging/on-demand paging
+# quizas 1MiB es mucho entonces porque es 1MiB a puro page fault, pero bueno hacer algo más dinámico estemmmmm pppppereza
+PGSIZE = 4 << 10 # tamaño de página en x86 y x86_64 linux
+DMAPSIZE = 1 << 20 # 1MiB en hackerman
 CHLDMAPSIZE = PIDSIZE*NCHLD
+MMAPSIZE = (DMAPSIZE | CHLDMAPSIZE) & ~(PGSIZE-1)
+#MMAPSIZE = CHLDMAPSIZE + DMAPSIZE
 
 IOWK_IDX = 0
 ROTWK_IDX = 1
 
+# ======================= shm ======================
+#   shm se vería así en C
+#       struct shm {
+#           int siblings[NCHLD];
+#           unsigned char data[DMAPSIZE];
+#       };
+#   por lo tanto:
+#       shm + sizeof(int) * NCHLD = data     ó bien en python      shm[CHILDMAPSIZE:] = data
+#   y:
+#       shm = shm.siblings = siblings        ó bien en python      shm[:CHILDMAPSIZE] = siblings
+#
+#   en python es posible moverse a offsets puntuales por una zona mapeada usando indexado como si fuera
+#   una lista. o bien escribir o leer a partir de un offset predeterminado usando foo.read() o foo.write()
+#   es posible llamar foo.seek(IDX, os.SEEK_SET) para asegurar la posición absoluta en la region mmapeada
+
 # debe ser asignado a una region de memoria mmapeada  en algun lugar
 # si se reasigna en algun lugar toda la aplicacion ve el cambio asi que kuidao
-packedpids = None
+shm = None
 
 # ======================= IO WORKER ======================
 
 def io_wk():
-    global fpath
-    global packedpids
-    spid = struct.unpack("II", packedpids[:CHLDMAPSIZE])[ROTWK_IDX]
+    global shm
+    spid = struct.unpack("II", shm[:CHLDMAPSIZE])[ROTWK_IDX]
 
     print("Hijo 1 escribiendo...")
 
-    fd = os.open(fpath, os.O_CREAT | os.O_WRONLY, stat.S_IRUSR | stat.S_IWUSR)
-
+    shm.seek(CHLDMAPSIZE, os.SEEK_SET)
     while (rb := os.read(STDIN_NO, RWSIZE)) != EOF:
-        os.write(fd, rb)
-
-    os.close(fd)
+        shm.write(rb)
 
     os.kill(spid, signal.SIGUSR1)
     signal.sigwait([signal.SIGUSR1])
 
     print("Hijo 1 leyendo...")
 
-    fd = os.open(fpath, os.O_RDONLY)
-
-    while (rb := os.read(fd, RWSIZE)) != EOF:
-        os.write(STDOUT_NO, rb)
-
-    os.close(fd)
+    shm.seek(CHLDMAPSIZE, os.SEEK_SET)
+    sys.stdout.write(shm.read().decode())
 
     sys.exit(0)
 
@@ -98,23 +110,17 @@ ROTCALL = 0
 
 def rwk_handler(signum, frame):
     global ROTCALL
-    global fpath
-    global packedpids
+    global shm
     ROTCALL |= 1
-    spid = struct.unpack("II", packedpids[:CHLDMAPSIZE])[IOWK_IDX]
+    spid = struct.unpack("II", shm[:CHLDMAPSIZE])[IOWK_IDX]
+    data = shm[CHLDMAPSIZE:]
 
     print("Hijo 2 reemplazando...")
 
-    fd = os.open(fpath, os.O_RDWR)
+    rotted = rot13(data)
+    shm.seek(CHLDMAPSIZE, os.SEEK_SET)
+    shm.write(rotted)
 
-    pos = 0
-    while (rb := os.read(fd, RWSIZE)) != EOF:
-        rotted = rot13(rb)
-        os.lseek(fd, pos, os.SEEK_SET)
-        os.write(fd, rotted)
-        pos += len(rb)
-
-    os.close(fd)
     os.kill(spid, signal.SIGUSR1)
 
 def rot_wk():
@@ -145,9 +151,9 @@ if __name__ == "__main__":
         pidstruct = b""
         fpath = arg_parse()
 
-        packedpids = mmap.mmap(-1, CHLDMAPSIZE)
+        shm = mmap.mmap(-1, MMAPSIZE)
         # creo que python no falla en esto pero ni idea no está de más, después leo bien la documentación de mmap
-        if not packedpids:
+        if not shm:
             raise Exception("No hay suficiente memoria")
 
         # setear la señal en el padre porque aparentemente hay un CLONE_SIGHAND de por medio en alguna parte del fork.
@@ -163,9 +169,9 @@ if __name__ == "__main__":
             io_wk() # no retorna
 
         # python complica mucho compartir estructuras de datos (con clase Manager y eso)
-        # yo solo quiero pasar numeros enteros asi que no pienso complicarla
+        # yo solo quiero pasar numeros enteros asi que no pienso complicarla (ver shm arriba)
         pidstruct = struct.pack("II", iowk, rotwk)
-        packedpids.write(pidstruct)
+        shm.write(pidstruct)
 
         while os.wait():
             continue
@@ -176,6 +182,6 @@ if __name__ == "__main__":
         exitcode = 1
         usage()
     finally:
-        if packedpids:
-            packedpids.close()
+        if shm:
+            shm.close()
         sys.exit(exitcode)
