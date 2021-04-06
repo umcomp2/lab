@@ -28,7 +28,7 @@ EOF = b""
 RWSIZE = 256
 
 # hardcodeo de sizeof(int),
-# sys.getsizeof(int) se refiere a int de python q son +400bytes en mi compu jajajsj
+# sys.getsizeof(int) se refiere a int de python q son 416bytes en mi compu jajajsj
 PIDSIZE = 4
 NCHLD = 2
 CHLDMAPSIZE = PIDSIZE*NCHLD
@@ -49,7 +49,7 @@ def io_wk():
 
     print("Hijo 1 escribiendo...")
 
-    fd = os.open(fpath, os.O_CREAT | os.O_WRONLY, stat.S_IRUSR | stat.S_IWUSR)
+    fd = os.open(fpath, os.O_CREAT | os.O_TRUNC | os.O_WRONLY, stat.S_IRUSR | stat.S_IWUSR)
 
     while (rb := os.read(STDIN_NO, RWSIZE)) != EOF:
         os.write(fd, rb)
@@ -74,7 +74,7 @@ def io_wk():
 
 # @b_arr     bytearray con datos a pasar por rot13
 def rot13(b_arr):
-    r_alpha = ord("z") - ord("a")
+    r_alpha = ord("z") - ord("a") + 1
     out = bytearray()
     c = b""
 

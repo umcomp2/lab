@@ -38,7 +38,7 @@ def io_worker():
 # ======================= ROT WORKER =======================
 
 def rot13(bstr):
-    alpha_r = ord("z") - ord("a")
+    alpha_r = ord("z") - ord("a") + 1
     out = bytearray()
     c = b""
 
@@ -47,7 +47,7 @@ def rot13(bstr):
             c = (b - ord("A") + 13) % alpha_r + ord("A")
             c = struct.pack("b", c)
         elif ord("a") <= b and b <= ord("z"):
-            c = (b - ord("A") + 13) % alpha_r + ord("a")
+            c = (b - ord("a") + 13) % alpha_r + ord("a")
             c = struct.pack("b", c)
         else:
             c = b.to_bytes(1, byteorder="big")

@@ -26,7 +26,7 @@ EOF = b""
 RWSIZE = 256
 
 # hardcodeo de sizeof(int),
-# sys.getsizeof(int) se refiere a int de python q son +400bytes en mi compu jajajsj
+# sys.getsizeof(int) se refiere a int de python q son +416bytes en mi compu jajajsj
 PIDSIZE = 4
 NCHLD = 2
 
@@ -86,7 +86,7 @@ def io_wk():
 
 # @b_arr     bytearray con datos a pasar por rot13
 def rot13(b_arr):
-    r_alpha = ord("z") - ord("a")
+    r_alpha = ord("z") - ord("a") + 1
     out = bytearray()
     c = b""
 
