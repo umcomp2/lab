@@ -33,7 +33,8 @@ void r2upper2w(int rfd, int wfd)
 		*/
 
 		i = 0;
-		while (c = CHLDBUF[i+rbacc]) {
+		while (i < rbc) {
+			c = CHLDBUF[i+rbacc];
 			/*
 			 * porque C se maneja con ascii, las letras
 			 * minúsculas empiezan en 0x61, las mayúsculas en 0x41
@@ -55,10 +56,6 @@ void r2upper2w(int rfd, int wfd)
 
 		write(wfd, CHLDBUF + rbacc, BUFFSIZE-rbacc);
 		rbacc = (rbacc + rbc) % BUFFSIZE;
-		/*
-		 * quitar del comentario para usar como ayuda para ver el orden de las operaciones
-		printf("rbacc hijo: %d\n", rbacc);
-		*/
 	}
 }
 
@@ -90,7 +87,6 @@ int main()
 		close(pr_cw[0]);
 
 		r2upper2w(pw_cr[0], pr_cw[1]);
-		printf("hijo exit\n");
 		close(pw_cr[0]);
 		close(pr_cw[1]);
 		exit(0);
