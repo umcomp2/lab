@@ -32,9 +32,13 @@ if __name__ == "__main__":
         pr, cw = os.pipe()
 
         if not os.fork():
+            os.close(pw)
+            os.close(pr)
             r2upper2w(cr, cw)
             os._exit(os.EX_OK)
 
+        os.close(cr)
+        os.close(cw)
         ffd = os.open(fpath, os.O_RDONLY)
         while (rbytes := os.read(ffd, RWSIZE)) != b"":
             os.write(pw, rbytes)
