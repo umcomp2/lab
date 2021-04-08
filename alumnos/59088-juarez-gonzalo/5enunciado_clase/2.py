@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import sys
+import struct
 import getopt
 
 RWSIZE = 4096
@@ -10,11 +11,29 @@ def usagendie():
     print("Usage: %s -f <path_to_file>" % __file__)
     sys.exit(1)
 
+# @b_arr     bytearray con datos a pasar por rot13
+def rot13(b_arr):
+    r_alpha = ord("z") - ord("a") + 1
+    out = bytearray()
+    c = b""
+
+    for b in b_arr:
+        if ord("A") <= b and b <= ord("Z"):                 # está en el alfabeto, es mayúscula
+            c = (b - ord("A") + 13) % r_alpha + ord("A")
+            c = struct.pack("b", c)
+        elif ord("a") <= b and b <= ord("z"):               # está en el alfabeto, es minúscula
+            c = (b - ord("a") + 13) % r_alpha + ord("a")
+            c = struct.pack("b", c)
+        else:                                               # no está en el alfabeto, lo pasamos a bytes y dejamos como tal
+            c = b.to_bytes(1, byteorder="big")
+        out += c
+    return out
+
 # @rfd  fd del extremo de lectura
 # @wfd  fd del extremo de escritura
-def r2upper2w(rfd, wfd):
+def r2rot13(rfd, wfd):
     while (rdata := os.read(rfd, RWSIZE)) != b"":
-        os.write(wfd, rdata.upper())
+        os.write(wfd, rot13(rdata))
 
 
 if __name__ == "__main__":
@@ -34,7 +53,7 @@ if __name__ == "__main__":
         if not os.fork():
             os.close(pw)
             os.close(pr)
-            r2upper2w(cr, cw)
+            r2rot13(cr, cw)
             os.close(cr)
             os.close(cw)
             os._exit(os.EX_OK)

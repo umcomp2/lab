@@ -43,7 +43,6 @@ def writing():
         shm.write(c.to_bytes(1, byteorder="big"))
 
     shm.seek(0, os.SEEK_SET)
-    sys.stdout.buffer.write(shm.read())
     os.kill(os.getppid(), signal.SIGUSR2)
 
 def chld():
