@@ -34,7 +34,7 @@ if __name__ == '__main__':
             linea = os.read(l12,1024).decode('utf-8')
         print ("hijo2 reemplazando ..")
         os.close(e21)
-        exit(0)
+        os._exit(os.EX_OK)
 
     pidh1 = os.fork()
     if pidh1 == 0: #hijoh1
