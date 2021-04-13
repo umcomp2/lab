@@ -61,8 +61,11 @@ r_tux.txt
 
 ### Referencias
 man ppm
+
 http://netpbm.sourceforge.net/doc/ppm.html
+
 https://es.wikipedia.org/wiki/Histograma
+
 
 ### Bonus Track
 Los procesos hijos adicionalmente deben generar un archivo tipo ppm con su filtro
