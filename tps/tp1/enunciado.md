@@ -22,7 +22,7 @@ Cuando el proceso padre termina de leer el archivo, debe cerrarlo, esperar que l
 
 * La aplicación debe contener como mínimo 3 funciones.
 * Debe procesar las opciones con getopt (agregar una opcion de ayuda) o con argparse.
-* Debe usar el modulo multiprosessing.
+* Debe usar el modulo multiprocessing.
 * Debe manejar los errores.
 
 
