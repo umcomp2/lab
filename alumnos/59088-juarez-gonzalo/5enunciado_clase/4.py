@@ -15,7 +15,7 @@ import getopt
 BASE = 10
 
 def parse_matriz(data):
-    m = [[0]]
+    m = [[]]
     col = 0
     row = 0
     prevflag = 0b00
@@ -60,9 +60,9 @@ def parse_matriz(data):
 
         # la primera vez que se llega a una fila o columna, hay que agregarla
         # no es el caso para los numeros de varios digitos
-        if len(m) < row+1:
+        if len(m) < row+1: # primera vez que se llega a una fila
             m.append([])
-        if len(m[row]) < col+1:
+        if len(m[row]) < col+1: # primera vez que se llega a una columna
             m[row].append(0)
 
         m[row][col] = num
