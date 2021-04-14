@@ -9,7 +9,7 @@ P6
 255
 largo encabezado: 28 bytes
 
-3 - Haga un programa que cree 3 procesos hijos con multiprocessing.Process(), lea de a bloques de -n bytes un archivo (especificado con la opción -f) y 
+2 - Haga un programa que cree 3 procesos hijos con multiprocessing.Process(), lea de a bloques de -n bytes un archivo (especificado con la opción -f) y 
 por cada lectura, le envíe lo leido a los tres hijos usando Pipes. Cada hijo deberá ir leyendo del Pipe y guardando en un nuevo archivo los datos leidos.
 Cuando el padre termine de leer el archivo, los hijos terminarán la ejecución.
 Ejemplo de funcionamiento
