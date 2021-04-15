@@ -1,0 +1,48 @@
+1 - Escriba un programa que lea un archivo de formato portátil pixmap (ppm), definido por el argumento -f y muestre por pantalla el encabezado
+y su largo en bytes.
+Ej de funcionamiento
+
+$ ./1.py -f dog.ppm
+P6
+# Imagen ppm
+200 298 
+255
+largo encabezado: 28 bytes
+
+2 - Haga un programa que cree 3 procesos hijos con multiprocessing.Process(), lea de a bloques de -n bytes un archivo (especificado con la opción -f) y 
+por cada lectura, le envíe lo leido a los tres hijos usando Pipes. Cada hijo deberá ir leyendo del Pipe y guardando en un nuevo archivo los datos leidos.
+Cuando el padre termine de leer el archivo, los hijos terminarán la ejecución.
+Ejemplo de funcionamiento
+
+# ./2.py -n 1024 -f archivo.txt
+creando hijos...
+leyendo archivo ....
+Copia exitosa
+
+$ ls -l
+-rw-rw-r-- 1 carlost carlost    609 Apr 14 08:05 archivo-h1.txt
+-rw-rw-r-- 1 carlost carlost    609 Apr 14 08:05 archivo-h2.txt
+-rw-rw-r-- 1 carlost carlost    609 Apr 14 08:05 archivo-h3.txt
+-rw-rw-r-- 1 carlost carlost    609 Apr 14 08:05 archivo.txt
+$
+$ diff archivo.txt archivo-h2.txt
+$
+
+3 - Haga un programa que cree 3 procesos hijos con multiprocessing.Process(), lea de a bloques de -n bytes un archivo (especificado con la opción -f) y
+por cada lectura, le envíe lo leido a los tres hijos usando MQ. Cada hijo deberá ir leyendo del Pipe y guardando en un nuevo archivo los datos leidos.
+Cuando el padre termine de leer el archivo, los hijos terminarán la ejecución.
+Ejemplo de funcionamiento
+
+# ./3.py -n 1024 -f archivo.txt
+creando hijos...
+leyendo archivo ....
+Copia exitosa
+
+$ ls -l
+-rw-rw-r-- 1 carlost carlost    609 Apr 14 08:05 archivo-h1.txt
+-rw-rw-r-- 1 carlost carlost    609 Apr 14 08:05 archivo-h2.txt
+-rw-rw-r-- 1 carlost carlost    609 Apr 14 08:05 archivo-h3.txt
+-rw-rw-r-- 1 carlost carlost    609 Apr 14 08:05 archivo.txt
+$
+$ diff archivo.txt archivo-h2.txt
+$
