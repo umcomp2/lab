@@ -19,7 +19,7 @@ pero en lugar de utilizar un archivo, utilizar la ipc os.pipe().
 
 Ejemplo de funcionamiento
 
-# echo "CONTENIDO DEL ARCHIVO"| ./2.py --file archivo
+# echo "CONTENIDO DEL ARCHIVO"| ./2.py 
 hijo1 enviando ...
 hijo2 reemplazando ..
 hijo1 leyendo .......
@@ -31,7 +31,7 @@ pero en lugar de utilizar un archivo, utilizar la multiprocessiong.Pipe().
 
 Ejemplo de funcionamiento
 
-# echo "CONTENIDO DEL ARCHIVO"| ./3.py --file archivo
+# echo "CONTENIDO DEL ARCHIVO"| ./3.py 
 hijo1 enviando ...
 hijo2 reemplazando ..
 hijo1 leyendo .......
