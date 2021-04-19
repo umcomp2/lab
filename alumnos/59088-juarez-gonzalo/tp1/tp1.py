@@ -64,6 +64,7 @@ read = 0         # indica la cantidad de readers que ya terminaron de leer shm
 read_lock = None # lock sobre variable read
 r_condvar = None # variable condicional que trabaja con read_lock
 
+# =============== Algoritmo para lograr la consigna ================
 
 def reader(rwsize, r_offset, fname):
     global HEADER
@@ -153,6 +154,8 @@ def writer(fd, s_idx, rwsize):
     sys.stdout.buffer.write(bytes("============== END OF WRITER, written: %d ===============\n" % b_count, "utf8"))
     sys.stdout.buffer.flush()
 
+# =============== Parseo de argumentos y header ================
+
 def parse_args(argv):
     opt, args = getopt.getopt(argv, "n:f:")
     fname = ""
@@ -217,6 +220,8 @@ def parse_header(rb):
     HEADER["rows"] = btoi(HEADER["rows"])
 
     HEADER["maxcolor"] = btoi(hdr_fields[2])
+
+# =============== Main ================
 
 if __name__ == "__main__":
     fname, rwsize = parse_args(sys.argv[1:])
