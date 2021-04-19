@@ -28,7 +28,7 @@ def btoi(b_arr):
 
 # =============== Diccionario para el header y funciones correspondientes ================
 
-# EL HEADER ES DE LA FORMA TIPO - COLSxROWS - MAX_BYTE_VAL
+# EL HEADER SIN COMENTARIOS ES DE LA FORMA: MAGIC\nCOLS ROWS\nMAX_BYTE_VAL\n
 # LA CANTIDAD DE BYTES A LEER SE PUEDE OBTENER COMO LEN(HEADER) + COLSxROWS * 3 * (MAX_BYTE_VAL+1) >> 8
 
 def h_calc_colorsize(header):
