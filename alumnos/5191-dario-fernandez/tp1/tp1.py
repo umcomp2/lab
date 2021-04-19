@@ -47,6 +47,52 @@ def get_header_data(ppm_file):
     return data_header
 
 
+def create_header_ppm(data):
+    header = data.get('magic_number') + '\n'
+    header += str(data.get('width')) + ' ' + str(data.get('height')) + '\n'
+    header += str(data.get('max_color')) + '\n'
+    return header
+
+
+def get_rgb_position(color):
+    position = 0
+    if color == 'green':
+        position = 1
+    elif color == 'blue':
+        position = 2
+
+    return position
+
+
+def create_ppm_p6(color, file_path):
+
+    rgb_filtered = None
+    header_ppm = None
+    with open(file_path, 'rb') as f:
+        header_data = get_header_data(f)
+        header_ppm = create_header_ppm(header_data)
+        data = f.read()
+
+        position = get_rgb_position(color)
+        rgb = [list(data[i:i + 3]) for i in range(0, len(data), 3)]
+        for x in rgb:
+            for index in range(len(x)):
+                if index != position:
+                    x[index] = 0
+
+        rgb_filtered = [item for sublist in rgb for item in sublist]
+
+    f.close()
+
+    if rgb_filtered and header_ppm:
+        filename = file_path.split('.')[0]
+        filename_color = color[0] + '_' + filename + '.ppm'
+        with open(filename_color, 'wb') as f:
+            f.write(bytes(header_ppm.encode()))
+            f.write(bytes(rgb_filtered))
+        f.close()
+
+
 def parse_color(child_pipe, color, file_path):
     name_original_ppm = file_path.split('.')[0]
     filename = color[0] + '_' + name_original_ppm + '.txt'
@@ -71,6 +117,8 @@ def parse_color(child_pipe, color, file_path):
             f.write("{0}\t{1}\n".format(x, count_lines[x]))
 
     f.close()
+
+    create_ppm_p6(color, file_path)
 
 
 if __name__ == '__main__':
