@@ -7,8 +7,6 @@ import getopt
 import multiprocessing as mp
 from multiprocessing.sharedctypes import Value
 import mmap
-import struct
-import string
 
 # ================ Ayuda general a lo largo del programa ================
 
@@ -16,10 +14,17 @@ RSIZE = 512
 INFONL = 3  # total de lineas del header que aportan info en .ppm
 EOF = b""
 PPM_STEP = 3
+FILLER_B = b"\x00\x00\x00"
 
 def PPM_ALIGN(size):
     global PPM_STEP
     return size // PPM_STEP * PPM_STEP  # siendo PPM_STEP no multiplo de 2, de lo contrario -> bitwise
+
+def btoi(b_arr):
+    ret = 0
+    for i in range(len(b_arr)):
+        ret = ret * 10 + (b_arr[i] - ord('0'))
+    return ret
 
 # =============== Diccionario para el header y funciones correspondientes ================
 
@@ -63,8 +68,7 @@ r_condvar = None # variable condicional que trabaja con read_lock
 def reader(rwsize, r_offset, fname):
     global HEADER
     global PPM_STEP
-    global EOF
-    global body_bytes
+    global FILLER_B
 
     global shm
     global empty_sem
@@ -74,7 +78,8 @@ def reader(rwsize, r_offset, fname):
     global r_lock
     global read
 
-    b_count = 0 # cuenta la cantidad de bytes leidos de shm y escritos, si b_count == body_bytes entonces fin de la funcion
+    b_count = 0 # cuenta la cantidad de bytes leidos de shm
+    leftbytes = HEADER["calc_totalbytes"](HEADER)  # la cantidad total de bytes en .ppm sin header
 
     out_fname = "h%d-" % (r_offset + 1)
     out_fname += fname
@@ -86,34 +91,38 @@ def reader(rwsize, r_offset, fname):
     while True:
 
         shm.seek(0, os.SEEK_SET)
-        rb = shm.read(rwsize)
-        b_count += len(rb)
+        rsize = rwsize if rwsize < leftbytes else leftbytes
+        rb = shm.read(rsize)
 
-        # reemplazar 196608 por numero de bytes a escribir obtenido del header
-        if b_count > HEADER["calc_totalbytes"](HEADER):
-            break
+        b_count += len(rb)
 
         wb = bytearray()
 
-        for i in range(0, rwsize, PPM_STEP):
+        for i in range(0, rsize, PPM_STEP):
             int_byte = rb[i + r_offset]
-            wb += int_byte.to_bytes(1, byteorder="big")
+            int_byte = int_byte.to_bytes(1, byteorder="big")
+            wb += FILLER_B[:r_offset] + int_byte + FILLER_B[r_offset + 1:]
 
         os.write(out_fd, wb)
+        leftbytes -= len(wb)
 
+        # creo que en este bloque de sincronizacion entre readers hay un problema
         r_lock.acquire()
         read.value += 1
         if read.value != PPM_STEP:
             r_condvar.wait()
         else:
-            r_condvar.notify_all()
             empty_sem.release()
+            r_condvar.notify_all()
         read.value -= 1
         r_lock.release()
 
+        if not leftbytes:
+            break
+
         nonempty_sem.acquire()
 
-    sys.stdout.buffer.write(bytes("============== END OF READER %d, read: %d ===============\n" % (r_offset, b_count), "utf8"))
+    sys.stdout.buffer.write(bytes("============== END OF READER %d, read: %d, left: %d ===============\n" % (r_offset, b_count, leftbytes), "utf8"))
     sys.stdout.flush()
     nonempty_sem.release()
 
@@ -162,12 +171,6 @@ def parse_args(argv):
 
     return fname, rwsize
 
-def atoi(str):
-    ret = 0
-    for i in range(len(str)):
-        ret = ret * 10 + (ord(str[i]) - ord('0'))
-    return ret
-
 def parse_header(rb):
     global INFONL
     global HEADER
@@ -205,10 +208,10 @@ def parse_header(rb):
     HEADER["magic"] = hdr_fields[0].decode()
 
     HEADER["cols"], HEADER["rows"] = hdr_fields[1].split(b" ")
-    HEADER["cols"] = atoi(HEADER["cols"].decode())
-    HEADER["rows"] = atoi(HEADER["rows"].decode())
+    HEADER["cols"] = btoi(HEADER["cols"])
+    HEADER["rows"] = btoi(HEADER["rows"])
 
-    HEADER["maxcolor"] = atoi(hdr_fields[2].decode())
+    HEADER["maxcolor"] = btoi(hdr_fields[2])
 
     if nls != INFONL:
         raise ValueError("Demasiados comentarios en el header, header superior a %d bytes" % RSIZE)
