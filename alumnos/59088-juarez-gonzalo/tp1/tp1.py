@@ -79,7 +79,6 @@ def reader(rwsize, r_offset, fname):
     global r_lock
     global read
 
-    b_count = 0 # cuenta la cantidad de bytes leidos de shm
     leftbytes = HEADER["calc_totalbytes"](HEADER)  # la cantidad total de bytes en .ppm sin header
 
     out_fname = "h%d-" % (r_offset + 1)
@@ -94,9 +93,6 @@ def reader(rwsize, r_offset, fname):
         shm.seek(0, os.SEEK_SET)
         rsize = rwsize if rwsize < leftbytes else leftbytes
         rb = shm.read(rsize)
-
-        b_count += len(rb)
-
         wb = bytearray()
 
         for i in range(0, rsize, PPM_STEP):
@@ -107,25 +103,24 @@ def reader(rwsize, r_offset, fname):
         os.write(out_fd, wb)
         leftbytes -= len(wb)
 
-
         # creo que en este bloque de sincronizacion entre readers hay un problema
         r_lock.acquire()
         read.value += 1
         if read.value != PPM_STEP:
-            r_condvar.wait()
+            r_condvar.wait() # ??? por qué variable condicional ???
         else:
             empty_sem.release()
         read.value -= 1
         r_condvar.notify_all() # si todas señalan entonces no se pierden señales ?? jajsj
         r_lock.release()
 
-        # por que no antes de r_lock?? Para dejar señalar empty_sem
+        # por que no antes de r_lock?? Para señalar empty_sem
         if not leftbytes:
             break
 
         nonempty_sem.acquire()
 
-    sys.stdout.buffer.write(bytes("============== END OF READER %d, read: %d, left: %d ===============\n" % (r_offset, b_count, leftbytes), "utf8"))
+    sys.stdout.buffer.write(bytes("============== END OF READER %d, left: %d ===============\n" % (r_offset, leftbytes), "utf8"))
     sys.stdout.flush()
     nonempty_sem.release()
 
