@@ -106,6 +106,7 @@ def reader(rwsize, r_offset, fname):
         os.write(out_fd, wb)
         leftbytes -= len(wb)
 
+
         # creo que en este bloque de sincronizacion entre readers hay un problema
         r_lock.acquire()
         read.value += 1
@@ -113,10 +114,11 @@ def reader(rwsize, r_offset, fname):
             r_condvar.wait()
         else:
             empty_sem.release()
-            r_condvar.notify_all()
         read.value -= 1
+        r_condvar.notify_all() # si todas señalan entonces no se pierden señales ?? jajsj
         r_lock.release()
 
+        # por que no antes de r_lock?? Para dejar señalar empty_sem
         if not leftbytes:
             break
 
