@@ -200,6 +200,9 @@ def parse_header(rb):
             f_idx = i + 1
             break
 
+    if nls != INFONL:
+        raise ValueError("Demasiados comentarios en el header, header superior a %d bytes" % RSIZE)
+
     hdr_fields = hdr_no_cmmnt.split(b'\n')
 
     HEADER["content"] = rb[:f_idx]
@@ -212,9 +215,6 @@ def parse_header(rb):
     HEADER["rows"] = btoi(HEADER["rows"])
 
     HEADER["maxcolor"] = btoi(hdr_fields[2])
-
-    if nls != INFONL:
-        raise ValueError("Demasiados comentarios en el header, header superior a %d bytes" % RSIZE)
 
 if __name__ == "__main__":
     fname, rwsize = parse_args(sys.argv[1:])
