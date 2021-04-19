@@ -171,7 +171,7 @@ if __name__ == '__main__':
             ppm_block_data = f.read(options.size)
             # data = ppm_block_data.splitlines()
 
-            block_data = ppm_block_data.strip()
+            block_data = ppm_block_data
 
             if header_data.get('magic_number') == 'P3':
                 block_data = block_data.split()
