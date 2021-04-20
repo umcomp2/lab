@@ -147,10 +147,7 @@ def reader(rwsize, r_offset, fname):
         nonempty_sem.acquire()
 
     os.close(out_fd)
-
     write_hist(col_count, out_fname)
-    sys.stdout.buffer.write(bytes("============== END OF READER %d, left: %d ===============\n" % (r_offset, leftbytes), "utf8"))
-    sys.stdout.flush()
 
 def writer(fd, s_idx, rwsize):
     global EOF
@@ -173,9 +170,6 @@ def writer(fd, s_idx, rwsize):
 
         for i in range(PPM_STEP):
             nonempty_sem.release()
-
-    sys.stdout.buffer.write(bytes("============== END OF WRITER, written: %d ===============\n" % b_count, "utf8"))
-    sys.stdout.buffer.flush()
 
 # =============== Parseo de argumentos y header ================
 
@@ -264,11 +258,15 @@ if __name__ == "__main__":
 
     rwsize = PPM_ALIGN(rwsize)
 
+    pool = []
     for i in range(PPM_STEP):
-        p = mp.Process(target=reader, args=(rwsize, i, fname))
-        p.start()
+        pool.append(mp.Process(target=reader, args=(rwsize, i, fname)))
+        pool[i].start()
 
     writer(fd, HEADER["f_idx"], rwsize)
+
+    for p in pool:
+        p.join()
 
     shm.close()
     os.close(fd)
