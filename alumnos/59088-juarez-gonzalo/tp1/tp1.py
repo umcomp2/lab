@@ -259,4 +259,5 @@ if __name__ == "__main__":
 
     writer(fd, HEADER["f_idx"], rwsize)
 
+    shm.close()
     os.close(fd)
