@@ -8,6 +8,12 @@ import multiprocessing as mp
 from multiprocessing.sharedctypes import Value
 import mmap
 
+# TODO:
+#   -   Armar el histograma
+#       Con un hashmap con tantas entradas como HEADER["maxcolor"], inicializadas a 0
+#       y aumentando el contador a medida que se encuentra el numero de la entrada correspondiente
+#       creo que se puede hacer rapido y facil. Quizás no estéticamente pero meeeeeeeh
+
 # ================ Ayuda general a lo largo del programa ================
 
 RSIZE = 512
@@ -27,16 +33,21 @@ def btoi(b_arr):
     return ret
 
 # =============== Diccionario para el header y funciones correspondientes ================
-
 # EL HEADER SIN COMENTARIOS ES DE LA FORMA: MAGIC\nCOLS ROWS\nMAX_BYTE_VAL\n
-# LA CANTIDAD DE BYTES A LEER SE PUEDE OBTENER COMO LEN(HEADER) + COLSxROWS * 3 * (MAX_BYTE_VAL+1) >> 8
+# LA CANTIDAD DE BYTES A LEER SE PUEDE OBTENER COMO LEN(HEADER) + COLS * ROWS * 3 * (MAX_BYTE_VAL+1) >> 8
+# LA CANTIDAD DE BYTES SIN EL HEADER (calculada en h_calc_totalbytes) COMO COLS * ROWS * 3 * (MAX_BYTE_VAL+1) >> 8
 
 def h_calc_colorsize(header):
     return (header["maxcolor"] + 1) >> 8
 
 def h_calc_totalbytes(header):
     global PPM_STEP
-    return h_calc_colorsize(header) * PPM_STEP * header["cols"] * header["rows"]
+    return header["hdr_ops"]["calc_colorsize"](header) * PPM_STEP * header["cols"] * header["rows"]
+
+HDR_OPS = {
+    "calc_totalbytes": h_calc_totalbytes,
+    "calc_colorsize": h_calc_colorsize,
+}
 
 HEADER = {
     "content": "",
@@ -45,8 +56,7 @@ HEADER = {
     "cols": 0,
     "rows": 0,
     "maxcolor": 0,
-    "calc_totalbytes": h_calc_totalbytes,
-    "calc_colorsize": h_calc_colorsize,
+    "hdr_ops": HDR_OPS
 }
 
 # =============== Sincronizacion sobre la memoria compartida ================
@@ -60,11 +70,12 @@ nonempty_sem = None # shm tiene contenido
 #   no puede empezar a leer un bloque B sin esperar a que el resto
 #   de los readers haya terminado de leer el bloque A
 
-read = 0         # indica la cantidad de readers que ya terminaron de leer shm
-read_lock = None # lock sobre variable read
-r_condvar = None # variable condicional que trabaja con read_lock
+rcount = 0         # indica la cantidad de readers que ya terminaron de leer shm
+read_lock = None   # lock sobre variable rcount
+r_condvar = None   # variable condicional que trabaja con read_lock
 
-# =============== Algoritmo para lograr la consigna ================
+# =============== Algoritmo  ================
+# Producer-Consumer modificado para sincronizar lectura de bloques entre consumers
 
 def reader(rwsize, r_offset, fname):
     global HEADER
@@ -75,11 +86,11 @@ def reader(rwsize, r_offset, fname):
     global empty_sem
     global nonempty_sem
 
-    global r_condvar
+    global rcount
     global r_lock
-    global read
+    global r_condvar
 
-    leftbytes = HEADER["calc_totalbytes"](HEADER)  # la cantidad total de bytes en .ppm sin header
+    leftbytes = HEADER["hdr_ops"]["calc_totalbytes"](HEADER)  # la cantidad total de bytes en .ppm sin header
 
     out_fname = "h%d-" % (r_offset + 1)
     out_fname += fname
@@ -103,26 +114,30 @@ def reader(rwsize, r_offset, fname):
         os.write(out_fd, wb)
         leftbytes -= len(wb)
 
-        # creo que en este bloque de sincronizacion entre readers hay un problema
         r_lock.acquire()
-        read.value += 1
-        if read.value != PPM_STEP:
-            r_condvar.wait() # ??? por qué variable condicional ???
-        else:
+
+        rcount.value += 1
+        if rcount.value != PPM_STEP:  # se asegura que todos hayan llegado hasta acá antes de seguir
+            r_condvar.wait()
+
+        r_condvar.notify()            # si todos señalan solo se pierde la ultima señal ??? jajsjs
+        rcount.value -= 1
+
+        if rcount.value == 0:         # el ultimo consumer señala que el buffer puede ser escrito
             empty_sem.release()
-        read.value -= 1
-        r_condvar.notify_all() # si todas señalan entonces no se pierden señales ?? jajsj
+
         r_lock.release()
 
-        # por que no antes de r_lock?? Para señalar empty_sem
+        # por que no antes de r_lock?? Para señalar empty_sem y dejarlo en el estado inicial
         if not leftbytes:
             break
 
         nonempty_sem.acquire()
 
+    os.close(out_fd)
+
     sys.stdout.buffer.write(bytes("============== END OF READER %d, left: %d ===============\n" % (r_offset, leftbytes), "utf8"))
     sys.stdout.flush()
-    nonempty_sem.release()
 
 def writer(fd, s_idx, rwsize):
     global EOF
@@ -229,7 +244,7 @@ if __name__ == "__main__":
 
     r_lock = mp.Lock()
     r_condvar = mp.Condition(r_lock)
-    read = mp.sharedctypes.Value('i', 0, lock=False)
+    rcount = mp.sharedctypes.Value('i', 0, lock=False)
 
     os.lseek(fd, 0, os.SEEK_SET)
     rb = os.read(fd, RSIZE)
