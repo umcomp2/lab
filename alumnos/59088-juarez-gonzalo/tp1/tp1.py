@@ -10,7 +10,7 @@ import mmap
 
 # TODO:
 #   -   Armar el histograma
-#       Con un hashmap con tantas entradas como HEADER["maxcolor"], inicializadas a 0
+#       Con un hashmap con tantas entradas como hdr["maxcolor"], inicializadas a 0
 #       y aumentando el contador a medida que se encuentra el numero de la entrada correspondiente
 #       creo que se puede hacer rapido y facil. Quizás no estéticamente pero meeeeeeeh
 
@@ -22,10 +22,14 @@ INFONL = 3  # total de lineas del header que aportan info en .ppm
 PPM_STEP = 3
 FILLER_B = b"\x00\x00\x00"
 
+# Alinea un numero contra PPM_STEP
+# @size:    tamaño numerico
 def PPM_ALIGN(size):
     global PPM_STEP
-    return size // PPM_STEP * PPM_STEP  # siendo PPM_STEP no multiplo de 2, de lo contrario -> bitwise
+    return size // PPM_STEP * PPM_STEP  # siendo PPM_STEP no potencia de 2, de lo contrario -> bitwise
 
+# Transforma una numero representado en un bytearray en el numero en sí
+# @b_arr:   representacion de numero en bytearray. Eg.: b"\x32\x35\x35" -> 255
 def btoi(b_arr):
     ret = 0
     for i in range(len(b_arr)):
@@ -33,30 +37,33 @@ def btoi(b_arr):
     return ret
 
 # =============== Diccionario para el header y funciones correspondientes ================
-# EL HEADER SIN COMENTARIOS ES DE LA FORMA: MAGIC\nCOLS ROWS\nMAX_BYTE_VAL\n
-# LA CANTIDAD DE BYTES A LEER SE PUEDE OBTENER COMO LEN(HEADER) + COLS * ROWS * 3 * (MAX_BYTE_VAL+1) >> 8
-# LA CANTIDAD DE BYTES SIN EL HEADER (calculada en h_calc_totalbytes) COMO COLS * ROWS * 3 * (MAX_BYTE_VAL+1) >> 8
+# Header sin comentarios es de la forma: MAGIC\nCOLS ROWS\nMAX_BYTE_VAL\n
+# La cantidad de bytes a leer sin el header (calculada en h_calc_totalbytes) como: COLS * ROWS * 3 * (MAX_BYTE_VAL+1) >> 8
 
+# Calcula la cantidad de bytes necesarios para el maximo color posible en un color de archivo .ppm
+# @header:  diccionario hdr
 def h_calc_colorsize(header):
     return (header["maxcolor"] + 1) >> 8
 
+# Calcula la cantidad total de bytes (sin header) que hay en un archivo .ppm
+# @header:  diccionario hdr
 def h_calc_totalbytes(header):
     global PPM_STEP
     return header["hdr_ops"]["calc_colorsize"](header) * PPM_STEP * header["cols"] * header["rows"]
 
-HDR_OPS = {
+hdr_ops = {
     "calc_totalbytes": h_calc_totalbytes,
     "calc_colorsize": h_calc_colorsize,
 }
 
-HEADER = {
+hdr = {
     "content": "",
     "f_idx": "",
     "magic": "",
     "cols": 0,
     "rows": 0,
     "maxcolor": 0,
-    "hdr_ops": HDR_OPS
+    "hdr_ops": hdr_ops
 }
 
 # =============== Sincronizacion sobre la memoria compartida ================
@@ -77,6 +84,8 @@ r_condvar = None   # variable condicional que trabaja con read_lock
 # =============== Algoritmo  ================
 # Producer-Consumer modificado para sincronizar lectura de bloques entre consumers
 
+# Escribe el histograma que corresponde a la consigna
+# @col_count:   Diccionario con la cantidad de apariciones de un color mapeadas al valor numerico de ese color en el .ppm
 def write_hist(col_count, fname):
     hist = bytearray()      # si esto fuera a parar al stack entonces es media nefasta la cuestion. pero es python
     hist_fname = fname + ".hist"
@@ -87,10 +96,14 @@ def write_hist(col_count, fname):
 
     os.write(hist_fd, hist)
 
+# @rwsize:      Cantidad de bytes a leer indicadas por input del usuario
+# @r_offset:    Offset del color que corresponde a este consumer
+# @fname:       Nombre del archivo original
 def reader(rwsize, r_offset, fname):
-    global HEADER
     global PPM_STEP
     global FILLER_B
+
+    global hdr
 
     global shm
     global empty_sem
@@ -100,14 +113,14 @@ def reader(rwsize, r_offset, fname):
     global r_lock
     global r_condvar
 
-    leftbytes = HEADER["hdr_ops"]["calc_totalbytes"](HEADER)  # la cantidad total de bytes en .ppm sin header
-    col_count = {i: 0 for i in range(HEADER["maxcolor"] + 1)}
+    leftbytes = hdr["hdr_ops"]["calc_totalbytes"](hdr)  # la cantidad total de bytes en .ppm sin header
+    col_count = {i: 0 for i in range(hdr["maxcolor"] + 1)}
 
     out_fname = "h%d-" % (r_offset + 1)
     out_fname += fname
 
     out_fd = os.open(out_fname, os.O_CREAT | os.O_TRUNC | os.O_WRONLY, stat.S_IWUSR | stat.S_IRUSR)
-    os.write(out_fd, HEADER["content"])
+    os.write(out_fd, hdr["content"])
 
     nonempty_sem.acquire()
     while True:
@@ -149,6 +162,9 @@ def reader(rwsize, r_offset, fname):
     os.close(out_fd)
     write_hist(col_count, out_fname)
 
+# @fd:          file descriptor del archivo siendo leído
+# @s_idx:       Primer byte despues del header en el archivo .ppm
+# @rwsize:      Cantidad de bytes a leer indicadas por input del usuario
 def writer(fd, s_idx, rwsize):
     global EOF
     global PPM_STEP
@@ -173,16 +189,29 @@ def writer(fd, s_idx, rwsize):
 
 # =============== Parseo de argumentos y header ================
 
+def usagendie():
+    h = "usage: %s [-h] -n SIZE -f FILE\n\n" % __file__
+    h += "TP1 - procesa ppm\n\n"
+    h += "\t-h, --help\tMuestra esta ayuda\n"
+    h += "\t-s, --size\tTamaño del bloque de lectura\n"
+    h += "\t-f, --file\tArchivo a procesar\n"
+    sys.stdout.write(h)
+    sys.exit(0)
+
+# @argv:    Lista de argumentos
 def parse_args(argv):
-    opt, args = getopt.getopt(argv, "n:f:")
+    opt, args = getopt.getopt(argv, "s:f:h", ["size=", "file=", "help"])
     fname = ""
     rwsize = 0
 
     for o in opt:
-        if o[0] == "-n":
+        oname = o[0].replace("-","")
+        if oname == "s":
             rwsize = int(o[1])
-        elif o[0] == "-f":
+        elif oname == "f":
             fname = o[1]
+        elif oname == "h":
+            usagendie()
 
     if not fname or not rwsize:
         raise ValueError("Faltan parametros")
@@ -193,9 +222,11 @@ def parse_args(argv):
 
     return fname, rwsize
 
+# Parsea el header de un archivo .ppm, populando el diccionario hdr global con informacion
+# @rb:  Bytes donde se encuentra el header
 def parse_header(rb):
     global INFONL
-    global HEADER
+    global hdr
 
     hdr_no_cmmnt = bytearray()
     nls = 0         # contador de '\n' en lineas que aportan info
@@ -225,16 +256,16 @@ def parse_header(rb):
 
     hdr_fields = hdr_no_cmmnt.split(b'\n')
 
-    HEADER["content"] = rb[:f_idx]
-    HEADER["f_idx"] = f_idx
+    hdr["content"] = rb[:f_idx]
+    hdr["f_idx"] = f_idx
 
-    HEADER["magic"] = hdr_fields[0].decode()
+    hdr["magic"] = hdr_fields[0].decode()
 
-    HEADER["cols"], HEADER["rows"] = hdr_fields[1].split(b" ")
-    HEADER["cols"] = btoi(HEADER["cols"])
-    HEADER["rows"] = btoi(HEADER["rows"])
+    hdr["cols"], hdr["rows"] = hdr_fields[1].split(b" ")
+    hdr["cols"] = btoi(hdr["cols"])
+    hdr["rows"] = btoi(hdr["rows"])
 
-    HEADER["maxcolor"] = btoi(hdr_fields[2])
+    hdr["maxcolor"] = btoi(hdr_fields[2])
 
 # =============== Main ================
 
@@ -263,7 +294,7 @@ if __name__ == "__main__":
         pool.append(mp.Process(target=reader, args=(rwsize, i, fname)))
         pool[i].start()
 
-    writer(fd, HEADER["f_idx"], rwsize)
+    writer(fd, hdr["f_idx"], rwsize)
 
     for p in pool:
         p.join()
