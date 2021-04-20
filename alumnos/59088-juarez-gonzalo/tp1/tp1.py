@@ -8,39 +8,49 @@ import multiprocessing as mp
 from multiprocessing.sharedctypes import Value
 import mmap
 
-# TODO:
-#   -   Armar el histograma
-#       Con un hashmap con tantas entradas como hdr["maxcolor"], inicializadas a 0
-#       y aumentando el contador a medida que se encuentra el numero de la entrada correspondiente
-#       creo que se puede hacer rapido y facil. Quizás no estéticamente pero meeeeeeeh
-
 # ================ Ayuda general a lo largo del programa ================
 
 EOF = b""
-INIT_RSIZE = 512            # tamaño de lectura inicial de header
-INFONL = 3                  # total de lineas del header que aportan info en .ppm
-B_PER_PX = 3                # cantidad de bytes que conforman un pixel en .ppm
-FILLER_B = b"\x00\x00\x00"  # usada para extraer bytes nulos, longitud de B_PER_PX
 
-# Alinea un numero contra B_PER_PX
+INIT_RSIZE = 512            # tamaño de lectura inicial (usado para leer el header)
+
+INFONL = 3                  # total de lineas del header que aportan info en .ppm
+
+B_PER_PX = 3                # cantidad de bytes que conforman un pixel en .ppm
+NCHILD = B_PER_PX           # cantidad de hijos (NOTA: valor igual a B_PER_PX, legibilidad no)
+NPROD = NCHILD              # cantidad de producers (NOTA: idem nota NCHILD)
+
+FILLER_B = b"\x00\x00\x00"  # usada para extraer bytes nulos, len(FILLER_B) == B_PER_PX
+
+# Alinea un numero contra B_PER_PX, B_PER_PX no es potencia de 2 asi que no bitwise :(
 # @size:    tamaño numerico
 def PPM_ALIGN(size):
     global B_PER_PX
-    return size // B_PER_PX * B_PER_PX  # siendo B_PER_PX no potencia de 2, de lo contrario -> bitwise
+    return size // B_PER_PX * B_PER_PX if size >= B_PER_PX else B_PER_PX
 
-# Transforma una numero representado en un bytearray en el numero en sí
-# @b_arr:   representacion de numero en bytearray. Eg.: b"\x32\x35\x35" -> 255
+# Transforma un numero representado en un bytearray al datatype Number
+#   Eg.: b"\x32\x35\x35" -> 255
+# @b_arr:   representacion de numero en bytearray.
 def btoi(b_arr):
     ret = 0
     for i in range(len(b_arr)):
         ret = ret * 10 + (b_arr[i] - ord('0'))
     return ret
 
-# =============== Diccionario para el header y funciones correspondientes ================
+# =============== Diccionario para header y funciones correspondientes ================
 # Header sin comentarios es de la forma: MAGIC\nCOLS ROWS\nMAX_BYTE_VAL\n
-# La cantidad de bytes a leer sin el header (calculada en h_calc_totalbytes) como: COLS * ROWS * 3 * (MAX_BYTE_VAL+1) >> 8
+# La cantidad de bytes a leer sin el header como:
+#               COLS * ROWS * 3 * (MAX_BYTE_VAL+1) >> 8
 
-# Calcula la cantidad de bytes necesarios para el maximo color posible en un color de archivo .ppm
+# NOTA: Podría ser una clase pero el resto del código no es OO
+#       y para no mezclar la cuestión meh use referencia a objetos,
+#       y que las funciones son objetos en python para algo parecido
+#       al OO en C con un struct con punteros a funciones (virtual table?).
+#       Use diccionario en lugar de struct, que es mas bien una hash table
+#       pero bueno es lo que hay. Al menos el tiempo de acceso teoricamente es O(1) (?
+
+# Calcula la cantidad de bytes necesarios para el maximo valor
+# posible en un color de archivo .ppm
 # @header:  diccionario hdr
 def h_calc_colorsize(header):
     return (header["maxcolor"] + 1) >> 8
@@ -67,8 +77,9 @@ hdr = {
 }
 
 # =============== Sincronizacion sobre la memoria compartida ================
+#   Sincronizacion necesaria en algoritmo producer-consumer estandar
 
-shm = None
+shm = None          # el buffer compartido
 empty_sem = None    # shm esta vacio
 nonempty_sem = None # shm tiene contenido
 
@@ -83,6 +94,7 @@ p_condvar = None   # variable condicional que trabaja con read_lock
 
 # =============== Algoritmo  ================
 # Producer-Consumer modificado para sincronizar lectura de bloques entre consumers
+# Nota: Producer es el proceso padre de los hijos
 
 # Escribe el histograma que corresponde a la consigna
 # @col_count:   Diccionario con la cantidad de apariciones de un color mapeadas al valor numerico de ese color en el .ppm
@@ -95,12 +107,14 @@ def write_hist(col_count, fname):
         hist += bytes("%d:\t%d\n" % (key, col_count[key]), "utf8")
 
     os.write(hist_fd, hist)
+    os.close(hist_fd)
 
 # @rwsize:      Cantidad de bytes a leer indicadas por input del usuario
 # @r_offset:    Offset del color que corresponde a este consumer
 # @fname:       Nombre del archivo original
 def consumer(rwsize, r_offset, fname):
     global B_PER_PX
+    global NPROD
     global FILLER_B
 
     global hdr
@@ -139,19 +153,21 @@ def consumer(rwsize, r_offset, fname):
         os.write(out_fd, wb)
         leftbytes -= len(wb)
 
+        ### COMIENZO DE MODIFICACION AL PRODUCER-CONSUMER ESTANDAR ###
         p_lock.acquire()
 
         pcount.value += 1
-        if pcount.value != B_PER_PX:  # se asegura que todos hayan llegado hasta acá antes de seguir
+        if pcount.value != NPROD:  # se asegura que todos hayan llegado hasta acá antes de seguir
             p_condvar.wait()
 
-        p_condvar.notify()            # si todos señalan solo se pierde la ultima señal ??? jajsjs
         pcount.value -= 1
 
-        if pcount.value == 0:         # el ultimo consumer señala que el buffer puede ser escrito
+        if pcount.value == 0:         # el ultimo consumer señala semaforo de buffer vacio (para producer)
             empty_sem.release()
 
+        p_condvar.notify()            # si todos señalan solo se pierde la ultima señal ??? jajsjs
         p_lock.release()
+        ### FIN DE MODIFICACION AL PRODUCER-CONSUMER ESTANDAR ###
 
         # por que no antes de p_lock?? Para señalar empty_sem y dejarlo en el estado inicial
         if not leftbytes:
@@ -166,7 +182,7 @@ def consumer(rwsize, r_offset, fname):
 # @rwsize:      Cantidad de bytes a leer indicadas por input del usuario
 def producer(fd, rwsize):
     global EOF
-    global B_PER_PX
+    global NPROD
 
     global hdr
 
@@ -177,21 +193,21 @@ def producer(fd, rwsize):
     rb = b""
     b_count = 0
 
-    os.lseek(fd, hdr["f_idx"], os.SEEK_SET)
+    os.lseek(fd, hdr["f_idx"], os.SEEK_SET) # comenzar lectura en 1er byte post-header
     while (rb := os.read(fd, rwsize)) != EOF:
         b_count += len(rb)
-        empty_sem.acquire()
+        empty_sem.acquire()         # buffer vacio (y/o consumido), escribir
 
         shm.seek(0, os.SEEK_SET)
         shm.write(rb)
 
-        for i in range(B_PER_PX):
-            nonempty_sem.release()
+        for i in range(NPROD):
+            nonempty_sem.release()  # buffer con contenido, señalar para consumers
 
 # =============== Parseo de argumentos y header ================
 
 def usagendie():
-    h = "usage: %s [-h] -n SIZE -f FILE\n\n" % __file__
+    h = "usage: %s [-h] (-s|--size) SIZE (-f|--file) FILE\n\n" % __file__
     h += "TP1 - procesa ppm\n\n"
     h += "\t-h, --help\tMuestra esta ayuda\n"
     h += "\t-s, --size\tTamaño del bloque de lectura\n"
@@ -275,6 +291,8 @@ if __name__ == "__main__":
 
     fd = os.open(fname, os.O_RDONLY)
 
+    rwsize = PPM_ALIGN(rwsize)
+
     shm = mmap.mmap(-1, rwsize)
     empty_sem = mp.Semaphore(1)
     nonempty_sem = mp.Semaphore(0)
@@ -288,10 +306,9 @@ if __name__ == "__main__":
 
     parse_header(rb)
 
-    rwsize = PPM_ALIGN(rwsize)
 
     pool = []
-    for i in range(B_PER_PX):
+    for i in range(NCHILD):
         pool.append(mp.Process(target=consumer, args=(rwsize, i, fname)))
         pool[i].start()
 
@@ -299,6 +316,8 @@ if __name__ == "__main__":
 
     for p in pool:
         p.join()
+
+    sys.stdout.write("- Lo logré?\n- Lo logró Señor\n\n\tSe generaron correctamente %d histogramas\n" % NCHILD)
 
     shm.close()
     os.close(fd)
