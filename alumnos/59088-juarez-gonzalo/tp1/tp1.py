@@ -94,7 +94,7 @@ p_condvar = None   # variable condicional que trabaja con read_lock
 
 # =============== Algoritmo  ================
 # Producer-Consumer modificado para sincronizar lectura de bloques entre consumers
-# Nota: Producer es el proceso padre de los hijos
+# Nota: Producer es el proceso padre de los hijos. Hijos son los consumers
 
 # Escribe el histograma que corresponde a la consigna
 # @col_count:   Diccionario con la cantidad de apariciones de un color mapeadas al valor numerico de ese color en el .ppm
