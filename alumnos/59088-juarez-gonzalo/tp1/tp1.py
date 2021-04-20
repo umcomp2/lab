@@ -77,6 +77,16 @@ r_condvar = None   # variable condicional que trabaja con read_lock
 # =============== Algoritmo  ================
 # Producer-Consumer modificado para sincronizar lectura de bloques entre consumers
 
+def write_hist(col_count, fname):
+    hist = bytearray()      # si esto fuera a parar al stack entonces es media nefasta la cuestion. pero es python
+    hist_fname = fname + ".hist"
+    hist_fd = os.open(hist_fname, os.O_CREAT | os.O_TRUNC | os.O_WRONLY, stat.S_IWUSR | stat.S_IRUSR)
+
+    for key in col_count.keys():
+        hist += bytes("%d:\t%d\n" % (key, col_count[key]), "utf8")
+
+    os.write(hist_fd, hist)
+
 def reader(rwsize, r_offset, fname):
     global HEADER
     global PPM_STEP
@@ -91,6 +101,7 @@ def reader(rwsize, r_offset, fname):
     global r_condvar
 
     leftbytes = HEADER["hdr_ops"]["calc_totalbytes"](HEADER)  # la cantidad total de bytes en .ppm sin header
+    col_count = {i: 0 for i in range(HEADER["maxcolor"] + 1)}
 
     out_fname = "h%d-" % (r_offset + 1)
     out_fname += fname
@@ -107,9 +118,10 @@ def reader(rwsize, r_offset, fname):
         wb = bytearray()
 
         for i in range(0, rsize, PPM_STEP):
-            int_byte = rb[i + r_offset]
-            int_byte = int_byte.to_bytes(1, byteorder="big")
-            wb += FILLER_B[:r_offset] + int_byte + FILLER_B[r_offset + 1:]
+            color_int = rb[i + r_offset]
+            col_count[color_int] = col_count[color_int] + 1
+            color_byte = color_int.to_bytes(1, byteorder="big")
+            wb += FILLER_B[:r_offset] + color_byte + FILLER_B[r_offset + 1:]
 
         os.write(out_fd, wb)
         leftbytes -= len(wb)
@@ -136,6 +148,7 @@ def reader(rwsize, r_offset, fname):
 
     os.close(out_fd)
 
+    write_hist(col_count, out_fname)
     sys.stdout.buffer.write(bytes("============== END OF READER %d, left: %d ===============\n" % (r_offset, leftbytes), "utf8"))
     sys.stdout.flush()
 
