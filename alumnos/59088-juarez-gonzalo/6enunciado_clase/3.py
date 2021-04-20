@@ -10,7 +10,7 @@ import getopt
 NCHILD = 3
 EOF = b""
 
-def pipe2file(q, fname, childnum):
+def q2file(q, fname, childnum):
     rb = b""
     newfname = "h%d-" % childnum
     newfname += fname
@@ -34,12 +34,6 @@ def parseargs(argv):
 
     return fname, rwsize
 
-def init_pipes(nchild, rpipe_ends, wpipe_ends):
-    for i in range(NCHILD):
-        r, w = mp.Pipe(False)
-        rpipe_ends.append(r)
-        wpipe_ends.append(w)
-
 if __name__ == "__main__":
     fname = ""
     rwize = 0
@@ -52,7 +46,7 @@ if __name__ == "__main__":
         queues.append(mp.Queue())
 
     for i in range(NCHILD):
-        p = mp.Process(target=pipe2file, args=(queues[i], fname, i+1))
+        p = mp.Process(target=q2file, args=(queues[i], fname, i+1))
         pool.append(p)
         p.start()
 
