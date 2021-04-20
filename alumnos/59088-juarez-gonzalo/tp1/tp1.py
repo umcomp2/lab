@@ -17,16 +17,16 @@ import mmap
 # ================ Ayuda general a lo largo del programa ================
 
 EOF = b""
-RSIZE = 512
-INFONL = 3  # total de lineas del header que aportan info en .ppm
-PPM_STEP = 3
-FILLER_B = b"\x00\x00\x00"
+INIT_RSIZE = 512            # tamaño de lectura inicial de header
+INFONL = 3                  # total de lineas del header que aportan info en .ppm
+B_PER_PX = 3                # cantidad de bytes que conforman un pixel en .ppm
+FILLER_B = b"\x00\x00\x00"  # usada para extraer bytes nulos, longitud de B_PER_PX
 
-# Alinea un numero contra PPM_STEP
+# Alinea un numero contra B_PER_PX
 # @size:    tamaño numerico
 def PPM_ALIGN(size):
-    global PPM_STEP
-    return size // PPM_STEP * PPM_STEP  # siendo PPM_STEP no potencia de 2, de lo contrario -> bitwise
+    global B_PER_PX
+    return size // B_PER_PX * B_PER_PX  # siendo B_PER_PX no potencia de 2, de lo contrario -> bitwise
 
 # Transforma una numero representado en un bytearray en el numero en sí
 # @b_arr:   representacion de numero en bytearray. Eg.: b"\x32\x35\x35" -> 255
@@ -48,8 +48,8 @@ def h_calc_colorsize(header):
 # Calcula la cantidad total de bytes (sin header) que hay en un archivo .ppm
 # @header:  diccionario hdr
 def h_calc_totalbytes(header):
-    global PPM_STEP
-    return header["hdr_ops"]["calc_colorsize"](header) * PPM_STEP * header["cols"] * header["rows"]
+    global B_PER_PX
+    return header["hdr_ops"]["calc_colorsize"](header) * B_PER_PX * header["cols"] * header["rows"]
 
 hdr_ops = {
     "calc_totalbytes": h_calc_totalbytes,
@@ -72,14 +72,14 @@ shm = None
 empty_sem = None    # shm esta vacio
 nonempty_sem = None # shm tiene contenido
 
-# =============== Sincronizacion sobre readers ===============
-#   Un reader que haya terminado con el bloque A,
+# =============== Sincronizacion sobre consumers ===============
+#   Un consumer que haya terminado con el bloque A,
 #   no puede empezar a leer un bloque B sin esperar a que el resto
-#   de los readers haya terminado de leer el bloque A
+#   de los consumers haya terminado de leer el bloque A
 
-rcount = 0         # indica la cantidad de readers que ya terminaron de leer shm
-read_lock = None   # lock sobre variable rcount
-r_condvar = None   # variable condicional que trabaja con read_lock
+pcount = 0         # indica la cantidad de consumers que ya terminaron de leer shm
+p_lock = None      # lock sobre variable pcount
+p_condvar = None   # variable condicional que trabaja con read_lock
 
 # =============== Algoritmo  ================
 # Producer-Consumer modificado para sincronizar lectura de bloques entre consumers
@@ -99,8 +99,8 @@ def write_hist(col_count, fname):
 # @rwsize:      Cantidad de bytes a leer indicadas por input del usuario
 # @r_offset:    Offset del color que corresponde a este consumer
 # @fname:       Nombre del archivo original
-def reader(rwsize, r_offset, fname):
-    global PPM_STEP
+def consumer(rwsize, r_offset, fname):
+    global B_PER_PX
     global FILLER_B
 
     global hdr
@@ -109,11 +109,11 @@ def reader(rwsize, r_offset, fname):
     global empty_sem
     global nonempty_sem
 
-    global rcount
-    global r_lock
-    global r_condvar
+    global pcount
+    global p_lock
+    global p_condvar
 
-    leftbytes = hdr["hdr_ops"]["calc_totalbytes"](hdr)  # la cantidad total de bytes en .ppm sin header
+    leftbytes = hdr["hdr_ops"]["calc_totalbytes"](hdr)
     col_count = {i: 0 for i in range(hdr["maxcolor"] + 1)}
 
     out_fname = "h%d-" % (r_offset + 1)
@@ -130,7 +130,7 @@ def reader(rwsize, r_offset, fname):
         rb = shm.read(rsize)
         wb = bytearray()
 
-        for i in range(0, rsize, PPM_STEP):
+        for i in range(0, rsize, B_PER_PX):
             color_int = rb[i + r_offset]
             col_count[color_int] = col_count[color_int] + 1
             color_byte = color_int.to_bytes(1, byteorder="big")
@@ -139,21 +139,21 @@ def reader(rwsize, r_offset, fname):
         os.write(out_fd, wb)
         leftbytes -= len(wb)
 
-        r_lock.acquire()
+        p_lock.acquire()
 
-        rcount.value += 1
-        if rcount.value != PPM_STEP:  # se asegura que todos hayan llegado hasta acá antes de seguir
-            r_condvar.wait()
+        pcount.value += 1
+        if pcount.value != B_PER_PX:  # se asegura que todos hayan llegado hasta acá antes de seguir
+            p_condvar.wait()
 
-        r_condvar.notify()            # si todos señalan solo se pierde la ultima señal ??? jajsjs
-        rcount.value -= 1
+        p_condvar.notify()            # si todos señalan solo se pierde la ultima señal ??? jajsjs
+        pcount.value -= 1
 
-        if rcount.value == 0:         # el ultimo consumer señala que el buffer puede ser escrito
+        if pcount.value == 0:         # el ultimo consumer señala que el buffer puede ser escrito
             empty_sem.release()
 
-        r_lock.release()
+        p_lock.release()
 
-        # por que no antes de r_lock?? Para señalar empty_sem y dejarlo en el estado inicial
+        # por que no antes de p_lock?? Para señalar empty_sem y dejarlo en el estado inicial
         if not leftbytes:
             break
 
@@ -163,11 +163,12 @@ def reader(rwsize, r_offset, fname):
     write_hist(col_count, out_fname)
 
 # @fd:          file descriptor del archivo siendo leído
-# @s_idx:       Primer byte despues del header en el archivo .ppm
 # @rwsize:      Cantidad de bytes a leer indicadas por input del usuario
-def writer(fd, s_idx, rwsize):
+def producer(fd, rwsize):
     global EOF
-    global PPM_STEP
+    global B_PER_PX
+
+    global hdr
 
     global shm
     global empty_sem
@@ -176,7 +177,7 @@ def writer(fd, s_idx, rwsize):
     rb = b""
     b_count = 0
 
-    os.lseek(fd, s_idx, os.SEEK_SET)
+    os.lseek(fd, hdr["f_idx"], os.SEEK_SET)
     while (rb := os.read(fd, rwsize)) != EOF:
         b_count += len(rb)
         empty_sem.acquire()
@@ -184,7 +185,7 @@ def writer(fd, s_idx, rwsize):
         shm.seek(0, os.SEEK_SET)
         shm.write(rb)
 
-        for i in range(PPM_STEP):
+        for i in range(B_PER_PX):
             nonempty_sem.release()
 
 # =============== Parseo de argumentos y header ================
@@ -206,11 +207,11 @@ def parse_args(argv):
 
     for o in opt:
         oname = o[0].replace("-","")
-        if oname == "s":
+        if oname[0] == "s":
             rwsize = int(o[1])
-        elif oname == "f":
+        elif oname[0] == "f":
             fname = o[1]
-        elif oname == "h":
+        elif oname[0] == "h":
             usagendie()
 
     if not fname or not rwsize:
@@ -252,7 +253,7 @@ def parse_header(rb):
             break
 
     if nls != INFONL:
-        raise ValueError("Demasiados comentarios en el header, header superior a %d bytes" % RSIZE)
+        raise ValueError("Demasiados comentarios en el header, header superior a %d bytes" % INIT_RSIZE)
 
     hdr_fields = hdr_no_cmmnt.split(b'\n')
 
@@ -278,23 +279,23 @@ if __name__ == "__main__":
     empty_sem = mp.Semaphore(1)
     nonempty_sem = mp.Semaphore(0)
 
-    r_lock = mp.Lock()
-    r_condvar = mp.Condition(r_lock)
-    rcount = mp.sharedctypes.Value('i', 0, lock=False)
+    p_lock = mp.Lock()
+    p_condvar = mp.Condition(p_lock)
+    pcount = mp.sharedctypes.Value('i', 0, lock=False)
 
     os.lseek(fd, 0, os.SEEK_SET)
-    rb = os.read(fd, RSIZE)
+    rb = os.read(fd, INIT_RSIZE)
 
     parse_header(rb)
 
     rwsize = PPM_ALIGN(rwsize)
 
     pool = []
-    for i in range(PPM_STEP):
-        pool.append(mp.Process(target=reader, args=(rwsize, i, fname)))
+    for i in range(B_PER_PX):
+        pool.append(mp.Process(target=consumer, args=(rwsize, i, fname)))
         pool[i].start()
 
-    writer(fd, hdr["f_idx"], rwsize)
+    producer(fd, rwsize)
 
     for p in pool:
         p.join()
