@@ -16,9 +16,9 @@ import mmap
 
 # ================ Ayuda general a lo largo del programa ================
 
+EOF = b""
 RSIZE = 512
 INFONL = 3  # total de lineas del header que aportan info en .ppm
-EOF = b""
 PPM_STEP = 3
 FILLER_B = b"\x00\x00\x00"
 
@@ -192,7 +192,6 @@ def parse_header(rb):
 
     hdr_no_cmmnt = bytearray()
     nls = 0         # contador de '\n' en lineas que aportan info
-    nls_idx = []
     f_idx = 0       # indice posterior al ultimo newline de linea que aporta info
     in_cmmnt = 0    # flag que indica si prox '\n' corresponde a linea de comentario
     c = b""
@@ -205,7 +204,6 @@ def parse_header(rb):
             in_cmmnt &= 0
             continue
         elif rb[i] == ord('\n'):
-            nls_idx.append(i)
             nls += 1
 
         if not in_cmmnt:
