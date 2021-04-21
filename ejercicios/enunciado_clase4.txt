@@ -1,0 +1,68 @@
+1 - Cree un programa que muestre su pid y cree procesos zombies. La opcion -n nro indica la cantidad de zombies a crear. Si en algun momento recibe 
+SIGUSR1, debe leer el exit status de todos sus hijos, para que no queden en la tabla de procesos, y finalmente cambiar su cuerpo por "ps -f",
+para poder verificar que no quedaron zombies.
+
+Ejemplo de funcionamiento
+./1.py -n 3
+Pid:  182522
+UID          PID    PPID  C STIME TTY          TIME CMD
+carlost   180798  125947  0 18:24 pts/2    00:00:00 bash
+carlost   182522  180798  1 18:41 pts/2    00:00:00 /usr/bin/ps -f
+
+
+2 - Mediante señales, comunique a dos procesos hijos para que:
+El hijo1 cree el archivo indicado con el argumento --file y escriba en el todo lo que le llega por stdin.
+Una vez que termine de escribir, el hijo 2 debe abrir el archivo, y reemplazar todos los caracteres algoritmo rot-13 de cifrado.
+Finalmente, el hijo 1 debe abrir nuevamente el archivo solo lectura y enviar su contenido por stdout.
+
+Ejemplo de funcionamiento
+
+# echo "CONTENIDO DEL ARCHIVO"| ./2.py --file archivo
+hijo1 escribiendo ...
+hijo2 reemplazando ..
+hijo1 leyendo .......
+PBAGRAVQB QRY NEPUVIB
+
+
+3 - Realize un programa que comienze a imprimir por pantalla el siguiente nro real cada 1 segundo, partiendo de 0.
+Cada vez que reciba una señal SIGUSR1, el tiempo entre impresiones en pantalla se duplicará.
+Si se recibe la señal SIGUSR2, el tiempo entre impresiones  por pantalla será la mitad.
+En caso de que el tiempo de espera sea menor que 1 segundo el programa debe terminar.
+
+Ejemplo de funcionamiento
+# ./3.py
+1
+2
+3
+4
+.....etc, etc
+
+
+4 - Escriba un programa que lea un archivo de texto definido por el argumento -f y le envíe cada linea a un hijo,
+este pasará a mayúsculas lo que se le envíe, luego se lo reenviará transformado al padre,
+quien lo mostrará por pantalla. La comunicación se hará mediante pipe (modulo os)
+
+Ej de funcionamiento
+
+$ ./4.py -f pasar.txt
+
+Escribiendo...
+Hijo iniciado
+
+HOLA
+GENTE
+DE
+COMPU2
+
+
+5 Escriba dos programas distintos que realizen la misma tarea que el ejericio 4, pero usando FIFO (os.mkdifo)
+
+Ej de funcionamiento
+
+$ ./5a.py -f pasar.txt
+$
+$ ./5b.py 
+HOLA
+GENTE
+DE
+COMPU2
