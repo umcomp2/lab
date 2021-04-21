@@ -64,25 +64,27 @@ def get_rgb_position(color):
     return position
 
 
-def create_ppm_p6(color, file_path):
-
-    rgb_filtered = None
-    header_ppm = None
+def create_ppm_p6(color, file_path, color_values):
     with open(file_path, 'rb') as f:
         header_data = get_header_data(f)
-        header_ppm = create_header_ppm(header_data)
-        data = f.read()
-
-        position = get_rgb_position(color)
-        rgb = [list(data[i:i + 3]) for i in range(0, len(data), 3)]
-        for x in rgb:
-            for index in range(len(x)):
-                if index != position:
-                    x[index] = 0
-
-        rgb_filtered = [item for sublist in rgb for item in sublist]
-
     f.close()
+
+    header_ppm = create_header_ppm(header_data)
+
+    count_size = header_data.get('width') * header_data.get('height')
+    data = []
+    for i in range(count_size):
+        data.append((0, 0, 0))
+
+    position = get_rgb_position(color)
+
+    rgb = [list(data[i]) for i in range(0, len(data), 1)]
+
+    for i, x in enumerate(rgb):
+        for index in range(len(x)):
+            if index == position:
+                x[index] = int(color_values[i])
+    rgb_filtered = [item for sublist in rgb for item in sublist]
 
     if rgb_filtered and header_ppm:
         filename = file_path.split('.')[0]
@@ -94,8 +96,8 @@ def create_ppm_p6(color, file_path):
 
 
 def parse_color(child_pipe, color, file_path):
-    name_original_ppm = file_path.split('.')[0]
-    filename = color[0] + '_' + name_original_ppm + '.txt'
+    original_name_ppm = file_path.split('.')[0]
+    filename = color[0] + '_' + original_name_ppm + '.txt'
 
     values = []
     while child_pipe.poll():
@@ -118,7 +120,7 @@ def parse_color(child_pipe, color, file_path):
 
     f.close()
 
-    create_ppm_p6(color, file_path)
+    create_ppm_p6(color, file_path, color_values)
 
 
 if __name__ == '__main__':
