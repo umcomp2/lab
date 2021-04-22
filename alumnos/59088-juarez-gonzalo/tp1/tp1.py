@@ -299,7 +299,7 @@ if __name__ == "__main__":
 
     c_lock = mp.Lock()
     c_condvar = mp.Condition(c_lock)
-    c_count = mp.sharedctypes.Value('i', 0, lock=False)
+    c_count = Value('i', 0, lock=False)
 
     os.lseek(fd, 0, os.SEEK_SET)
     rb = os.read(fd, INIT_RSIZE)
