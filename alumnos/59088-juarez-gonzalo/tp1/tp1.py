@@ -158,7 +158,6 @@ def consumer(rwsize, r_offset, fname):
         c_barrier.wait()
         ### FIN DE MODIFICACION AL PRODUCER-CONSUMER ESTANDAR ###
 
-        # por que no antes de c_lock?? Para señalar empty_sem y dejarlo en el estado inicial
         if not leftbytes:
             break
 
