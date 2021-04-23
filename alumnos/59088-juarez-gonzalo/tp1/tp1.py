@@ -88,9 +88,7 @@ nonempty_sem = None # shm tiene contenido
 #   no puede empezar a leer un bloque B sin esperar a que el resto
 #   de los consumers haya terminado de leer el bloque A
 
-c_count = 0         # indica la cantidad de consumers que ya terminaron de leer shm
-c_lock = None      # lock sobre variable c_count
-c_condvar = None   # variable condicional que trabaja con read_lock
+c_barrier = None
 
 # =============== Algoritmo  ================
 # Producer-Consumer modificado para sincronizar lectura de bloques entre consumers
@@ -109,6 +107,11 @@ def write_hist(col_count, fname):
     os.write(hist_fd, hist)
     os.close(hist_fd)
 
+def empty_sem_up():
+    global empty_sem
+    empty_sem.release()
+
+
 # @rwsize:      Cantidad de bytes a leer indicadas por input del usuario
 # @r_offset:    Offset del color que corresponde a este consumer
 # @fname:       Nombre del archivo original
@@ -123,9 +126,7 @@ def consumer(rwsize, r_offset, fname):
     global empty_sem
     global nonempty_sem
 
-    global c_count
-    global c_lock
-    global c_condvar
+    global c_barrier
 
     leftbytes = hdr["hdr_ops"]["calc_totalbytes"](hdr)
     col_count = {i: 0 for i in range(hdr["maxcolor"] + 1)}
@@ -154,19 +155,7 @@ def consumer(rwsize, r_offset, fname):
         leftbytes -= len(wb)
 
         ### COMIENZO DE MODIFICACION AL PRODUCER-CONSUMER ESTANDAR ###
-        c_lock.acquire()
-
-        c_count.value += 1
-        if c_count.value != NPROD:  # se asegura que todos hayan llegado hasta acá antes de seguir
-            c_condvar.wait()
-
-        c_count.value -= 1
-
-        if c_count.value == 0:         # el ultimo consumer señala semaforo de buffer vacio (para producer)
-            empty_sem.release()
-
-        c_condvar.notify()            # si todos señalan solo se pierde la ultima señal ??? jajsjs
-        c_lock.release()
+        c_barrier.wait()
         ### FIN DE MODIFICACION AL PRODUCER-CONSUMER ESTANDAR ###
 
         # por que no antes de c_lock?? Para señalar empty_sem y dejarlo en el estado inicial
@@ -297,9 +286,7 @@ if __name__ == "__main__":
     empty_sem = mp.Semaphore(1)
     nonempty_sem = mp.Semaphore(0)
 
-    c_lock = mp.Lock()
-    c_condvar = mp.Condition(c_lock)
-    c_count = Value('i', 0, lock=False)
+    c_barrier = mp.Barrier(NCHILD, empty_sem_up)
 
     os.lseek(fd, 0, os.SEEK_SET)
     rb = os.read(fd, INIT_RSIZE)
