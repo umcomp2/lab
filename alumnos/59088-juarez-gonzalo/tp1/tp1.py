@@ -33,7 +33,7 @@ def btoi(b_arr):
         ret = ret * 10 + (b_arr[i] - ord('0'))
     return ret
 
-# =============== header ================
+# =============== hdr ================
 #
 # Header sin comentarios es de la forma:
 #                MAGIC\nCOLS ROWS\nMAX_BYTE_VAL\n
@@ -68,7 +68,7 @@ hdr = {
     "hdr_ops": hdr_ops
 }
 
-# =============== shm sync ================
+# =============== shm & shm sync ================
 #
 #   Sincronizacion necesaria en algoritmo producer-consumer estandar
 
@@ -83,7 +83,7 @@ nonempty_sem = None # shm tiene contenido
 
 c_barrier = None
 
-# =============== PRODUCER-CONSUMER  ================
+# =============== PRODUCER-CONSUMER ================
 #
 #   NOTA: Producer es proceso padre de consumers
 
@@ -145,7 +145,7 @@ def consumer(rwsize, r_offset, fname):
         os.write(out_fd, wb)
         leftbytes -= len(wb)
 
-        # llama empty_sem_up() 1 vez al finalizar .wait()
+        # llama empty_sem_up() 1 cuando todos los producers terminan .wait()
         c_barrier.wait()
 
         if not leftbytes:
@@ -196,18 +196,22 @@ def usagendie():
 
 # @argv:    lista de argumentos
 def parse_args(argv):
-    opt, args = getopt.getopt(argv, "s:f:h", ["size=", "file=", "help"])
+    opt, args = getopt.getopt(argv, "s:f:", ["size=", "file="])
     fname = ""
     rwsize = 0
 
     for o in opt:
         oname = o[0].replace("-","")
+
         if oname[0] == "s":
             rwsize = int(o[1])
-        elif oname[0] == "f":
+            continue
+
+        if oname[0] == "f":
             fname = o[1]
-        elif oname[0] == "h":
-            usagendie()
+            continue
+
+        usagendie()
 
     if not fname or not rwsize:
         raise ValueError("Faltan parametros")
@@ -234,12 +238,13 @@ def parse_header(rb):
 
         if rb[i] == ord('#'):
             in_cmmnt |= 1
+            continue
 
-        elif rb[i] == ord('\n') and in_cmmnt:
+        if rb[i] == ord('\n') and in_cmmnt:
             in_cmmnt &= 0
             continue
 
-        elif rb[i] == ord('\n'):
+        if rb[i] == ord('\n'):
             nls += 1
 
         if not in_cmmnt:
