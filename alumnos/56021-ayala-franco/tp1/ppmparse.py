@@ -18,7 +18,7 @@ class PPMParser():
             try:
                 pixels.append((c[i], c[i+1], c[i+2]))
             except:
-                continue
+                pixels.append((None, None, None))
         os.lseek(self.filefd, 0, os.SEEK_SET)
         return pixels
 
@@ -89,14 +89,4 @@ class PPMParser():
                 found = True 
         return blankSpacePosition+1
         """
-"""
-parser = PPMParser("/home/franco/Documents/computacion/lab/tps/tp1/yacht.ppm", 10)
-print(parser.metadata)
-print(parser.metaDataEnd)
-parser = PPMParser("/home/franco/Documents/computacion/lab/tps/tp1/tux.ppm", 10)
-print(parser.metadata)
-print(parser.metaDataEnd)
-parser = PPMParser("/home/franco/Documents/computacion/lab/tps/tp1/dog.ppm", 10)
-print(parser.metadata)
-print(parser.metaDataEnd)
-"""
+

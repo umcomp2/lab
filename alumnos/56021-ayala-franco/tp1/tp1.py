@@ -6,13 +6,11 @@ import ppmparse
 import matplotlib.pyplot as plot
 
 def makeHistogram(color, ipc):
-    colors = {"red": 0, "green": 1, "blue": 2}
-    color_intensities = []
-    while (pixels := ipc.get()) is not None: 
-        for pixel in pixels:
-            color_intensities.append(pixel[colors[color]])
+    values = []
+    while (value := ipc.get()) is not None: 
+       values.append(value)
     else:
-        hist = plot.hist(color_intensities, bins=255)
+        hist = plot.hist(values, bins=255)
         plot.gcf().savefig("./"+color+".png")
         plot.clf()
     exit()
@@ -38,8 +36,17 @@ child3.start()
 ppmParser = ppmparse.PPMParser(args.f, args.n)
 # pixels = ppmParser.getPixels(0)
 i = 0
-while (pixels := ppmParser.getPixels(args.n*i)) != []:
-    ipc1.put(pixels)
+while True:
+    pixels = ppmParser.getPixels(args.n*i)
+    for pixel in pixels:
+        ipc1.put(pixel[0])
+        ipc2.put(pixel[1])
+        ipc3.put(pixel[2])
+    if pixels[-1] == (None, None, None):
+        break
+    i += 1
+
+    """ipc1.put(pixels)
     ipc2.put(pixels)
     ipc3.put(pixels)
 
@@ -48,7 +55,7 @@ while (pixels := ppmParser.getPixels(args.n*i)) != []:
 else:
     ipc1.put(None)
     ipc2.put(None)
-    ipc3.put(None)
+    ipc3.put(None)"""
 
 
 """for pixel in pixels:
