@@ -16,15 +16,12 @@ INIT_RSIZE = 512            # tamaño de lectura inicial (usado para leer el hea
 
 INFONL = 3                  # total de lineas del header que aportan info en .ppm
 
-B_PER_PX = 3                # cantidad de bytes que conforman un pixel en .ppm
-NCHILD = B_PER_PX           # cantidad de hijos (NOTA: valor igual a B_PER_PX, legibilidad no)
-NPROD = NCHILD              # cantidad de producers (NOTA: idem nota NCHILD)
+NCOLORS = 3                 # cantidad de colores
+NCHILD = NCOLORS            # cantidad de hijos (NOTA: valor igual a NCOLORS, legibilidad no)
+NCONSUM = NCOLORS           # cantidad de producers (NOTA: idem nota NCHILD)
 
-FILLER_B = b"\x00\x00\x00"  # usada para extraer bytes nulos, len(FILLER_B) == B_PER_PX
-
-def PPM_ALIGN(num):
-    global B_PER_PX
-    return num // B_PER_PX * B_PER_PX if num >= B_PER_PX else B_PER_PX
+def PPM_ALIGN(num, b_per_px):
+    return num // b_per_px * b_per_px if num >= b_per_px else b_per_px
 
 # @b_arr:   bytearray
 def btoi(b_arr):
@@ -37,9 +34,6 @@ def btoi(b_arr):
 #
 # Header sin comentarios es de la forma:
 #                MAGIC\nCOLS ROWS\nMAX_BYTE_VAL\n
-#
-# La cantidad de bytes a leer sin el header como:
-#               COLS * ROWS * 3 * (MAX_BYTE_VAL+1) >> 8
 
 # @header:  diccionario hdr
 def h_calc_colorsize(header):
@@ -50,8 +44,7 @@ def h_calc_colorsize(header):
 
 # @header:  diccionario hdr
 def h_calc_totalbytes(header):
-    global B_PER_PX
-    return header["hdr_ops"]["calc_colorsize"](header) * B_PER_PX * header["cols"] * header["rows"]
+    return header["hdr_ops"]["calc_colorsize"](header) * header["b_per_px"] * header["cols"] * header["rows"]
 
 hdr_ops = {
     "calc_totalbytes": h_calc_totalbytes,
@@ -61,11 +54,17 @@ hdr_ops = {
 hdr = {
     "content": "",
     "f_idx": "",
+
     "magic": "",
     "cols": 0,
     "rows": 0,
+
     "maxcolor": 0,
-    "hdr_ops": hdr_ops
+    "b_per_px": 0,
+    "b_per_color": 0,
+    "filler_b": b"",
+
+    "hdr_ops": hdr_ops,
 }
 
 # =============== shm & shm sync ================
@@ -87,14 +86,14 @@ c_barrier = None
 #
 #   NOTA: Producer es proceso padre de consumers
 
-# @col_count:   diccionario con la cantidad de apariciones de un color mapeadas al valor numerico de ese color en el .ppm
-def write_hist(col_count, fname):
+# @color_count:   diccionario con la cantidad de apariciones de un color mapeadas al valor numerico de ese color en el .ppm
+def write_hist(color_count, fname):
     hist = bytearray()
     hist_fname = fname + ".hist"
     hist_fd = os.open(hist_fname, os.O_CREAT | os.O_TRUNC | os.O_WRONLY, stat.S_IWUSR | stat.S_IRUSR)
 
-    for key in col_count.keys():
-        hist += bytes("%d:\t%d\n" % (key, col_count[key]), "utf8")
+    for key in color_count.keys():
+        hist += b"%d:\t%d\n" % (int.from_bytes(key, byteorder="big"), color_count[key])
 
     os.write(hist_fd, hist)
     os.close(hist_fd)
@@ -104,13 +103,9 @@ def empty_sem_up():
     empty_sem.release()
 
 # @rwsize:      cantidad de bytes a leer indicadas por input del usuario
-# @r_offset:    offset del color que corresponde a este consumer
+# @c_offset:    offset del color que corresponde a este consumer, sus valores van de 0-2 (r, g, b)
 # @fname:       nombre del archivo original
-def consumer(rwsize, r_offset, fname):
-    global B_PER_PX
-    global NPROD
-    global FILLER_B
-
+def consumer(rwsize, c_offset, fname):
     global hdr
 
     global shm
@@ -119,14 +114,17 @@ def consumer(rwsize, r_offset, fname):
 
     global c_barrier
 
-    leftbytes = hdr["hdr_ops"]["calc_totalbytes"](hdr)
-    col_count = {i: 0 for i in range(hdr["maxcolor"] + 1)}
-
-    out_fname = "h%d-" % (r_offset + 1)
+    out_fname = "h%d-" % (c_offset + 1)
     out_fname += fname
 
     out_fd = os.open(out_fname, os.O_CREAT | os.O_TRUNC | os.O_WRONLY, stat.S_IWUSR | stat.S_IRUSR)
     os.write(out_fd, hdr["content"])
+
+    leftbytes = hdr["hdr_ops"]["calc_totalbytes"](hdr)
+    color_count = {i.to_bytes(1, byteorder="big"): 0 for i in range(hdr["maxcolor"] + 1)}
+
+    s_offset = c_offset * hdr["b_per_color"]
+    e_offset = s_offset + hdr["b_per_color"]
 
     while leftbytes:
         nonempty_sem.acquire()
@@ -136,12 +134,11 @@ def consumer(rwsize, r_offset, fname):
         rb = shm.read(n)
         wb = bytearray()
 
-        for i in range(0, n, B_PER_PX):
-            color_int = rb[i + r_offset]
-            color_byte = color_int.to_bytes(1, byteorder="big")
+        for i in range(0, n, hdr["b_per_px"]):
+            color_byte = rb[i + s_offset: i + e_offset]
 
-            col_count[color_int] = col_count[color_int] + 1
-            wb += FILLER_B[:r_offset] + color_byte + FILLER_B[r_offset + 1:]
+            color_count[color_byte] = color_count[color_byte] + 1
+            wb += hdr["filler_b"][:s_offset] + color_byte + hdr["filler_b"][e_offset:]
 
         os.write(out_fd, wb)
         leftbytes -= len(wb)
@@ -150,13 +147,13 @@ def consumer(rwsize, r_offset, fname):
         c_barrier.wait()
 
     os.close(out_fd)
-    write_hist(col_count, out_fname)
+    write_hist(color_count, out_fname)
 
 # @fd:          file descriptor del archivo siendo leído
 # @rwsize:      cantidad de bytes a leer indicadas por input del usuario
 def producer(fd, rwsize):
     global EOF
-    global NPROD
+    global NCONSUM
 
     global hdr
 
@@ -174,7 +171,7 @@ def producer(fd, rwsize):
         shm.seek(0, os.SEEK_SET)
         shm.write(rb)
 
-        for i in range(NPROD):
+        for i in range(NCONSUM):
             nonempty_sem.release()
 
 # =============== PARSE ARGS & HEADER ================
@@ -220,6 +217,7 @@ def parse_args(argv):
 # @rb:  Bytes donde se encuentra el header
 def parse_header(rb):
     global INFONL
+    global NCOLORS
     global hdr
 
     hdr_no_cmmnt = bytearray()
@@ -261,14 +259,20 @@ def parse_header(rb):
     hdr["rows"] = btoi(hdr["rows"])
     hdr["maxcolor"] = btoi(hdr_fields[2])
 
+    hdr["b_per_px"] = hdr["hdr_ops"]["calc_colorsize"](hdr) * NCOLORS
+    hdr["b_per_color"] = hdr["b_per_px"] // NCOLORS
+    hdr["filler_b"] = b"\x00" * hdr["b_per_px"]
+
 # =============== MAIN ================
 
 if __name__ == "__main__":
     fname, rwsize = parse_args(sys.argv[1:])
 
     fd = os.open(fname, os.O_RDONLY)
+    rb = os.read(fd, INIT_RSIZE)
+    parse_header(rb)
 
-    rwsize = PPM_ALIGN(rwsize)
+    rwsize = PPM_ALIGN(rwsize, hdr["b_per_px"])
 
     shm = mmap.mmap(-1, rwsize)
     empty_sem = mp.Semaphore(1)
@@ -276,9 +280,6 @@ if __name__ == "__main__":
 
     c_barrier = mp.Barrier(NCHILD, empty_sem_up)
 
-    os.lseek(fd, 0, os.SEEK_SET)
-    rb = os.read(fd, INIT_RSIZE)
-    parse_header(rb)
 
     pool = []
     for i in range(NCHILD):
