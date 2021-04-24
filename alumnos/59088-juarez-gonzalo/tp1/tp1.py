@@ -8,7 +8,7 @@ import multiprocessing as mp
 from multiprocessing.sharedctypes import Value
 import mmap
 
-# ================ Ayuda general a lo largo del programa ================
+# ================ MISC ================
 
 EOF = b""
 
@@ -22,35 +22,25 @@ NPROD = NCHILD              # cantidad de producers (NOTA: idem nota NCHILD)
 
 FILLER_B = b"\x00\x00\x00"  # usada para extraer bytes nulos, len(FILLER_B) == B_PER_PX
 
-# Alinea un numero contra B_PER_PX, B_PER_PX no es potencia de 2 asi que no bitwise :(
-# @size:    tamaño numerico
-def PPM_ALIGN(size):
+def PPM_ALIGN(num):
     global B_PER_PX
-    return size // B_PER_PX * B_PER_PX if size >= B_PER_PX else B_PER_PX
+    return num // B_PER_PX * B_PER_PX if num >= B_PER_PX else B_PER_PX
 
-# Transforma un numero representado en un bytearray al datatype Number
-#   Eg.: b"\x32\x35\x35" -> 255
-# @b_arr:   representacion de numero en bytearray.
+# @b_arr:   bytearray
 def btoi(b_arr):
     ret = 0
     for i in range(len(b_arr)):
         ret = ret * 10 + (b_arr[i] - ord('0'))
     return ret
 
-# =============== Diccionario para header y funciones correspondientes ================
-# Header sin comentarios es de la forma: MAGIC\nCOLS ROWS\nMAX_BYTE_VAL\n
+# =============== header ================
+#
+# Header sin comentarios es de la forma:
+#                MAGIC\nCOLS ROWS\nMAX_BYTE_VAL\n
+#
 # La cantidad de bytes a leer sin el header como:
 #               COLS * ROWS * 3 * (MAX_BYTE_VAL+1) >> 8
 
-# NOTA: Podría ser una clase pero el resto del código no es OO
-#       y para no mezclar la cuestión meh use referencia a objetos,
-#       y que las funciones son objetos en python para algo parecido
-#       al OO en C con un struct con punteros a funciones (virtual table?).
-#       Use diccionario en lugar de struct, que es mas bien una hash table
-#       pero bueno es lo que hay. Al menos el tiempo de acceso teoricamente es O(1) (?
-
-# Calcula la cantidad de bytes necesarios para el maximo valor
-# posible en un color de archivo .ppm
 # @header:  diccionario hdr
 def h_calc_colorsize(header):
     maxval = header["maxcolor"]
@@ -58,7 +48,6 @@ def h_calc_colorsize(header):
         return 2
     return 1
 
-# Calcula la cantidad total de bytes (sin header) que hay en un archivo .ppm
 # @header:  diccionario hdr
 def h_calc_totalbytes(header):
     global B_PER_PX
@@ -79,28 +68,28 @@ hdr = {
     "hdr_ops": hdr_ops
 }
 
-# =============== Sincronizacion sobre la memoria compartida ================
+# =============== shm sync ================
+#
 #   Sincronizacion necesaria en algoritmo producer-consumer estandar
 
 shm = None          # el buffer compartido
 empty_sem = None    # shm esta vacio
 nonempty_sem = None # shm tiene contenido
 
-# =============== Sincronizacion sobre consumers ===============
-#   Un consumer que haya terminado con el bloque A,
-#   no puede empezar a leer un bloque B sin esperar a que el resto
-#   de los consumers haya terminado de leer el bloque A
+# =============== consumers sync ===============
+#
+#   Sincronizacion necesaria para que todos los consumers
+#   lean bloque a bloque a la par
 
 c_barrier = None
 
-# =============== Algoritmo  ================
-# Producer-Consumer modificado para sincronizar lectura de bloques entre consumers
-# Nota: Producer es el proceso padre de los hijos. Hijos son los consumers
+# =============== PRODUCER-CONSUMER  ================
+#
+#   NOTA: Producer es proceso padre de consumers
 
-# Escribe el histograma que corresponde a la consigna
-# @col_count:   Diccionario con la cantidad de apariciones de un color mapeadas al valor numerico de ese color en el .ppm
+# @col_count:   diccionario con la cantidad de apariciones de un color mapeadas al valor numerico de ese color en el .ppm
 def write_hist(col_count, fname):
-    hist = bytearray()      # si esto fuera a parar al stack entonces es media nefasta la cuestion. pero es python
+    hist = bytearray()
     hist_fname = fname + ".hist"
     hist_fd = os.open(hist_fname, os.O_CREAT | os.O_TRUNC | os.O_WRONLY, stat.S_IWUSR | stat.S_IRUSR)
 
@@ -114,10 +103,9 @@ def empty_sem_up():
     global empty_sem
     empty_sem.release()
 
-
-# @rwsize:      Cantidad de bytes a leer indicadas por input del usuario
-# @r_offset:    Offset del color que corresponde a este consumer
-# @fname:       Nombre del archivo original
+# @rwsize:      cantidad de bytes a leer indicadas por input del usuario
+# @r_offset:    offset del color que corresponde a este consumer
+# @fname:       nombre del archivo original
 def consumer(rwsize, r_offset, fname):
     global B_PER_PX
     global NPROD
@@ -144,11 +132,11 @@ def consumer(rwsize, r_offset, fname):
     while True:
 
         shm.seek(0, os.SEEK_SET)
-        rsize = rwsize if rwsize < leftbytes else leftbytes
-        rb = shm.read(rsize)
+        n = rwsize if rwsize < leftbytes else leftbytes
+        rb = shm.read(n)
         wb = bytearray()
 
-        for i in range(0, rsize, B_PER_PX):
+        for i in range(0, n, B_PER_PX):
             color_int = rb[i + r_offset]
             col_count[color_int] = col_count[color_int] + 1
             color_byte = color_int.to_bytes(1, byteorder="big")
@@ -157,9 +145,8 @@ def consumer(rwsize, r_offset, fname):
         os.write(out_fd, wb)
         leftbytes -= len(wb)
 
-        ### COMIENZO DE MODIFICACION AL PRODUCER-CONSUMER ESTANDAR ###
+        # llama empty_sem_up() 1 vez al finalizar .wait()
         c_barrier.wait()
-        ### FIN DE MODIFICACION AL PRODUCER-CONSUMER ESTANDAR ###
 
         if not leftbytes:
             break
@@ -170,7 +157,7 @@ def consumer(rwsize, r_offset, fname):
     write_hist(col_count, out_fname)
 
 # @fd:          file descriptor del archivo siendo leído
-# @rwsize:      Cantidad de bytes a leer indicadas por input del usuario
+# @rwsize:      cantidad de bytes a leer indicadas por input del usuario
 def producer(fd, rwsize):
     global EOF
     global NPROD
@@ -184,18 +171,19 @@ def producer(fd, rwsize):
     rb = b""
     b_count = 0
 
-    os.lseek(fd, hdr["f_idx"], os.SEEK_SET) # comenzar lectura en 1er byte post-header
+    # leer a partir del 1er byte post-header
+    os.lseek(fd, hdr["f_idx"], os.SEEK_SET)
     while (rb := os.read(fd, rwsize)) != EOF:
         b_count += len(rb)
-        empty_sem.acquire()         # buffer vacio (y/o consumido), escribir
+        empty_sem.acquire()
 
         shm.seek(0, os.SEEK_SET)
         shm.write(rb)
 
         for i in range(NPROD):
-            nonempty_sem.release()  # buffer con contenido, señalar para consumers
+            nonempty_sem.release()
 
-# =============== Parseo de argumentos y header ================
+# =============== PARSE ARGS & HEADER ================
 
 def usagendie():
     h = "usage: %s [-h] (-s|--size) SIZE (-f|--file) FILE\n\n" % __file__
@@ -206,7 +194,7 @@ def usagendie():
     sys.stdout.write(h)
     sys.exit(0)
 
-# @argv:    Lista de argumentos
+# @argv:    lista de argumentos
 def parse_args(argv):
     opt, args = getopt.getopt(argv, "s:f:h", ["size=", "file=", "help"])
     fname = ""
@@ -246,9 +234,11 @@ def parse_header(rb):
 
         if rb[i] == ord('#'):
             in_cmmnt |= 1
+
         elif rb[i] == ord('\n') and in_cmmnt:
             in_cmmnt &= 0
             continue
+
         elif rb[i] == ord('\n'):
             nls += 1
 
@@ -263,19 +253,16 @@ def parse_header(rb):
         raise ValueError("Demasiados comentarios en el header, header superior a %d bytes" % INIT_RSIZE)
 
     hdr_fields = hdr_no_cmmnt.split(b'\n')
-
     hdr["content"] = rb[:f_idx]
     hdr["f_idx"] = f_idx
-
-    hdr["magic"] = hdr_fields[0].decode()
+    hdr["magic"] = hdr_fields[0]
 
     hdr["cols"], hdr["rows"] = hdr_fields[1].split(b" ")
     hdr["cols"] = btoi(hdr["cols"])
     hdr["rows"] = btoi(hdr["rows"])
-
     hdr["maxcolor"] = btoi(hdr_fields[2])
 
-# =============== Main ================
+# =============== MAIN ================
 
 if __name__ == "__main__":
     fname, rwsize = parse_args(sys.argv[1:])
@@ -292,9 +279,7 @@ if __name__ == "__main__":
 
     os.lseek(fd, 0, os.SEEK_SET)
     rb = os.read(fd, INIT_RSIZE)
-
     parse_header(rb)
-
 
     pool = []
     for i in range(NCHILD):
