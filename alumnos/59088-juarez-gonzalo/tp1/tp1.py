@@ -53,7 +53,10 @@ def btoi(b_arr):
 # posible en un color de archivo .ppm
 # @header:  diccionario hdr
 def h_calc_colorsize(header):
-    return (header["maxcolor"] + 1) >> 8
+    maxval = header["maxcolor"]
+    if maxval & 0xff00:
+        return 2
+    return 1
 
 # Calcula la cantidad total de bytes (sin header) que hay en un archivo .ppm
 # @header:  diccionario hdr
