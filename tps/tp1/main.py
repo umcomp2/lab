@@ -6,11 +6,7 @@ import os
 import sys
 import mmap
 import multiprocessing as mp
-
-# TODO: Funciones de procesos hijos
-# TODO: RegEx https://regex101.com/r/oOpHlJ/1 (#.*\n)*(P6|P3)(\n|\s){0,2}(#.*\n)*(\d+)(\n|\s){0,2}(#.*\n)*(\d+)(\n|\s){0,2}(#.*\n)*(255|1023)(\n|\s){0,2}(#.*\n)*
-
-# EXTRA: Ver como agregar filtro de color
+import re
 
 
 STDIN = 0
@@ -50,24 +46,27 @@ def open_image(path: str):
 #   @img: Imagen mapeada a memoria
 def seek_payload(m_space: mmap):
     cursor = 0
-    format_flag = False
-    try:
-        while True:
-            buff = m_space.readline()
+    header = ''
+    regex = r"(#.*\n)*(P6|P3)(\n|\s){0,2}(#.*\n)*(\d+)(\n|\s){0,2}(#.*\n)*(\d+)(\n|\s){0,2}(#.*\n)*(255|1023)(\n|\s){0,2}(#.*\n)*"
+    while not re.match(regex, header, re.MULTILINE):
+        try:
+            header += str(m_space.readline(), encoding='utf-8')
+            
+            # Esta condicion se cumple cuando se llego al final del la memoria
+            # mapeada y no se es capaz de avanzar.
+            if cursor == m_space.tell():
+                raise errores.FormatIdentifierNotFound
             cursor = m_space.tell()
-            if b'P6' in buff:
-                format_flag = True
-            if buff == b'255\n':
-                break
-        if not format_flag:
-            raise errores.FormatIdentifierNotFound
-    
-    except errores.FormatIdentifierNotFound:
-        print(f'El archivo no posee un identificador de formato PPM')
-        sys.exit(1)
-    
 
-    return cursor
+        except errores.FormatIdentifierNotFound:
+            print("El archivo no contiene la cabecera de una archivo PPM")
+            sys.exit(1)
+
+        except Exception as e:
+            print(f'Error inesperado leyendo el archivo. Error {e}')
+            sys.exit(1)
+
+    return cursor, header
 
 
 # Funcion encargada de leer por chunks el archivo indicado
@@ -82,7 +81,6 @@ def read_by_chunks(fd: int, start: int, chunk_sz: int, pipe_arr: list):
         for i in pipe_arr:
             i.send(chunk)
         if len(chunk) < chunk_sz:
-           print('fin envio')
            for i in pipe_arr:
                 i.send(EOF)
            break
@@ -92,18 +90,24 @@ def read_by_chunks(fd: int, start: int, chunk_sz: int, pipe_arr: list):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--file', metavar='FILE',
-                        help='Archivo a procesar')
-    parser.add_argument('-s', '--size', metavar='SIZE',
-                        help='Bloque de lectura', type=int)
+    parser.add_argument('-f', '--file',
+                        metavar='FILE',
+                        help='Archivo a procesar',
+                        required=True)
+    parser.add_argument('-s', '--size',
+                        metavar='SIZE',
+                        help='Bloque de lectura',
+                        type=int,
+                        required=True)
     args = parser.parse_args()
 
     # Obtener un file descriptor con manejo de errores
     fd = open_image(f'{args.file}')
 
-    # Mapear imagen a memoria y posicionarse en el payload
+    # Mapear imagen a memoria, posicionarse en el payload y obtener
+    # el header
     m_img = mmap.mmap(fd, 0)
-    inicio_pl = seek_payload(m_img)
+    inicio_pl, header = seek_payload(m_img)
 
     # Crear histogramers y pipes para IPC
     pipes_for_parent = list()
@@ -111,21 +115,24 @@ if __name__ == "__main__":
     for i in range(CHILDNO):
         parent, child = mp.Pipe()
         pipes_for_parent.append(parent)
-        histogramer_list.append(Histogramer(RGB[i], child, args.size, args.file))
+        histogramer_list.append(Histogramer(RGB[i], child, args.size, args.file, header))
 
-    # TEST: Crear hijo que lee rojo
+    # Iniciar hijos
     for i in histogramer_list:
         i.start()
     
-    # Leer de a chunks especificados por argumento
+    # Leer de a chunks (size especificado por argumento)
     read_by_chunks(fd, inicio_pl, args.size, pipes_for_parent)
     
-    
+    # Esperar a los hijos
     for i in histogramer_list:
         i.join()
 
-    print('exito!')
+    # Tareas del hogar
+    child.close()
+    for i in pipes_for_parent:
+        i.close()
+    m_img.close()
+    os.close(fd)
 
-
-    
-    
+    print('Se generaron correctamente los 3 histogramas')
