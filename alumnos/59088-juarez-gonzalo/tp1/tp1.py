@@ -128,18 +128,19 @@ def consumer(rwsize, r_offset, fname):
     out_fd = os.open(out_fname, os.O_CREAT | os.O_TRUNC | os.O_WRONLY, stat.S_IWUSR | stat.S_IRUSR)
     os.write(out_fd, hdr["content"])
 
-    nonempty_sem.acquire()
-    while True:
+    while leftbytes:
+        nonempty_sem.acquire()
 
-        shm.seek(0, os.SEEK_SET)
         n = rwsize if rwsize < leftbytes else leftbytes
+        shm.seek(0, os.SEEK_SET)
         rb = shm.read(n)
         wb = bytearray()
 
         for i in range(0, n, B_PER_PX):
             color_int = rb[i + r_offset]
-            col_count[color_int] = col_count[color_int] + 1
             color_byte = color_int.to_bytes(1, byteorder="big")
+
+            col_count[color_int] = col_count[color_int] + 1
             wb += FILLER_B[:r_offset] + color_byte + FILLER_B[r_offset + 1:]
 
         os.write(out_fd, wb)
@@ -147,11 +148,6 @@ def consumer(rwsize, r_offset, fname):
 
         # llama empty_sem_up() 1 cuando todos los producers terminan .wait()
         c_barrier.wait()
-
-        if not leftbytes:
-            break
-
-        nonempty_sem.acquire()
 
     os.close(out_fd)
     write_hist(col_count, out_fname)
@@ -169,12 +165,10 @@ def producer(fd, rwsize):
     global nonempty_sem
 
     rb = b""
-    b_count = 0
 
     # leer a partir del 1er byte post-header
     os.lseek(fd, hdr["f_idx"], os.SEEK_SET)
     while (rb := os.read(fd, rwsize)) != EOF:
-        b_count += len(rb)
         empty_sem.acquire()
 
         shm.seek(0, os.SEEK_SET)
