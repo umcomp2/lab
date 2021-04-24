@@ -8,7 +8,6 @@ import mmap
 import multiprocessing as mp
 import re
 
-
 STDIN = 0
 STDOUT = 1
 STDERR = 2
@@ -16,6 +15,7 @@ EOF = b''
 CHILDNO = 3
 RGB = [0, 1, 2]
 
+# ====================== PPM ANALYZER ======================
 
 # Funcion encargada de abrir el fd para la imagen .ppm
 #   @path: Path de la imagen a procesar
