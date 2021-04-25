@@ -121,7 +121,10 @@ def consumer(rwsize, c_offset, fname):
     os.write(out_fd, hdr["content"])
 
     leftbytes = hdr["hdr_ops"]["calc_totalbytes"](hdr)
-    color_count = {i.to_bytes(1, byteorder="big"): 0 for i in range(hdr["maxcolor"] + 1)}
+    color_count = {}
+    for i in range(hdr["maxcolor"] + 1):
+        key = i.to_bytes(hdr["b_per_color"], byteorder="big")
+        color_count[key] = 0
 
     s_offset = c_offset * hdr["b_per_color"]
     e_offset = s_offset + hdr["b_per_color"]
