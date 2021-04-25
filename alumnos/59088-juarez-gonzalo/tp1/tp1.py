@@ -140,7 +140,7 @@ def consumer(rwsize, c_offset, fname):
         for i in range(0, n, hdr["b_per_px"]):
             color_byte = rb[i + s_offset: i + e_offset]
 
-            color_count[color_byte] = color_count[color_byte] + 1
+            color_count[color_byte] += 1
             wb += hdr["filler_b"][:s_offset] + color_byte + hdr["filler_b"][e_offset:]
 
         os.write(out_fd, wb)
