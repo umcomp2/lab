@@ -61,7 +61,6 @@ hdr = {
 
     "maxcolor": 0,
     "b_per_px": 0,
-    "filler_b": b"",
 
     "hdr_ops": hdr_ops,
 }
@@ -126,6 +125,7 @@ def consumer(rwsize, c_offset, fname):
         key = i.to_bytes(colorsize, byteorder="big")
         color_count[key] = 0
 
+    null_px = b"\x00" * hdr["b_per_px"]
     s_offset = c_offset * colorsize
     e_offset = s_offset + colorsize
 
@@ -141,7 +141,7 @@ def consumer(rwsize, c_offset, fname):
             color_byte = rb[i + s_offset: i + e_offset]
 
             color_count[color_byte] += 1
-            wb += hdr["filler_b"][:s_offset] + color_byte + hdr["filler_b"][e_offset:]
+            wb += null_px[:s_offset] + color_byte + null_px[e_offset:]
 
         os.write(out_fd, wb)
         leftbytes -= len(wb)
@@ -263,7 +263,6 @@ def parse_header(rb):
     hdr["maxcolor"] = btoi(hdr_fields[2])
 
     hdr["b_per_px"] = hdr["hdr_ops"]["calc_colorsize"](hdr) * NCOLORS
-    hdr["filler_b"] = b"\x00" * hdr["b_per_px"]
 
 # =============== MAIN ================
 
