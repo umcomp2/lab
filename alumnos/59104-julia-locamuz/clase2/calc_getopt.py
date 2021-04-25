@@ -28,16 +28,17 @@ def calc(opciones, argumentos):
         elif opciones[0][0] == '-h':
             print('''Usage: ./calculo.py [s|r|m|d] arg1 arg2  
 
-Mandatory ad excluyent arguments are [s|r|m|d]
-  -s         suma arg1 + arg2
-  -r         resta arg1 + arg2
-  -m         multiplica arg1 * arg2
-  -d         divide arg1 / arg2 
+                        Mandatory ad excluyent arguments are [s|r|m|d]
+                        -s         suma arg1 + arg2
+                        -r         resta arg1 + arg2
+                        -m         multiplica arg1 * arg2
+                        -d         divide arg1 / arg2 
 
-type  value:
-   int
-   float
-   real ''')
+                        type  value:
+                        int
+                        float
+                        real 
+                ''')
         else: 
             raise ValueError
 

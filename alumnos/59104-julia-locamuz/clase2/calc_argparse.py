@@ -15,31 +15,23 @@ args = parser.parse_args()
 print(args.nro1)
 print(args.nro2)
 
-def main():
-    try:
-        if args.s: 
-            print('suma is turned on')
-            print(int(args.nro1) + int(args.nro2))
+if args.s: 
+    print('suma is turned on')
+    print(int(args.nro1) + int(args.nro2))
 
 
-        if args.r: 
-            print('resta is turned on')
-            print(int(args.nro1) - int(args.nro2))
+if args.r: 
+    print('resta is turned on')
+    print(int(args.nro1) - int(args.nro2))
 
 
-        if args.m: 
-            print('multiplicacion is turned on')
-            print(int(args.nro1) * int(args.nro2))
+if args.m: 
+    print('multiplicacion is turned on')
+    print(int(args.nro1) * int(args.nro2))
 
 
-        if args.d: 
-            print('division is turned on')
-            print(int(args.nro1) / int(args.nro2))
-
-    except Exception as exx: 
-        print("argumentos no validos")
-        print(exx)
+if args.d: 
+    print('division is turned on')
+    print(int(args.nro1) / int(args.nro2))
 
 
-if __name__ == '__main__':
-    main()
