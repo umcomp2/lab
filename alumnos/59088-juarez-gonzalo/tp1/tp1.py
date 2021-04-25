@@ -125,9 +125,12 @@ def consumer(rwsize, c_offset, fname):
         key = i.to_bytes(colorsize, byteorder="big")
         color_count[key] = 0
 
-    null_px = b"\x00" * hdr["b_per_px"]
     s_offset = c_offset * colorsize
     e_offset = s_offset + colorsize
+
+    null_px = b"\x00" * hdr["b_per_px"]
+    prefix = null_px[:s_offset]
+    suffix = null_px[e_offset:]
 
     while leftbytes:
         nonempty_sem.acquire()
@@ -141,7 +144,7 @@ def consumer(rwsize, c_offset, fname):
             color_byte = rb[i + s_offset: i + e_offset]
 
             color_count[color_byte] += 1
-            wb += null_px[:s_offset] + color_byte + null_px[e_offset:]
+            wb += prefix + color_byte + suffix
 
         os.write(out_fd, wb)
         leftbytes -= len(wb)
