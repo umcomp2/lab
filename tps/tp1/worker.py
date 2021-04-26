@@ -23,8 +23,12 @@ class Histogramer(mp.Process):
         mod_chunk = bytes(self.header, 'utf-8')
 
         # Crear archivo y abrirlo en modo read & write
-        fd = os.open(f'{RGB[self.color]}_{self.file_name}.ppm', os.O_RDWR | os.O_CREAT)
-        
+        try:
+            fd = os.open(f'{RGB[self.color]}_{self.file_name}.ppm', os.O_RDWR | os.O_CREAT | os.O_TRUNC)
+        except Exception as e:
+            print(f'Error inesperado al generar el archivo PPM. {e}')
+            sys.exit(1)
+
         # Puntero que indica posicion de lectura actual
         cursor = 0
 

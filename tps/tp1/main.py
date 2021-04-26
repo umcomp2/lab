@@ -31,7 +31,7 @@ def open_image(path: str):
     # Manejar un par de excepciones por las dudas
     except errores.InvalidFileExtension:
         print(f'Extension de archivo invalida')
-        sys.exit()
+        sys.exit(1)
     except FileNotFoundError:
         print(f'Archivo {path} no encontrado')
         sys.exit(1)
@@ -108,14 +108,33 @@ if __name__ == "__main__":
     # el header
     m_img = mmap.mmap(fd, 0)
     inicio_pl, header = seek_payload(m_img)
+    m_img.close()
 
     # Crear histogramers y pipes para IPC
     pipes_for_parent = list()
     histogramer_list = list()
     for i in range(CHILDNO):
-        parent, child = mp.Pipe()
-        pipes_for_parent.append(parent)
-        histogramer_list.append(Histogramer(RGB[i], child, args.size, args.file, header))
+        try:
+            parent, child = mp.Pipe()
+            pipes_for_parent.append(parent)
+            histogramer_list.append(Histogramer(RGB[i], child, args.size, args.file, header))
+        except mp.ProcessError:
+            print(f'No se pudieron crear hijos')
+            # Tareas del hogar
+            child.close()
+            for i in pipes_for_parent:
+                i.close()
+            os.close(fd)
+            sys.exit(1)
+        except Exception as e:
+            print(f'Error inesperado al crear hijos o IPC. {e}')
+            # Tareas del hogar
+            child.close()
+            for i in pipes_for_parent:
+                i.close()
+            os.close(fd)
+            sys.exit(1)
+
 
     # Iniciar hijos
     for i in histogramer_list:
@@ -132,7 +151,8 @@ if __name__ == "__main__":
     child.close()
     for i in pipes_for_parent:
         i.close()
-    m_img.close()
     os.close(fd)
 
     print('Se generaron correctamente los 3 histogramas')
+
+    sys.exit(0)
