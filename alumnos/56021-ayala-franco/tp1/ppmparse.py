@@ -5,8 +5,6 @@ class PPMParser():
         self.filePath = filePath
         self.blocksize = blocksize
         self.filefd = os.open(filePath, os.O_RDONLY)
-        # self.dimensions = self.parseDimensions()
-        # self.bytesStart = self.parseBytesStart()
         self.metadata = self.parseMetaData()
         self.metaDataEnd = self.getMetaDataEnd()
 
@@ -26,7 +24,6 @@ class PPMParser():
         image = open(self.filefd)
         metadata = []
         while len(metadata) < 4:
-            # line = image.readline()
             line = str(self.getLine(), "utf-8")
             if (poundIndex := line.find("#")) != -1:
                 continue
@@ -47,46 +44,4 @@ class PPMParser():
         while (newlineIndex := c.find(b"\n")) == -1:
             c += os.read(self.filefd, 10)
         os.lseek(self.filefd, newlineIndex - len(c) + 1, os.SEEK_CUR)
-        #print(newlineIndex - len(c))
         return c[0:newlineIndex]
-
-    def parseDimensions(self):
-        c = os.read(self.filefd, 20)
-        c = c.split(b"\n")
-        for i in range(len(c)):
-            if c[i][0] == "#":
-                c.pop(i)
-        print(c)
-        c = c[1]
-        c = c.decode().split(" ")
-        os.lseek(self.filefd, 0, os.SEEK_SET) 
-        return (c[0], c[1])
-
-    def parseBytesStart(self):
-        """
-        c = os.read(self.filefd, 40)
-        for i in range(len(c)):
-            if c[i] not in [10, 32, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 80, 35]:
-                break
-
-        
-        c = str(c[0:i], "ascii")
-        print(c)
-        """
-        return 0
-
-        """
-        blankspaces = 0
-        blankSpacePosition = 0
-        found = False
-        while found is not True:
-            c = os.read(self.filefd, 20)
-            for i in range(len(c)):
-                if c[i] in (10, 32):
-                    blankspaces += 1
-                    blankSpacePosition = i
-            if blankspaces == 4:
-                found = True 
-        return blankSpacePosition+1
-        """
-
