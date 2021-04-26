@@ -1,0 +1,90 @@
+1 - Modifique el programa visto en clases calc.py utilizando el modulo getopt :
+
+Ejemplo de funcionamiento
+
+# ./calc-getopt.py -h
+Usage: ./calculo.py [s|r|m|d] arg1 arg2  
+
+Mandatory ad excluyent arguments are [s|r|m|d]
+  -s         suma arg1 + arg2
+  -r         resta arg1 + arg2
+  -m         multiplica arg1 * arg2
+  -d         divide arg1 / arg2 
+
+type  value:
+   int
+   float
+   real
+
+   -h, --help       print this help
+
+2 - Modifique el programa visto en clases calc.py utilizando el modulo argparse :
+
+Ejemplo de funcionamiento
+
+# ./calc-getopt.py -h
+Usage: ./calculo.py [s|r|m|d] -t type arg1 arg2  
+
+Mandatory ad excluyent arguments are [s|r|m|d]
+  -s, --suma         suma arg1 + arg2
+  -r, --resta        resta arg1 + arg2
+  -m, --multi        multiplica arg1 * arg2
+  -d, --divi         divide arg1 / arg2 
+  -t 		     tipo de numeros
+
+type  value:
+   int
+   float
+   real
+
+   -h, --help       print this help
+
+3 - Realice un programa que cree un hijo (usando os.fork()) y realice el promedio entre dos numeros.Utilice el módulo getopt o argparse para obtener los operandos. El programa deberá Adicionalmente debe tener la opción verbosa (-v) que muestre los argumentos ingresados y la opción help (-h) o ayuda que explique que argumentos espera el programa.
+
+Argumentos necesarios
+	-v verboso
+	-h,--help ayuda
+	-n 1er numero
+	-m 2do numero
+
+Ejemplo de funcionamiento
+
+# ./fork_argumentos_getopt.py -h
+# ./fork_argumentos_getopt.py --help 
+
+Ayuda: Los argumentos validos son -v (verboso) -n (base) -m (exponente)
+
+# ./fork_argumentos_getopt.py -v -n 2 -m 4
+
+...Modo verboso...
+Argumentos ingresados:  [('-v', ''), ('-n', '2'), ('-m', '3')]
+PID padre 14488
+Creando hijo
+PID hijo: 14489 promedio: 3 creado por: 14488
+
+
+3 - Modifique el programa anterior para poder crear múltiples hijos ingresando un argumento -c que indique la cantidad de hijos que se crearán, Los numeros no se ingresaran por argumento. En su lugar cada hijo deberá pedirlos por teclado (usando input por ej). 
+
+Ejemplo de funcionamiento
+
+# ./fork_argumentos_getopt_multiple.py -v -c 2
+
+...Modo verboso...
+Argumentos ingresados:  [('-v', ''), ('-c', '2')]
+Ingrese el 1er numero: 2
+PID hijo: 14555 2do numero: 4
+promedio 3
+Ingrese el primer numero: 10
+PID hijo: 14558 2do numero: 8 
+promedio 9
+
+4 -  Describa el funcionamiento del siguiente programa:
+
+import os
+
+while True:
+    pid = os.fork()
+    if pid == 0:
+        print (getpid())
+    else:
+        continue
