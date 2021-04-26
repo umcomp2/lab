@@ -6,8 +6,9 @@ import multiprocessing
 import re
 import os
 
-
 def child_task(pipe_father,color_child):
+    import matplotlib.pyplot as plt
+
     """
     Funcion principal hijos
     """
@@ -21,6 +22,8 @@ def child_task(pipe_father,color_child):
     print(dict(sorted(counted.items(), key=lambda item: item[1])))
     save_obj(counted,color_child)
     print(f'Termino el hijo de color: {color_child} y ID:{os.getpid()}')
+    plt.hist(pixels, bins=256, color = 'red', edgecolor='blue')
+    plt.savefig(f'hist/{color_child}.png')
 
 
 def count_elements(seq) -> dict:
