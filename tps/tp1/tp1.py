@@ -45,7 +45,7 @@ def padre(args, hijo_rojo, hijo_verde, hijo_azul):
     # Una vez finalizado el envio de la lista, el bucle while vuelve a empezar
     # y mueve el puntero hasta el ultimo byte anterior leido.
 
-    while finale is True:
+    while fin is True:
 
         archivo.seek(archivo.tell())
         texto = archivo.read(args.size)
@@ -54,7 +54,7 @@ def padre(args, hijo_rojo, hijo_verde, hijo_azul):
         for linea in texto:
             pixels.append(ord(linea))
             if (len(texto) != args.size):
-                finale = False
+                fin = False
 
         cola_r.put(pixels)
         cola_v.put(pixels)
@@ -142,16 +142,11 @@ def separador(q, primer, segundo, tercero, nombre):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(usage="\ntp1.py [-h] [-r RED] [-g GREEN] [-b BLUE] -s SIZE -f FILE")
-    parser.add_argument('-r', '--red', metavar='RED', type=float,
-                        help="Escala para rojo", default=1)
-    parser.add_argument('-g', '--green', metavar='GREEN', type=float,
-                        default=1, help="Escala para verde")
-    parser.add_argument('-b', '--blue', metavar='BLUE', type=float,
-                        default=1, help="Escala para azul")
-    parser.add_argument('-s', '--size', metavar='SIZE', type=int,
-                        default=1024, help="Bloque de lectura")
-    parser.add_argument('-f', '--file', metavar='FILE', type=str,
-                        help="archivo a procesar")
+    parser.add_argument('-r', '--red', metavar='RED', type=float,help="Escala para rojo", default=1)
+    parser.add_argument('-g', '--green', metavar='GREEN', type=float,default=1, help="Escala para verde")
+    parser.add_argument('-b', '--blue', metavar='BLUE', type=float,default=1, help="Escala para azul")
+    parser.add_argument('-s', '--size', metavar='SIZE', type=int,default=1024, help="Bloque de lectura")
+    parser.add_argument('-f', '--file', metavar='FILE', type=str,help="archivo a procesar")
     args = parser.parse_args()
     # args.size += 10
 
