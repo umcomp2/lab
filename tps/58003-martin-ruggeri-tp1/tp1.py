@@ -20,7 +20,6 @@ def prosRojo(pipe, nombre_archivo, imageInt, header):
             rojo += [r] + [0] + [0]
             rojo_unico += [r]
     # envio al pipe por el descriptor del hijo
-    print(len(rojo_unico))
     pipe.send(rojo_unico)
     pipe.close()
     # creo un array de bytes que representa los pixeles de la imagen
@@ -92,7 +91,6 @@ def header_and_body(imagen):
     body = imagen[finHeader:]
     # Pixeles a int
     imageInt = [i for i in body]
-    print(len(imageInt))
     return header, imageInt
 
 
@@ -160,7 +158,6 @@ if __name__ == '__main__':
         print("comentarios eliminados correctamente")
         header, imageInt = header_and_body(imagenSinCom)
         print("header y body separados correctamente")
-        time.sleep(2)
     except Exception:
         print("ERROR - Error en el header de la imagen")
         exit()
@@ -184,7 +181,9 @@ if __name__ == '__main__':
         exit(2)
     try:
         crearHistogramas(pix_rojo, nombre_archivo, "histogramaRojo.png")
+        time.sleep(2)
         crearHistogramas(pix_verde, nombre_archivo, "histogramaVerde.png")
+        time.sleep(2)
         crearHistogramas(pix_azul, nombre_archivo, "histogramaAzul.png")
     except Exception:
         print("ERROR - No se pudo crear el histograma")
