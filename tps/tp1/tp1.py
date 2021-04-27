@@ -39,11 +39,11 @@ def histogram(ppm,rgb):
     g = -2
     b = -1
     r = 0
-    
+    filename = args.file.replace('.ppm', '')
     #red creator
     if rgb == "r":
         position = 0
-        name = histo_name = "red_filter_"
+        name = histo_name = "red_filter_" + filename
         for i in range(large):
             g = g + 3
             b = b + 3
@@ -57,7 +57,7 @@ def histogram(ppm,rgb):
     #green creator
     elif rgb == "g":
         position = 1
-        name = histo_name = "green_filter_"
+        name = histo_name = "green_filter_" + filename
         for i in range(large):
             r = r + 3
             b = b + 3
@@ -71,7 +71,7 @@ def histogram(ppm,rgb):
     #blue creator
     elif rgb == "b":
         position = 2
-        name = histo_name = "blue_filter_"
+        name = histo_name = "blue_filter_" + filename
         for i in range(large):
             r = r + 3
             g = g + 3
@@ -82,24 +82,23 @@ def histogram(ppm,rgb):
         print("Blue Processed")
         time.sleep(0.5)
 
-    pos = position #color RGB position in pixel
+    pos = position
+    #color RGB position in pixel
     #Histogram sort by intensity of color
     histo = [[0] * 2 for i in range(256)]
     for color in range(256):
         histo[color][0] = color
-        for i in range(large):
+        for i in range(0,large,3):
             if ppm[pos] == color:
                 histo[color][1] = histo[color][1] + 1
             pos = pos + 3
-            if pos > large:
-                break
-            if rgb == 'g' and pos > large-1: #Fix green bug.
+            if pos > large-3:
                 break
         pos = position
 
     #Creating histogram.txt
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    printhisto = open(dir_path + '/' + histo_name + "histogram.txt", "w")
+    printhisto = open(dir_path + '/' + histo_name + "_histogram.txt", "w")
 
     try:
         printhisto.write("color      Repeats" + os.linesep)
@@ -126,7 +125,7 @@ def plot_image(ppm, name):
     #creating ppm filter
     try:
         filter_rgb = array.array('B', [i for i in ppm])
-        with open(name + args.file, "wb", os.O_CREAT) as asing:
+        with open(name + ".ppm", "wb", os.O_CREAT) as asing:
             asing.write(bytearray(header, 'ascii'))
             filter_rgb.tofile(asing)
             asing.close()
