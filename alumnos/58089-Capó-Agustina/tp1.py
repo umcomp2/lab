@@ -21,7 +21,7 @@ try:
     if args.red < 0 or args.green < 0 or args.blue < 0 or args.size <= 0:
         raise ValueError
 except ValueError:
-    print("Error. Los valores negativos no son válidos")
+    print("Error. Los valores no válidos")
     sys.exit()
 
 
