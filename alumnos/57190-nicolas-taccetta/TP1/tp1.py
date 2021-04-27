@@ -118,6 +118,7 @@ def histogram(ppm,rgb):
     time.sleep(0.5)
     #launch plot image
     plot_image(ppm, name)
+    
 
 def plot_image(ppm, name):
     print("Launching plot image.")
@@ -150,7 +151,7 @@ def load_animation(text, t):
     #pointer       
     i = 0                     
     while (counttime != 100):
-        # used to change the animation speed
+        # animation speed
         # smaller the value, faster will be the animation
         time.sleep(t) 
         load_str_list = list(load_str) 
@@ -158,7 +159,6 @@ def load_animation(text, t):
         x = ord(load_str_list[i])
         # y->for storing altered ASCII code
         y = 0                             
-        # if the character is "." or " ", keep it unaltered
         # switch uppercase to lowercase and vice-versa 
         if x != 32 and x != 46:
             if x > 47 and x < 58:
@@ -255,4 +255,8 @@ if __name__ == "__main__":
     child_three.join()
 
     print("\nExiting program\n")
-    exit(2)
+    child_one.terminate()
+    child_two.terminate()
+    child_three.terminate()
+
+    exit(10)
