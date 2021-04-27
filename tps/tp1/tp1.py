@@ -34,6 +34,7 @@ def image_reader(imagefile):
 
 def histogram(ppm,rgb):
     #Auxiliar variables
+    ppm = ppm.get()
     large = len(ppm)
     g = -2
     b = -1
@@ -41,6 +42,7 @@ def histogram(ppm,rgb):
     
     #red creator
     if rgb == "r":
+        position = 0
         name = histo_name = "red_filter_"
         for i in range(large):
             g = g + 3
@@ -54,7 +56,8 @@ def histogram(ppm,rgb):
 
     #green creator
     elif rgb == "g":
-        name = histo_name = "gree_filter_"
+        position = 1
+        name = histo_name = "green_filter_"
         for i in range(large):
             r = r + 3
             b = b + 3
@@ -67,6 +70,7 @@ def histogram(ppm,rgb):
 
     #blue creator
     elif rgb == "b":
+        position = 2
         name = histo_name = "blue_filter_"
         for i in range(large):
             r = r + 3
@@ -78,17 +82,20 @@ def histogram(ppm,rgb):
         print("Blue Processed")
         time.sleep(0.5)
 
+    pos = position #color RGB position in pixel
     #Histogram sort by intensity of color
     histo = [[0] * 2 for i in range(256)]
     for color in range(256):
         histo[color][0] = color
         for i in range(large):
-            if ppm[i] == color:
+            if ppm[pos] == color:
                 histo[color][1] = histo[color][1] + 1
-            i = i + 3
-            if i > large:
+            pos = pos + 3
+            if pos > large:
                 break
-
+            if rgb == 'g' and pos > large-1: #Fix green bug.
+                break
+        pos = position
 
     #Creating histogram.txt
     dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -110,13 +117,18 @@ def histogram(ppm,rgb):
 
     print("Histograms created.")
     time.sleep(0.5)
+    #launch plot image
+    plot_image(ppm, name)
 
+def plot_image(ppm, name):
+    print("Launching plot image.")
+    time.sleep(0.5)
     #creating ppm filter
     try:
-        filter_red = array.array('B', [i for i in ppm])
+        filter_rgb = array.array('B', [i for i in ppm])
         with open(name + args.file, "wb", os.O_CREAT) as asing:
             asing.write(bytearray(header, 'ascii'))
-            filter_red.tofile(asing)
+            filter_rgb.tofile(asing)
             asing.close()
     
     except:
@@ -177,7 +189,6 @@ def load_animation(text, t):
 if __name__ == "__main__":
     text1 = "Iniciating program"
     
-
     #Creating Queue
     q = mp.Queue()
 
@@ -230,11 +241,11 @@ if __name__ == "__main__":
     time.sleep(2)
     #Launch childs processes.
     q.put(ppm_image)
-    child_one = mp.Process(target = histogram, args = (q.get(), "r"))
+    child_one = mp.Process(target = histogram, args = (q, "r"))
     q.put(ppm_image)
-    child_two = mp.Process(target = histogram, args = (q.get(), "g"))
+    child_two = mp.Process(target = histogram, args = (q, "g"))
     q.put(ppm_image)
-    child_three = mp.Process(target = histogram, args = (q.get(), "b"))
+    child_three = mp.Process(target = histogram, args = (q, "b"))
     
     child_one.start()
     child_two.start()
