@@ -1,5 +1,6 @@
 from multiprocessing import Process, JoinableQueue
 import textwrap
+import time
 import sys
 import argparse
 from pathlib import Path
@@ -41,30 +42,38 @@ def eliminar_header(image):
 
 def leer(q1, q2, q3, image, numero):
     eliminar_header(image)
-    pr = open('imagen', 'r')
-    texto1 = pr.read(numero)
-    text = textwrap.wrap(texto1, 2)
-    q1.put(text)
-    q2.put(text)
-    q3.put(text)
-    pr.close()
+    tamaño_archivo = Path('imagen').absolute()
+    tamaño = os.path.getsize(tamaño_archivo)
+    print(tamaño)
+    pr = os.open('imagen', os.O_RDONLY)
+    while True:
+        f_read = os.read(pr, numero)
+        texto1 = f_read.decode('utf-8')
+        text = textwrap.wrap(texto1, 2)
+        q1.put(text)
+        q2.put(text)
+        q3.put(text)
+        if len(text) != numero/2:
+            print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+            break
+    os.close(pr)
 
 
 def tomar_rojo(q):
+    time.sleep(1)
     lista = []
-    lista.append(q.get())
+    if q.empty():
+        sys.exit()
     valor = []
-    for list1 in lista:
-        valor = list1[::3]
-    print(valor)
-    lista2 = []
-    lista2.append('0x')
-    lista3 = []
-    for v in valor:
-        for k in lista2:
-            lista3.append(k + v)
+    while True:
+        if q.empty() is False:
+            lista = (q.get())
+            for v in lista[0::3]:
+                valor.append(v)
+        else:
+            break
     hex_value = []
-    for v in lista3:
+    for v in valor:
         an_integer = int(v, 16)
         hex_value.append(an_integer)
     dic = {}
@@ -86,19 +95,20 @@ def tomar_rojo(q):
 
 
 def tomar_verde(q):
+    time.sleep(2)
     lista = []
-    lista.append(q.get())
-    for list1 in lista:
-        valor = list1[1::3]
-    print(valor)
-    lista2 = []
-    lista2.append('0x')
-    lista3 = []
-    for v in valor:
-        for k in lista2:
-            lista3.append(k + v)
+    if q.empty():
+        sys.exit()
+    valor = []
+    while True:
+        if q.empty() is False:
+            lista = (q.get())
+            for v in lista[1::3]:
+                valor.append(v)
+        else:
+            break
     hex_value = []
-    for v in lista3:
+    for v in valor:
         an_integer = int(v, 16)
         hex_value.append(an_integer)
     dic = {}
@@ -120,21 +130,22 @@ def tomar_verde(q):
 
 
 def tomar_azul(q):
+    time.sleep(3)
     lista = []
-    lista.append(q.get())
-    for list1 in lista:
-        valor = list1[2::3]
-    lista2 = []
-    lista2.append('0x')
-    lista3 = []
-    for v in valor:
-        for k in lista2:
-            lista3.append(k + v)
+    if q.empty():
+        sys.exit()
+    valor = []
+    while True:
+        if q.empty() is False:
+            lista = (q.get())
+            for v in lista[2::3]:
+                valor.append(v)
+        else:
+            break
     hex_value = []
-    for v in lista3:
+    for v in valor:
         an_integer = int(v, 16)
         hex_value.append(an_integer)
-    print(hex_value)
     dic = {}
     for i in range(0, 256):
         dic[i] = 0
@@ -168,44 +179,43 @@ def main():
                         action='store',
                         type=str)
     args = parser.parse_args()
-
-    if args.size:
-        numero = int(args.size)
-        if numero % 6 != 0 or numero < 6:
-            print('El numero debe ser multiplo de 6 o mayor a 6')
-            sys.exit()
-        if args.file:
-            tamaño_archivo = Path(args.file).absolute()
-            tamaño = os.path.getsize(tamaño_archivo)
-            if numero > tamaño:
-                print(f'El tamaño a leer debe ser menor al tamaño del archivo.'
-                      f'\nNumero introducido: {numero} > Tamaño del archivo: '
-                      f'{tamaño}')
+    try:
+        if args.size:
+            numero = int(args.size)
+            if numero % 6 != 0 or numero < 6:
+                print('El numero debe ser multiplo de 6 o mayor a 6')
                 sys.exit()
-            imagen = args.file
-            if 'ppm' not in imagen:
-                print('Error, La imagen debe ser de formato PPM')
-                sys.exit()
-            q1 = JoinableQueue()
-            q2 = JoinableQueue()
-            q3 = JoinableQueue()
-            leer(q1, q2, q3, imagen, numero)
-            p1 = Process(target=tomar_rojo, args=(q1, ))
-            p2 = Process(target=tomar_verde, args=(q2, ))
-            p3 = Process(target=tomar_azul, args=(q3, ))
-            p1.start()
-            p2.start()
-            p3.start()
-            p1.join()
-            p2.join()
-            p3.join()
-            p1.terminate()
-            p2.terminate()
-            p3.terminate()
-            if p1.is_alive() is False and p2.is_alive() is False and \
-               p3.is_alive() is False:
-                print('Mis hijos han muerto con exito y se han generado sus'
-                      ' histogramas')
+            if args.file:
+                tamaño_archivo = Path(args.file).absolute()
+                tamaño = os.path.getsize(tamaño_archivo)
+                if numero > tamaño:
+                    print(f'El tamaño a leer debe ser menor al tamaño del archivo.'
+                        f'\nNumero introducido: {numero} > Tamaño del archivo: '
+                        f'{tamaño}')
+                    sys.exit()
+                imagen = args.file
+                if 'ppm' not in imagen:
+                    print('Error, La imagen debe ser de formato PPM')
+                    sys.exit()
+                q1 = JoinableQueue()
+                q2 = JoinableQueue()
+                q3 = JoinableQueue()
+                leer(q1, q2, q3, imagen, numero)
+                p1 = Process(target=tomar_rojo, args=(q1, ))
+                p2 = Process(target=tomar_verde, args=(q2, ))
+                p3 = Process(target=tomar_azul, args=(q3, ))
+                p1.start()
+                p2.start()
+                p3.start()
+                p1.join()
+                p2.join()
+                p3.join()
+                if p1.is_alive() is False and p2.is_alive() is False and \
+                p3.is_alive() is False:
+                    print('Mis hijos han muerto con exito y se han generado sus'
+                        ' histogramas')
+    except FileNotFoundError as error:
+        print(error)    
 
 
 if __name__ == '__main__':
