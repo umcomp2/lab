@@ -29,8 +29,8 @@ def hijo_verde(pipe):
     archivo = open("Verde.txt", "wt")
     while True: 
         b = pipe.recv()
-        # if b == b'EOF':
-        #     break
+        if b == b'EOF':
+            break
         for i in range(0,len(b),3):
             pixel = b[i:i+3]
             lista_verde.append(pixel[1])
@@ -45,8 +45,8 @@ def hijo_azul(pipe):
     archivo = open("Azul.txt", "wt")
     while True:
         c = pipe.recv()
-        # if c == b'EOF':
-        #     break
+        if c == b'EOF':
+            break
         for i in range(0,len(c),3):
             pixel = c[i:i+3]
             lista_azul.append(pixel[2])
@@ -129,10 +129,10 @@ if __name__ == "__main__":
             if len(bloque) == 0:
                 break
 
-    # #Envío EOF a los hijos
-    # for pipes in list_pipes_parents:
-    #     pipes.send(b'EOF')
-    #     pipes.close()
+    #Envío EOF a los hijos
+    for pipes in list_pipes_parents:
+        pipes.send(b'EOF')
+        pipes.close()
     #Espero a que terminen los hijos
     for i in list_hijos:
         i.join()
