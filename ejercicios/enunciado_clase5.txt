@@ -1,0 +1,50 @@
+1 - Escriba un programa que lea un archivo de texto definido por el argumento -f y comparta cada linea con su hijo,
+el hijo la pasará a mayúsculas , luego el padra mostrará por pantalla el resultado. La comunicación se hará mediante
+mmap.
+
+Ej de funcionamiento
+
+$ ./1.py -f pasar.txt
+
+Escribiendo...
+Hijo iniciado
+
+HOLA
+GENTE
+DE
+COMPU2
+
+2 - Comunique a dos procesos hijos con os.fork() para que hagan la misma tarea que el ejercicio 2 del enunciado_clase4.txt
+pero en lugar de utilizar un archivo, utilizar la ipc os.pipe().
+
+Ejemplo de funcionamiento
+
+# echo "CONTENIDO DEL ARCHIVO"| ./2.py 
+hijo1 enviando ...
+hijo2 reemplazando ..
+hijo1 leyendo .......
+PBAGRAVQB QRY NEPUVIB
+
+
+3 - Comunique a dos procesos hijos con multiprocessing.Process() para que hagan la misma tarea que el ejercicio 2 del enunciado_clase4.txt
+pero en lugar de utilizar un archivo, utilizar la multiprocessiong.Pipe().
+
+Ejemplo de funcionamiento
+
+# echo "CONTENIDO DEL ARCHIVO"| ./3.py 
+hijo1 enviando ...
+hijo2 reemplazando ..
+hijo1 leyendo .......
+PBAGRAVQB QRY NEPUVIB
+
+4 - Haga un programa que lea desde un archivo definido por el argumento -i o --input una matriz, y pueda multiplicarla (-m) o dividirla (-d) 
+por un escalar pasado por argumento mostrando el resultado por salida standar o guardando en un archivo indicado por la opción -o o --output.
+Pensando en la performance, diseñe el código usando multiprocessing.
+No se puede usar el módulo “numpy“.
+Ej de uso
+
+$ python3 4.py -i matrix.txt -m 5
+[ 15,  25,  -5],
+[ 25,  30, 440],
+[-10,  20,  25]]
+
