@@ -1,17 +1,13 @@
 #!/bin/python3
 
 import os
-import sys
-import time
 import multiprocessing as mp
 import argparse
 import array
 
 
-varPadre, varHijo = mp.Pipe()
-
-
 def getHeader():
+    #Crea una lista con los datos del Header de la imagen.
     header = []
     fd = os.open(args.file, os.O_RDONLY)
     datos = os.read(fd, 50).split()
@@ -34,6 +30,7 @@ def getBody():
 
 
 def splitBody(body):
+    #Lee Body y lo separa en 3 Queues segun color.
     pointer = -1
     for i in body:
         pointer += 1
@@ -52,13 +49,13 @@ def rojo():
     fd = open('rojo.txt', 'w')
     fd.write('Histograma color Rojo')
     while True:
-        #Pasa cada valor de la Queue a la lista rojo
+        #Pasa cada valor de la Queue a la lista rojo.
         getQueue = queueRed.get()
         rojo.append(getQueue) 
         if queueRed.qsize() == 0 or queueRed.qsize() is None:
             break
     for i in range(256):
-        #Escribe en el archivo el valor y la frecuencia
+        #Escribe en el archivo el valor y la frecuencia.
         fd.write('Valor: {}, Frecuencia: {}\n'.format(i, rojo.count(i)))
 
 
@@ -68,13 +65,13 @@ def verde():
     fd = open('verde.txt', 'w')
     fd.write('Histograma color Verde')
     while True:
-        #Pasa cada valor de la Queue a la lista verde
+        #Pasa cada valor de la Queue a la lista verde.
         getQueue = queueGreen.get()
         verde.append(getQueue) 
         if queueGreen.qsize() == 0 or queueGreen.qsize() is None:
             break
     for i in range(256):
-        #Escribe en el archivo el valor y la frecuencia
+        #Escribe en el archivo el valor y la frecuencia.
         fd.write('Valor: {}, Frecuencia: {}\n'.format(i, verde.count(i)))
 
 
@@ -83,13 +80,13 @@ def azul():
     fd = open('azul.txt', 'w')
     fd.write('Histograma color Azul')
     while True:
-        #Pasa cada valor de la Queue a la lista azul
+        #Pasa cada valor de la Queue a la lista azul.
         getQueue = queueBlue.get()
         azul.append(getQueue) 
         if queueBlue.qsize() == 0 or queueBlue.qsize() is None:
             break
     for i in range(256):
-        #Escribe en el archivo el valor y la frecuencia
+        #Escribe en el archivo el valor y la frecuencia.
         fd.write('Valor: {}, Frecuencia: {}\n'.format(i, azul.count(i)))
 
 
@@ -111,7 +108,6 @@ if __name__ == '__main__':
         queueBlue = mp.Queue()
         splitBody(body)
         print('\nArchivo Leído Correctamente\n')
-        time.sleep(2)
         
     except:
         print('\nError al leer Archivo, por favor verifica la ruta del archivo .ppm.\n')
