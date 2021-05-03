@@ -1,4 +1,4 @@
-import argparse, sys,os, array,time,re
+import argparse, sys,os, array,time
 from os.path import getsize
 import multiprocessing as mp
 
@@ -15,32 +15,30 @@ class NoNumber(Exception):
         print(message)
 
 
-
-
 def this_analize_the_raw_image(image,size):
-    bigfuckinglist =[]
+    raw_data =[]
     #Here i put the data in blocks of -s  and then separet the individual values
     for iterador in range (int(getsize(image)/size)):
-        bigfuckinglist.append(os.read(image,size))
+        raw_data.append(os.read(image,size))
 
-    bigfuckinglist.append(os.read(image,(getsize(image)%size)))
-    bigfuckinglist = b''.join(bigfuckinglist)
+    raw_data.append(os.read(image,(getsize(image)%size)))
+    raw_data = b''.join(raw_data)
 
     global header
     global body
 
    
     #Here i strip the comments
-    for i in range(bigfuckinglist.count(b"\n# ")):
-        coments1 = bigfuckinglist.find(b"\n# ")
-        coments2 = bigfuckinglist.find(b"\n", coments1 + 1)
-        bigfuckinglist = bigfuckinglist.replace(bigfuckinglist[coments1:coments2], b"")
+    for i in range(raw_data.count(b"\n# ")):
+        coments1 = raw_data.find(b"\n# ")
+        coments2 = raw_data.find(b"\n", coments1 + 1)
+        raw_data = raw_data.replace(raw_data[coments1:coments2], b"")
     
 
     #Here i change every value expresed as bit to a integers in a list
-    header_finder = bigfuckinglist.find(b"\n", bigfuckinglist.find(b"\n", bigfuckinglist.find(b"\n") +1) +1) +1
-    header = bigfuckinglist[:header_finder].decode()    #nesesary express the header to decode the image
-    body = bigfuckinglist[header_finder:]
+    header_finder = raw_data.find(b"\n", raw_data.find(b"\n", raw_data.find(b"\n") +1) +1) +1
+    header = raw_data[:header_finder].decode()    #nesesary express the header to decode the image
+    body = raw_data[header_finder:]
     data_procesed = [i for i in body]
 
     return data_procesed
@@ -104,9 +102,6 @@ def green_image(q_green,data_procesed,namefile):
 
     print("green histogram created")
 
-
-
-
 def red_image(q_red,data_procesed,namefile):
     only_red = []
     red = []
@@ -134,46 +129,6 @@ def red_image(q_red,data_procesed,namefile):
             writehisto.write(f"{key}̣  ____  {value}" + os.linesep)
     
     print("red histogram created")
-
-"""
-def histograma(data_procesed):
-
-    histo_blue = []
-    histo_red = []
-    histo_green = []
-    counter = 0
-    for i in range (0,len(data_procesed)):
-
-        if counter == 0:
-            counter += 1
-            histo_red.append(data_procesed[i])
-        
-        elif counter == 1:
-            counter +=1
-            histo_green.append(data_procesed[i])
-        
-        elif counter == 2:
-            counter = 0
-            histo_blue.append(data_procesed[i])
-
-    histo_red.sort()
-    histo_blue.sort()
-    histo_green.sort()
-
-    dic_red = {i:histo_red.count(i) for i in histo_red}             #the .count() function is slow as fuck
-    dic_blue = {i:histo_blue.count(i) for i in histo_blue}
-    dic_green = {i:histo_green.count(i)for i in histo_green}
-    
-    dictionaries ={ "red":dic_red , "green":dic_green , "blue":dic_blue}
-
-    for elementos in dictionaries:
-
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        writehisto = open(dir_path + '/' + elementos + "_histogram.txt", "w")
-        for key , value in dictionaries[elementos].items():
-            writehisto.write(f"{key}̣  ____  {value}" + os.linesep)"""
-
-
 
 def main():
     parser = argparse.ArgumentParser(usage="\nTP_agus.py [-h] [-s SIZE] [-f FILE]")
@@ -204,10 +159,10 @@ def main():
 
     os.close(image)
 
-
     q_red = mp.Queue()
     q_green = mp.Queue()
     q_blue = mp.Queue()
+
     time.sleep(1)
     print("Launching Child 1: RED")
     c1 = mp.Process(target = red_image, args = (q_red,data_procesed,namefile))
@@ -225,21 +180,15 @@ def main():
     c1.join()
     c2.join()
     c3.join()
+
     time.sleep(1)
     print("Killing children")
     time.sleep(1)
-    print("\nExiting program\n")
 
     c1.terminate()
     c2.terminate()
     c3.terminate()
-
-
-    #red_image(data_procesed,namefile)
-    #green_image(data_procesed,namefile)
-    #blue_image(data_procesed,namefile)
-    #histograma(data_procesed)
-
+    print("\nExiting program\n")
 
 
 if __name__ == "__main__":
