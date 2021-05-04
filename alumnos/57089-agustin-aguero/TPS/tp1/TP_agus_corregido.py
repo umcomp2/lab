@@ -27,7 +27,6 @@ def this_analize_the_raw_image(image,size):
     global header
     global body
 
-   
     #Here i strip the comments
     for i in range(raw_data.count(b"\n# ")):
         coments1 = raw_data.find(b"\n# ")
@@ -94,34 +93,23 @@ def image_analizer(data_procesed,namefile,rgb):
         histogram(rgb,namefile,dic_color)
     
 def color_image(rgb,color,namefile):
-    if rgb == "RED":
-        archivo= array.array('B',color)
 
-    elif rgb == "GREEN":
-        archivo = array.array('B',color)
-
-    elif rgb == "BLUE":
-        archivo = array.array('B',color)
+    archivo= array.array('B',color)
 
     with open(f'{namefile}_{rgb}.ppm', 'wb') as f:
         f.write(bytearray(header, 'ascii'))
         archivo.tofile(f)
+    
+    print(f"{rgb} image of {namefile} created")
 
 def histogram(rgb,namefile,dic_color):
 
-    if rgb == "RED":
-        dic= dic_color
-
-    elif rgb == "GREEN":
-        dic= dic_color
-
-    elif rgb == "BLUE":
-        dic= dic_color
-
     dir_path = os.path.dirname(os.path.realpath(__file__))
     writehisto = open(dir_path + '/' + namefile + "_" + rgb + "_histogram.txt", "w")
-    for key , value in dic.items():
+    for key , value in dic_color.items():
             writehisto.write(f"{key}̣  ____  {value}" + os.linesep)
+    
+    print(f"{rgb} histogram of {namefile} created")
 
 
 def main():
@@ -131,6 +119,7 @@ def main():
     args = parser.parse_args()
     file = args.file
     size = args.size
+    q = mp.Queue
 
     if not file.endswith(".ppm"):
         raise InvalidFormat("image is an invalid format, must be .ppm")
@@ -157,25 +146,28 @@ def main():
     #initialize each process with his arguments
     time.sleep(1)
     print("Launching Child 1: RED")
-    #c1 = mp.Process(target = red_image, args = (data_procesed,namefile))       #this line make work the triple coment code part
-    c1 = mp.Process(target = image_analizer, args = (data_procesed,namefile,"RED"))
+    q.put(data_procesed)
+    c1 = mp.Process(target = image_analizer, args = (q,namefile,"RED"))
     time.sleep(1)
     print("Launching Child 2:GREEN")
-    #c2 = mp.Process(target = green_image, args = (data_procesed ,namefile))    #this line make work the triple coment code part
-    c2 = mp.Process(target = image_analizer, args = (data_procesed,namefile,"GREEN"))
+    q.put(data_procesed)
+    c2 = mp.Process(target = image_analizer, args = (q,namefile,"GREEN"))
     time.sleep(1)
     print("Launching Child 3:BLUE")
-    #c3 = mp.Process(target = blue_image, args = (data_procesed ,namefile))     #this line make work the triple coment code part
-    c3 = mp.Process(target = image_analizer, args = (data_procesed,namefile,"BLUE"))
+    q.put(data_procesed)
+    c3 = mp.Process(target = image_analizer, args = (q,namefile,"BLUE"))
     #start the process
     c1.start()
     c2.start()
     c3.start()
     #block the process
+
+    print("This could take a while...")
     c1.join()
     c2.join()
     c3.join()
 
+    print("all 3 child process finish")
     time.sleep(1)
     print("Killing children")
 
