@@ -43,7 +43,7 @@ def this_analize_the_raw_image(image,size):
     return data_procesed
 
 def image_analizer(data_procesed,namefile,rgb):
-
+    data_procesed = data_procesed.get()
     if rgb == "RED":
         only_red = []
         red = []
