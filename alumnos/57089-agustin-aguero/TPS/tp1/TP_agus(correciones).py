@@ -43,91 +43,85 @@ def this_analize_the_raw_image(image,size):
 
     return data_procesed
 
+def image_analizer(data_procesed,namefile,rgb):
 
+    if rgb == "RED":
+        only_red = []
+        red = []
+        for j in range(0,len(data_procesed),3):
+            only_red.append(data_procesed[j])
+            red.append(data_procesed[j])
+            red.append(0)
+            red.append(0)
 
-def blue_image(data_procesed,namefile):
-    only_blue = []
-    blue = []
-    for j in range(2,len(data_procesed),3):
-        blue.append(0)
-        blue.append(0)
-        blue.append(data_procesed[j])
-        only_blue.append(data_procesed[j])
+        only_red.sort()
+        dic_red = {i:only_red.count(i) for i in only_red}
+        dic_color = dic_red
+        color = red
+        color_image(rgb,color,namefile)
+        histogram(rgb,namefile,dic_color)
 
-    only_blue.sort()
-    blue = array.array('B',blue)
+    elif rgb == "GREEN":
+        only_green = []
+        green = []
+        for j in range(1,len(data_procesed),3):
+            only_green.append(data_procesed[j])
+            green.append(0)
+            green.append(data_procesed[j])
+            green.append(0)
 
-    #https://solarianprogrammer.com/2017/10/25/ppm-image-python-3/
+        only_green.sort()
+        dic_green = {i:only_green.count(i) for i in only_green}
+        dic_color = dic_green
+        color = green
+        color_image(rgb,color,namefile)
+        histogram(rgb,namefile,dic_color)
 
-    with open(f'{namefile}_blue.ppm', 'wb') as f:
+    elif rgb == "BLUE":
+        only_blue = []
+        blue = []
+        for j in range(2,len(data_procesed),3):
+            blue.append(0)
+            blue.append(0)
+            blue.append(data_procesed[j])
+            only_blue.append(data_procesed[j])
+
+        only_blue.sort()
+        dic_blue = {i:only_blue.count(i) for i in only_blue}
+        dic_color = dic_blue
+        color = blue
+        color_image(rgb,color,namefile)
+        histogram(rgb,namefile,dic_color)
+    
+def color_image(rgb,color,namefile):
+    if rgb == "RED":
+        archivo= array.array('B',color)
+
+    elif rgb == "GREEN":
+        archivo = array.array('B',color)
+
+    elif rgb == "BLUE":
+        archivo = array.array('B',color)
+
+    with open(f'{namefile}_{rgb}.ppm', 'wb') as f:
         f.write(bytearray(header, 'ascii'))
-        blue.tofile(f)
-    
-    print("blue image created")
-    print("creating blue histogram...")
-    print("This could take a while.....")
-    dic_blue = {i:only_blue.count(i) for i in only_blue}
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    writehisto = open(dir_path + '/' + namefile + "_BLUE_histogram.txt", "w")
-    for key , value in dic_blue.items():
-            writehisto.write(f"{key}̣  ____  {value}" + os.linesep)
-    
-    print("blue histogram created")
+        archivo.tofile(f)
 
-def green_image(data_procesed,namefile):
-    only_green = []
-    green = []
-    for j in range(1,len(data_procesed),3):
-        only_green.append(data_procesed[j])
-        green.append(0)
-        green.append(data_procesed[j])
-        green.append(0)
+def histogram(rgb,namefile,dic_color):
 
-    only_green.sort()    
-    green = array.array('B',green)
+    if rgb == "RED":
+        dic= dic_color
 
+    elif rgb == "GREEN":
+        dic= dic_color
 
-    with open(f'{namefile}_green.ppm', 'wb') as f:
-        f.write(bytearray(header, 'ascii'))
-        green.tofile(f)
-    
-    print("green image created")
-    print("creating green histogram...")
-    dic_green = {i:only_green.count(i) for i in only_green}
-
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    writehisto = open(dir_path + '/' + namefile + "_GREEN_histogram.txt", "w")
-    for key , value in dic_green.items():
-            writehisto.write(f"{key}̣  ____  {value}" + os.linesep)
-
-    print("green histogram created")
-
-def red_image(data_procesed,namefile):
-    only_red = []
-    red = []
-    for j in range(0,len(data_procesed),3):
-        only_red.append(data_procesed[j])
-        red.append(data_procesed[j])
-        red.append(0)
-        red.append(0)
-
-    only_red.sort()
-    red = array.array('B',red)
-
-    with open(f'{namefile}_red.ppm', 'wb') as f:
-        f.write(bytearray(header, 'ascii'))
-        red.tofile(f)
-    
-    print("red image created")
-    print("creating red histogram...")
-    dic_red = {i:only_red.count(i) for i in only_red}
+    elif rgb == "BLUE":
+        dic= dic_color
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    writehisto = open(dir_path + '/' + namefile + "_RED_histogram.txt", "w")
-    for key , value in dic_red.items():
+    writehisto = open(dir_path + '/' + namefile + "_" + rgb + "_histogram.txt", "w")
+    for key , value in dic.items():
             writehisto.write(f"{key}̣  ____  {value}" + os.linesep)
-    
-    print("red histogram created")
 
 
 def main():
@@ -163,16 +157,16 @@ def main():
     #initialize each process with his arguments
     time.sleep(1)
     print("Launching Child 1: RED")
-    c1 = mp.Process(target = red_image, args = (data_procesed,namefile))       #this line make work the triple coment code part
-
+    #c1 = mp.Process(target = red_image, args = (data_procesed,namefile))       #this line make work the triple coment code part
+    c1 = mp.Process(target = image_analizer, args = (data_procesed,namefile,"RED"))
     time.sleep(1)
     print("Launching Child 2:GREEN")
-    c2 = mp.Process(target = green_image, args = (data_procesed ,namefile))    #this line make work the triple coment code part
-
+    #c2 = mp.Process(target = green_image, args = (data_procesed ,namefile))    #this line make work the triple coment code part
+    c2 = mp.Process(target = image_analizer, args = (data_procesed,namefile,"GREEN"))
     time.sleep(1)
     print("Launching Child 3:BLUE")
-    c3 = mp.Process(target = blue_image, args = (data_procesed ,namefile))     #this line make work the triple coment code part
-
+    #c3 = mp.Process(target = blue_image, args = (data_procesed ,namefile))     #this line make work the triple coment code part
+    c3 = mp.Process(target = image_analizer, args = (data_procesed,namefile,"BLUE"))
     #start the process
     c1.start()
     c2.start()
