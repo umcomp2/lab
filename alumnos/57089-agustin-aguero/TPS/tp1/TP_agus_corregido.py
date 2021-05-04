@@ -42,55 +42,39 @@ def this_analize_the_raw_image(image,size):
 
     return data_procesed
 
-def image_analizer(data_procesed,namefile,rgb):
-    data_procesed = data_procesed.get()
-    if rgb == "RED":
-        only_red = []
-        red = []
-        for j in range(0,len(data_procesed),3):
-            only_red.append(data_procesed[j])
-            red.append(data_procesed[j])
-            red.append(0)
-            red.append(0)
+def image_analizer(q,namefile,rgb):
 
-        only_red.sort()
-        dic_red = {i:only_red.count(i) for i in only_red}
-        dic_color = dic_red
-        color = red
-        color_image(rgb,color,namefile)
-        histogram(rgb,namefile,dic_color)
+    data_procesed = q.get()
+    only_one_color = []
+    actual_color = []
+    if rgb == "RED":
+
+        for j in range(0,len(data_procesed),3):
+            only_one_color.append(data_procesed[j])
+            actual_color.append(data_procesed[j])
+            actual_color.append(0)
+            actual_color.append(0)
 
     elif rgb == "GREEN":
-        only_green = []
-        green = []
         for j in range(1,len(data_procesed),3):
-            only_green.append(data_procesed[j])
-            green.append(0)
-            green.append(data_procesed[j])
-            green.append(0)
-
-        only_green.sort()
-        dic_green = {i:only_green.count(i) for i in only_green}
-        dic_color = dic_green
-        color = green
-        color_image(rgb,color,namefile)
-        histogram(rgb,namefile,dic_color)
+            only_one_color.append(data_procesed[j])
+            actual_color.append(0)
+            actual_color.append(data_procesed[j])
+            actual_color.append(0)
 
     elif rgb == "BLUE":
-        only_blue = []
-        blue = []
         for j in range(2,len(data_procesed),3):
-            blue.append(0)
-            blue.append(0)
-            blue.append(data_procesed[j])
-            only_blue.append(data_procesed[j])
+            actual_color.append(0)
+            actual_color.append(0)
+            actual_color.append(data_procesed[j])
+            only_one_color.append(data_procesed[j])
+    
+    only_one_color.sort()
+    color = actual_color
+    color_image(rgb,color,namefile)
+    dic_color = {i:only_one_color.count(i) for i in only_one_color}
+    histogram(rgb,namefile,dic_color)
 
-        only_blue.sort()
-        dic_blue = {i:only_blue.count(i) for i in only_blue}
-        dic_color = dic_blue
-        color = blue
-        color_image(rgb,color,namefile)
-        histogram(rgb,namefile,dic_color)
     
 def color_image(rgb,color,namefile):
 
@@ -119,7 +103,7 @@ def main():
     args = parser.parse_args()
     file = args.file
     size = args.size
-    q = mp.Queue
+    q = mp.Queue()
 
     if not file.endswith(".ppm"):
         raise InvalidFormat("image is an invalid format, must be .ppm")
@@ -141,7 +125,6 @@ def main():
     data_procesed = this_analize_the_raw_image(image,size)
 
     os.close(image)
-    #variables for queue
 
     #initialize each process with his arguments
     time.sleep(1)
@@ -177,7 +160,6 @@ def main():
     c3.terminate()
     time.sleep(1)
     print("\nExiting program\n")
-
 
 if __name__ == "__main__":
     main()
