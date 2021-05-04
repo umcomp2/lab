@@ -1,7 +1,9 @@
 import argparse
+import queue
 import time
 import os
 from multiprocessing import Process, Queue
+import concurrent.futures as cfut
 from collections import Counter
 import cred
 
@@ -30,6 +32,7 @@ class Imagen():
                 self.image = archivo.read()
             else:
                 self.image = b""
+                # leo por bloque
                 for num in range(round(self.size/bloque + 0.5)):
                     self.image += archivo.read(bloque)
 
@@ -85,8 +88,10 @@ def dicc(lista, rgb):
                 aux[key] = 0
         #print('aux')
         #print(ordenador(aux))
+        dicc_ordenado = ordenador(aux)
         # lo retorno ordenado
-        return ordenador(aux)
+        return dicc_ordenado
+        queue.put(dicc_ordenado)
 
 # ordena el dicc
 def ordenador(dicc):
@@ -116,6 +121,27 @@ def escribir_archivo(dicc, rgb):
                 f.write(f"{key}\t{value}\n")
 
 
+def escribir_archivoo(dicc):
+    #rgb = ['R', 'G', 'B']
+    if dicc[0] != 0:
+        with open('rojo.txt', 'w') as f:
+            for key, value in dicc.items():
+                f.write(f"{key}\t{value}\n")
+        print('ROJO TERMINADO')
+
+    if dicc[1] != 0:
+        with open('verde.txt', 'w') as f:
+            for key, value in dicc.items():
+                f.write(f"{key}\t{value}\n")
+        print('VERDE TERMINADO')
+
+    if dicc[2] != 0:
+        with open('azul.txt', 'w') as f:
+            for key, value in dicc.items():
+                f.write(f"{key}\t{value}\n")
+        print('AZUL TERMINADO')
+
+
 # esto al final no lo uso asi que deberia de borrarlo
 #def histograma(abc):
 #    for key, value in abc.items():
@@ -142,28 +168,58 @@ def main():
     listilla = pic.imageList
 
     # lo que va a terminar siendo el histograma
-    abc_r = dicc(listilla, 'G')
+    abc_r = dicc(listilla, 'R')
     abc_g = dicc(listilla, 'G')
-    abc_b = dicc(listilla, 'G')
+    abc_b = dicc(listilla, 'B')
     #dicc(listilla)
-    #print('ROJO')
-    #histograma(abc)
+    colores = ['R', 'G', 'B']
+    diccs = [abc_r, abc_g, abc_b]
+    #queue = Queue()
+    with cfut.ProcessPoolExecutor() as rgb:
+
+            #red = rgb.submit(escribir_archivoo, diccs[0])
+
+            #green = rgb.submit(escribir_archivoo, diccs[1])
+
+            #blue = rgb.submit(escribir_archivoo, diccs[2])
+
+            results = [rgb.submit(escribir_archivoo, diccs[i]) for i in range(len(diccs))]
+            print('Terminado')
+
+
+            
+
+
 
     #escribir_archivo(abc, 'G')
     # creo los procesos para escrbir los archivos
-    process_r = Process(target=escribir_archivo, args=(abc_r, 'R'))
-    process_g = Process(target=escribir_archivo, args=(abc_g, 'G'))
-    process_b = Process(target=escribir_archivo, args=(abc_b, 'B'))
+    #procesos = []
+    
+    
+
+    #process_r = Process(target=escribir_archivo, args=(abc_r, 'R'))
+    #process_g = Process(target=escribir_archivo, args=(abc_g, 'G'))
+    #process_b = Process(target=escribir_archivo, args=(abc_b, 'B'))
+
+    # inicio los procesos
+    #for i in range(len(colores)):
+    #    p = Process(target=escribir_archivo, args=(diccs[i], colores[i], queue))
+    #    p.start()
+    #    procesos.append(p)
+
+    # termino los procesos
+    #for proceso in procesos:
+    #    proceso.join()
 
     # los arranco
-    process_r.start()
-    process_g.start()
-    process_b.start()
+    #process_r.start()
+    #process_g.start()
+    #process_b.start()
 
     # los termino
-    process_r.join()
-    process_g.join()
-    process_b.join()
+    #process_r.join()
+    #process_g.join()
+    #process_b.join()
 
     time.sleep(1)
     print('Terminado')
