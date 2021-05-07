@@ -1,0 +1,40 @@
+1 - Escriba un programa que cree dos hilos utilizando el modulo threading. Cada uno mostrará por pantalla un mensaje y terminará. El programa luego de eso
+mostrará un mensaje de finalización y retornará.
+
+Ej de funcionamiento
+
+$ ./1.py 
+
+ejecutando ..
+ejecutando ..
+terminaron los hilos
+
+2 - Escriba un programa que cree dos hilos utilizando el modulo threading. Cada uno mostrará por pantalla el argumento que se especificó.
+
+Ej de funcionamiento
+
+$ ./2.py 
+
+Primer Hilo ejecutando ..
+Segundo Hilo ejecutando ..
+
+
+3 - Escriba un programa basado en el anterior, en el cual un hilo sume un monto (deposito) a una variable compartida y el otro reste un monto (extrae) 
+de la misma varaible. Asegurar que se ejecute primero el que deposita, para evitar que el saldo sea negativo.
+
+Ejemplo de funcionamiento
+
+./3.py 
+saldo = 100
+hilo1 depositando 1000 ...-> 1100
+hilo2 extrayendo 500 .....-> 600
+saldo = 600
+
+Ejemplo de MAL funcionamiento
+
+./3.py 
+saldo = 100
+hilo2 extrayendo 500 .....-> -100
+hilo1 depositando 1000 ...-> 600
+saldo = 600
+
