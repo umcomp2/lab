@@ -14,7 +14,9 @@ El proceso padre debe lanzar tres procesos hijos para procesar la imagen ( uno p
 
 Cada proceso hijo debe procesar los datos que recibe del mecanismo de IPC y crear un nuevo archivo, que será un filtro de color rojo, verde o azul, segun corresponda.
 
-Adicionalmente existen 3 opciones adicionales -r valor , -g valor y -b valor que escalan la intensidad del color para el filtro que se genera.
+Adicionalmente existen 3 opciones adicionales -r valor , -g valor y -b valor que escalan la intensidad del color para el filtro que se genera. El escalado
+de los colores significa que se puede variar la intensidad del color de los pixels, en función del argumento. Por ejemplo, -r 2 -g 1 -b 0.5
+duplicará la intensidad del color rojo, no modificará la intensidad del color verde y disminuirá a la mitad la intensidad del color azul.
 
 Cuando el proceso padre termina de leer el archivo, debe cerrarlo, esperar que los hijos terminen de trabajar y mostrar un mensaje si fue exitoso.
 
