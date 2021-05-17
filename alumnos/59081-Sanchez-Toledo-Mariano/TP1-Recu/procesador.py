@@ -8,15 +8,15 @@ import time
 
 
 def getHeader():
-    #Crea una lista con los datos del Header de la imagen.
+    #*Crea una lista con los datos del Header de la imagen.
     header = []
     fd = os.open(args.file, os.O_RDONLY)
     datos = os.read(fd, 50).split()
     for i in datos:
         if i == b'P6':
-            header.append(i)
-        elif i.isdigit():
-            header.append(i)
+            header.append(bytes(i))
+        if i.isdigit():
+            header.append(bytes(i))
         else:
             pass
     return header
@@ -49,23 +49,21 @@ def splitBody(body):
         else:
             break
 
+
 def rojo(header):
     rojo = []
-    fd = open('rojo.ppm', 'w')
-    fd.write('{}\n{} {}\n{}\n'.format(header[0], header[1], header[2], header[3]))
+    fd = os.open('rojo.ppm', os.O_RDWR|os.O_CREAT)
+    os.write(fd,'{}\n{} {}\n{}\n'.format(header[0], header[1], header[2], header[3]))
     while True:
         #*Pasa cada valor de la Queue a la lista rojo.
-        getQueue = queueRed.get()
-        rojo.append(getQueue) 
+        rojo.append(queueRed.get())
         if queueRed.qsize() == 0 or queueRed.qsize() is None:
             break
-    #!BORRAR
-    print(rojo)
     
-    '''for i in rojo:
+    for i in rojo:
         fd.write(i)
         fd.write(0)
-        fd.write(0)'''
+        fd.write(0)
 
 
 if __name__ == '__main__':
@@ -78,11 +76,15 @@ if __name__ == '__main__':
     #try:
     print('\n====Leyendo Archivo====\n')
     header = getHeader()
+    body = getBody()
+    
     print('Header obtenido...')
     queueRed = mp.Queue()
     queueGreen = mp.Queue()
     queueBlue = mp.Queue()
     print('Queues creadas...')
+    
+    splitBody(body)
     print('\nArchivo Leído Correctamente\n')
     print('Iniciando recontruccion de imagen ppm...')
 
