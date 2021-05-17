@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-<<<<<<< HEAD
 
 import argparse
 import os
@@ -16,11 +15,13 @@ def hijo_rojo(pipe):
         a = pipe.recv()
         if a == b'EOF':
             break
-        for i in range(0,len(a), 3):
-            pixel = a[i:i+3]
-            lista_rojo.append(pixel[0])
-    
-    archivo.write(str(dict(enumerate(lista_rojo))))
+        for pixel in a:
+            if len(a) % 3 == 0:
+                lista_rojo.append(pixel)
+    print(lista_rojo)
+    archivo.write(str(lista_rojo))
+    for i in range (0,len(lista_rojo,3)):
+
 
     pipe.close()
     archivo.close()
@@ -32,10 +33,10 @@ def hijo_verde(pipe):
         b = pipe.recv()
         if b == b'EOF':
             break
-        for i in range(0,len(b),3):
-            pixel = b[i:i+3]
-            lista_verde.append(pixel[1])
-    archivo.write(str(dict(enumerate(lista_verde))))
+        for pixel in b:
+            if len(b) % 3 == 1:
+                lista_verde.append(pixel)
+    archivo.write(str(lista_verde))
 
     pipe.close()
     archivo.close()
@@ -48,10 +49,10 @@ def hijo_azul(pipe):
         c = pipe.recv()
         if c == b'EOF':
             break
-        for i in range(0,len(c),3):
-            pixel = c[i:i+3]
-            lista_azul.append(pixel[2])
-    archivo.write(str(dict(enumerate(lista_azul))))
+        for pixel in c:
+            if len(c) % 3 == 2:
+                lista_azul.append(pixel)
+    archivo.write(str(lista_azul))
 
     pipe.close()
     archivo.close()
@@ -139,49 +140,3 @@ if __name__ == "__main__":
         i.join()
 
     print("\nEl padre terminó exitosamente\n")
-=======
-import os
-import argparse
-import multiprocessing as mp
-import fmanager
-import workers
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Tp1 - procesa ppm')
-    parser.add_argument('-s', '--size',action="store", type= int, required=True, help="Bloque de lectura")
-    parser.add_argument('-b', '--bonus',action="store", type= bool, required=False, help="genera archivos con filtros")
-    parser.add_argument('-f', '--file',action="store", dest="file", required=True, type=str, help="archivo a procesar")
-
-    args =  parser.parse_args()
-    archivo = args.file
-    args.size = args.size - (args.size%3) #reajusta a multiplo de 3
-    try:
-        fd = os.open(archivo, os.O_RDONLY)
-    except FileNotFoundError as err:
-        print("OS error: {0}".format(err))
-        exit(1)
-    #manejo de info del encabezado en un modulo
-    off,width,height,maxval = fmanager.lee_encabezado(fd)
-    os.lseek(fd,off,0) #rebobina al principio del raster
-    geometria = [width,height,maxval]
-    h = [] #list to save the process
-    colors = "rgb"
-    for i in colors:
-        exec("cola_{} = mp.Queue()".format(i))
-        exec('h.append(mp.Process(target=workers.histo, args=(cola_{},i,archivo,geometria,args.bonus)))'.format(i))
-        h[-1].start() #el ultimo
-
-    escrito = 0
-    while escrito < (width * height * 3): #leyendo de a size ... (si usan mq, el maximo es 32k, si usan pipe , es 8k )
-        imorig = os.read(fd, args.size)
-        escrito = escrito + len(imorig)
-        for i in colors:
-            if escrito > (width * height * 3):
-                exec('cola_{}.put(imorig[0:(width * height * 3 ) %args.size ])'.format(i)) #por si vienes mas datos que los que corresponden
-            else:
-                exec('cola_{}.put(imorig)'.format(i))
-
-    for i in range(len(h)):
-        h[i].join()
-    print ("Se generaron correctamente los" , len(h), "histogramas")
->>>>>>> dd07068ddcaf8138e3eab4d4c4a3ffa57f5a8a07
