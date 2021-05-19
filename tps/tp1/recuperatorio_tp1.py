@@ -3,25 +3,31 @@ import argparse
 import multiprocessing
 #import os
 #import matplotlib.pyplot as plt
-from itertools import islice
+#from itertools import islice
 from collections import Counter
-import os.path
+import os
 
 
-def read_and_dump(pipe, filename, chunk_sz, color, rojo, verde, azul):
+def read_and_dump(pipe, chunk_sz, rojo, verde, azul):
     while True:
         chunk = pipe.recv() # recive el chunk que envie
-        listado = list(islice(chunk, 3)) # divide el chunk cada 3 bytes
+        for x in range(0, len(chunk), 3): # para x desde 0 hasta el largo del bloque leer de a 3 posiciones
+            rojo.append(chunk[x])
+        for x in range(1, len(chunk), 3):
+            verde.append(chunk[x])
+        for x in range(2, len(chunk), 3):
+            azul.append(chunk[x])
+        '''listado = list(islice(chunk, 3)) # divide el chunk cada 3 bytes
         rojo.append(listado[0]) # agrego el primer item de la lista a la lista rojo
         verde.append(listado[1]) # agrego el segundo item de la lista a la lista verde
-        azul.append(listado[2]) # agrego el tercer item de la lista a la lista azul
+        azul.append(listado[2]) # agrego el tercer item de la lista a la lista azul'''
         if len(chunk) < chunk_sz:
             break
     pipe.close()
     return rojo, verde, azul
 
 def crear_filtros(pipe, filename, chunk_sz, color, rojo, verde, azul, escala_rojo, escala_verde, escala_azul):
-    rojo, verde, azul = read_and_dump(pipe, filename, chunk_sz, color, rojo, verde, azul) # tomo las listas rojo, verde y azul
+    rojo, verde, azul = read_and_dump(pipe, chunk_sz, rojo, verde, azul) # tomo las listas rojo, verde y azul
     if color == 'red':
         filtro_rojo = open(f'r_{filename}', 'w') # creo el archivo para guardar el filtro de rojos
         lista_rojo = list()
@@ -91,13 +97,13 @@ def quitar_header(leido):
 
     # guardo el cuerpo
     cuerpo = leido[ultimo_enter:] # guarda todo lo que esta despues del ultimo enter
-    new_file = open(f'{args.file}_copy', 'wb')
+    new_file = open(f'{args.file}'.replace('.ppm', '_copy.ppm'), 'wb')
     new_file.write(cuerpo)
     new_file.close()
     fd.close()
     return cuerpo
 
-def manejo_de_errores(parser, filename, size, rojo, verde, azul):
+def manejo_de_errores(parser, filename, size):
 
     # si no se ingresa el nombre de un archivo
     if not filename:
@@ -130,7 +136,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # MANEJO DE ERRORES
-    manejo_de_errores(parser, args.file, args.n, args.red, args.green, args.blue)
+    manejo_de_errores(parser, args.file, args.n)
 
     # imprimo los argumentos
     #print (args)
@@ -166,7 +172,7 @@ if __name__ == '__main__':
         procesos.append(p)
 
     # leer archivo y escribir al pipe de a chunks
-    new_file = open(f'{args.file}_copy', 'rb') 
+    new_file = open(f'{args.file}'.replace('.ppm','_copy.ppm'), 'rb') 
     while True:
         #chunk = fd.read(chunk_sz)
         chunk = new_file.read(chunk_sz)
@@ -189,4 +195,21 @@ if __name__ == '__main__':
     child_pipe.close()
     for i in pipes:
         i.close()
+
+    # padre imprime creacion exitosa
     print("\nSe generaron correctamente los 3 archivos\n")
+
+    # bonus track
+    if os.path.isfile('filtros'):
+        os.remove('filtros')
+    tres_filtros = open('filtros', 'a')
+    letras_colores = ['r', 'g', 'b']
+    for letra in letras_colores:
+        if letra == 'r':
+            tres_filtros.write('FILTRO ROJO\n-----------\n')
+        if letra == 'g':
+            tres_filtros.write('\nFILTRO VERDE\n------------\n')
+        if letra == 'b':
+            tres_filtros.write('\nFILTRO AZUL\n-----------\n')
+        tres_filtros.write(open(f'{letra}_{args.file}', 'r').read())
+
