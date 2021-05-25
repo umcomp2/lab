@@ -1,86 +1,61 @@
 #!/usr/bin/python3
 import argparse
 import multiprocessing
-#import os
-#import matplotlib.pyplot as plt
-#from itertools import islice
 from collections import Counter
 import os
 
+rojo = list()
+verde = list()
+azul = list()
 
-def read_and_dump(pipe, chunk_sz, rojo, verde, azul):
+def read_and_dump(pipe, chunk_sz, escala_rojo, escala_verde, escala_azul):
     while True:
         chunk = pipe.recv() # recive el chunk que envie
-        for x in range(0, len(chunk), 3): # para x desde 0 hasta el largo del bloque leer de a 3 posiciones
-            rojo.append(chunk[x])
+        for x in range(0, len(chunk), 3): # para x desde 0 hasta el largo del bloque, leer de a 3 posiciones
+            intensidad = chunk[x] * escala_rojo
+            if intensidad > 255:
+                intensidad = 255
+            rojo.append(round(intensidad))
         for x in range(1, len(chunk), 3):
-            verde.append(chunk[x])
+            intensidad = chunk[x] * escala_verde
+            if intensidad > 255:
+                intensidad = 255
+            verde.append(round(intensidad))
         for x in range(2, len(chunk), 3):
-            azul.append(chunk[x])
-        '''listado = list(islice(chunk, 3)) # divide el chunk cada 3 bytes
-        rojo.append(listado[0]) # agrego el primer item de la lista a la lista rojo
-        verde.append(listado[1]) # agrego el segundo item de la lista a la lista verde
-        azul.append(listado[2]) # agrego el tercer item de la lista a la lista azul'''
+            intensidad = chunk[x] * escala_azul
+            if intensidad > 255:
+                intensidad = 255
+            azul.append(round(intensidad))
         if len(chunk) < chunk_sz:
             break
     pipe.close()
     return rojo, verde, azul
 
-def crear_filtros(pipe, filename, chunk_sz, color, rojo, verde, azul, escala_rojo, escala_verde, escala_azul):
-    rojo, verde, azul = read_and_dump(pipe, chunk_sz, rojo, verde, azul) # tomo las listas rojo, verde y azul
+def crear_filtros(pipe, filename, chunk_sz, color, escala_rojo, escala_verde, escala_azul):
+    rojo, verde, azul = read_and_dump(pipe, chunk_sz, escala_rojo, escala_verde, escala_azul) # tomo las listas rojo, verde y azul
     if color == 'red':
         filtro_rojo = open(f'r_{filename}', 'w') # creo el archivo para guardar el filtro de rojos
-        lista_rojo = list()
-        for i in rojo: 
-            lista_rojo.append(i) # cada valor del color rojo lo guardo en una sola lista
-        lista_rojo.sort() # ordeno la lista
-        f_rojo = Counter(lista_rojo) # relizo un conteo de cada item y lo guardo pero me lo vuelve a desordenar (se guarda como tuplas)
-        rojo_ordenado = sorted(f_rojo.items()) # ordeno la lista que me devolvio la funcion Counter    
+        rojo.sort()
+        f_rojo = Counter(rojo)
+        rojo_ordenado = sorted(f_rojo.items())
         for tupla in rojo_ordenado:
-            lista = list(tupla) # las tuplas son inmutables por lo que debo convertir c/u en una lista,
-            lista[1] = lista[1] * escala_rojo # cambiar el valor necesitado
-            tupla = tuple(lista) # y volverla a convertir en tupla
             filtro_rojo.write(str(tupla) + '\n') # escribo el resultado en el archivo que cree anteriormente
     
     elif color == 'green':
         filtro_verde = open(f'g_{filename}', 'w')
-        lista_verde = list()
-        for i in verde:
-            lista_verde.append(i)
-        lista_verde.sort()
-        f_verde = Counter(lista_verde)
+        verde.sort()
+        f_verde = Counter(verde)
         verde_ordenado = sorted(f_verde.items())
         for tupla in verde_ordenado:
-            lista = list(tupla)
-            lista[1] = lista[1] * escala_verde
-            tupla = tuple(lista)
             filtro_verde.write(str(tupla) + '\n')
 
     elif color == 'blue':
         filtro_azul = open(f'b_{filename}', 'w')
-        lista_azul = list()
-        for i in azul:
-            lista_azul.append(i)
-        lista_azul.sort()
-        f_azul = Counter(lista_azul)
+        azul.sort()
+        f_azul = Counter(azul)
         azul_ordenado = sorted(f_azul.items())
         for tupla in azul_ordenado:
-            lista = list(tupla)
-            lista[1] = lista[1] * escala_azul
-            tupla = tuple(lista)
             filtro_azul.write(str(tupla) + '\n')
-
-'''def crear_hist(pipe, filename, chunk_sz, color, rojo, verde, azul):
-    h_r, h_v, h_a = read_and_dump(pipe, filename, chunk_sz, color, rojo, verde, azul)
-    plt.hist(h_r, bins=256, color = 'red', edgecolor='red')
-    plt.savefig('red.png')
-    plt.cla()
-    plt.hist(h_v, bins=256, color = 'green', edgecolor='green')
-    plt.savefig('green.png')
-    plt.cla()
-    plt.hist(h_a, bins=256, color = 'blue', edgecolor='blue')
-    plt.savefig('blue.png')
-    plt.cla()'''
 
 def quitar_header(leido):
     # quito los comentarios
@@ -89,14 +64,14 @@ def quitar_header(leido):
         sgte_enter = leido.find(b"\n", comienzo_comentario + 1) # busca la posicion del primer \n que le sigue al encontrado anteriormente
         leido = leido.replace(leido[comienzo_comentario:sgte_enter], b"") # reemplaza por un byte vacio todo lo que este entre la posicion del comienzo del comentario y la del \n que le sigue
 
-    # sacar encabezado
-    primer_enter = leido.find(b"\n") + 1 # busca la posicion del primer \n
-    segundo_enter = leido.find(b"\n", primer_enter) + 1 # busca la posicion del \n que le sigue al anterior
-    ultimo_enter = leido.find(b"\n", segundo_enter) + 1 # busca la posicion del siguiente \n que sera el ultimo del encabezado
+    # encontrar encabezado
+    primer_enter = leido.find(b"\n") # busca la posicion del primer \n
+    segundo_enter = leido.find(b"\n", primer_enter + 1) # busca la posicion del \n que le sigue al anterior
+    ultimo_enter = leido.find(b"\n", segundo_enter + 1) # busca la posicion del siguiente \n que sera el ultimo del encabezado
     #encabezado = leido[:ultimo_enter].decode()  # guarda todo lo que esta antes del ultimo enter
 
     # guardo el cuerpo
-    cuerpo = leido[ultimo_enter:] # guarda todo lo que esta despues del ultimo enter
+    cuerpo = leido[ultimo_enter + 1:] # guarda todo lo que esta despues del ultimo enter
     new_file = open(f'{args.file}'.replace('.ppm', '_copy.ppm'), 'wb')
     new_file.write(cuerpo)
     new_file.close()
@@ -129,21 +104,21 @@ if __name__ == '__main__':
     # creo los argumentos
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--file', action='store', help='Nombre del archivo', required=True)
-    parser.add_argument('-n', type=int, help='Tamano del bloque')
+    parser.add_argument('-s', '--size', type=int, help='Tamano del bloque')
     parser.add_argument('-r', '--red', type=float, help='Escalar color rojo', default=1)
     parser.add_argument('-g', '--green', type=float, help='Escalar color verde', default=1)
     parser.add_argument('-b', '--blue', type=float, help='Escalar color azul', default=1)
     args = parser.parse_args()
 
     # MANEJO DE ERRORES
-    manejo_de_errores(parser, args.file, args.n)
+    manejo_de_errores(parser, args.file, args.size)
 
     # imprimo los argumentos
     #print (args)
 
     #fd = os.open(f'{args.file}', os.O_RDWR)
     fd = open(f'{args.file}', 'rb')
-    chunk_sz = int(args.n)
+    chunk_sz = int(args.size)
     escala_rojo = args.red
     escala_verde = args.green
     escala_azul = args.blue
@@ -161,13 +136,10 @@ if __name__ == '__main__':
     pipes = []
     procesos = []
     colores = ['red','green','blue']
-    rojo = list()
-    verde = list()
-    azul = list()
     for color in colores: # esto es para que se cree un hijo por cada color (3 hijos)
         parent_pipe, child_pipe = multiprocessing.Pipe()
         pipes.append(parent_pipe)
-        p = multiprocessing.Process(target=crear_filtros, args=(child_pipe, args.file, chunk_sz, color, rojo, verde, azul, escala_rojo, escala_verde, escala_azul))
+        p = multiprocessing.Process(target=crear_filtros, args=(child_pipe, args.file, chunk_sz, color, escala_rojo, escala_verde, escala_azul))
         p.start() # inicializo el hijo
         procesos.append(p)
 
