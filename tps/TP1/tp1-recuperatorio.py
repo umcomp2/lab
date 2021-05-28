@@ -2,7 +2,6 @@
 
 import argparse
 import multiprocessing as mp
-import os
 import re
 
 def leer_encabezado(archivo):
