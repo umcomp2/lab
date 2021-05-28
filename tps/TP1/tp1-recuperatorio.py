@@ -3,6 +3,7 @@
 import argparse
 import multiprocessing as mp
 import re
+import time
 
 def leer_encabezado(archivo):
     #rb = Abrir fichero de lectura en binario
@@ -21,9 +22,11 @@ def leer_encabezado(archivo):
         Altura = anchura[0][1]
         head = header.readline().strip()
         MaxVal = head
-        # print("\n----Encabezado----\n")
-        # for a in dict_header.items():
-        # 	print(a)
+        #print("----------ENCABEZADO----------\n")
+        #print(f"Numero magico----->{Numero_magico}")
+        #print(f"Anchura----->{Anchura}")
+        #print(f"Altura----->{Altura}")
+        #print(f"MaxVal----->{MaxVal}")
     return Numero_magico, Anchura, Altura, MaxVal
 
 def leer_raster(archivo, cola, size):
@@ -183,6 +186,8 @@ if __name__=="__main__":
 
     #Iniciar hijos
     for i in lista_hijos:
+        time.sleep(2)
+        print("Iniciando hijo...")
         i.start()
     
     #Esperemos a los hijos
