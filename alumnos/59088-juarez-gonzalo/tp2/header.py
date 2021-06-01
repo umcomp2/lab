@@ -19,6 +19,14 @@ def h_calc_colorsize(hdr):
 def h_calc_totalbytes(hdr):
     return hdr["ops"]["calc_colorsize"](hdr) * hdr["b_per_px"] * hdr["cols"] * hdr["rows"]
 
+def h_swaprc(hdr):
+    hdr["cols"], hdr["rows"] = hdr["rows"], hdr["cols"]
+
+def h_index2rc(hdr, idx):
+    row = idx // hdr["rows"]
+    col = idx % hdr["cols"]
+    return row, col
+
 # Parsea el header de un archivo .ppm, populando el diccionario hdr global con informacion
 # @hdr:  diccionario header
 # @rb:  Bytes donde se encuentra el header
@@ -70,7 +78,9 @@ def parse_header(hdr, rb):
 header_ops = {
     "calc_totalbytes": h_calc_totalbytes,
     "calc_colorsize": h_calc_colorsize,
-    "parse": parse_header
+    "parse": parse_header,
+    "swaprc": h_swaprc,
+    "index2rc": h_index2rc
 }
 
 header = {
