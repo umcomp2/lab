@@ -1,6 +1,8 @@
 import sys
 import getopt
 
+EOF = b""
+
 def PPM_ALIGN(num, b_per_px):
     return num // b_per_px * b_per_px if num >= b_per_px else b_per_px
 
@@ -16,9 +18,14 @@ def parse_args(argv):
     opt, args = getopt.getopt(argv, "s:f:", ["size=", "file="])
     fname = ""
     rwsize = 0
+    rot = 1
 
     for o in opt:
         oname = o[0].replace("-","")
+
+        if oname == "sentido":
+            rot = -1
+            continue
 
         if oname[0] == "s":
             rwsize = int(o[1])

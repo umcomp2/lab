@@ -21,11 +21,24 @@ def h_calc_totalbytes(hdr):
 
 def h_swaprc(hdr):
     hdr["cols"], hdr["rows"] = hdr["rows"], hdr["cols"]
+    lines = hdr["content"].split(b'\n')
+    rcline = 2
+    for i in range(len(lines)):
+        if b"#" not in lines[i]:
+            rcline -= 1
+        if not rcline:
+            lines[i] = bytes("%s %s" % (str(hdr["cols"]), str(hdr["rows"])), "utf8")
+            break
+    hdr["content"] = b'\n'.join(lines)
 
-def h_index2rc(hdr, idx):
+def h_pixel2rc(hdr, idx):
     row = idx // hdr["rows"]
-    col = idx % hdr["cols"]
+    col = idx % hdr["rows"]
     return row, col
+
+def h_rc2pixel(hdr, row, col):
+    idx = row * hdr["rows"] + col
+    return idx
 
 # Parsea el header de un archivo .ppm, populando el diccionario hdr global con informacion
 # @hdr:  diccionario header
@@ -80,7 +93,8 @@ header_ops = {
     "calc_colorsize": h_calc_colorsize,
     "parse": parse_header,
     "swaprc": h_swaprc,
-    "index2rc": h_index2rc
+    "pixel2rc": h_pixel2rc,
+    "rc2pixel": h_rc2pixel
 }
 
 header = {
