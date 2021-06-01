@@ -170,6 +170,8 @@ if __name__=="__main__":
         print("ERROR: la escala (-r -g o -b) no pueden ser negativas")
         exit()
 
+    args.size = args.size - (args.size%3) #reajusta a multiplo de 3
+
     #Creacion de IPC
     q_r = mp.Queue()
     q_g = mp.Queue()
