@@ -9,7 +9,7 @@ def leer_encabezado(archivo):
     #rb = Abrir fichero de lectura en binario
     with open(archivo, "rb") as header:
         head = header.readline().strip()
-        if head == b"P6":
+        if head == b"P6" or b"P3":
             Numero_magico = head
         while True:
             head = header.readline().strip()
@@ -20,8 +20,7 @@ def leer_encabezado(archivo):
             break
         Anchura = anchura[0][0]
         Altura = anchura[0][1]
-        head = header.readline().strip()
-        MaxVal = head
+        MaxVal = header.readline().strip()
         #print("----------ENCABEZADO----------\n")
         #print(f"Numero magico----->{Numero_magico}")
         #print(f"Anchura----->{Anchura}")
@@ -30,6 +29,7 @@ def leer_encabezado(archivo):
     return Numero_magico, Anchura, Altura, MaxVal
 
 def leer_raster(archivo, cola, size):
+    #Comparamos el encabezado y leemos el cuerpo del raster
     Numero_magico, Anchura, Altura, MaxVal = leer_encabezado(archivo)
     with open(archivo, "rb") as header:
         while True:
@@ -195,3 +195,8 @@ if __name__=="__main__":
     #Esperemos a los hijos
     for i in lista_hijos:
         i.join()
+
+    time.sleep(2)
+    print("Las imagenes han sido filtradas con exito")
+    time.sleep(1)
+    print("El padre finalizo...")
