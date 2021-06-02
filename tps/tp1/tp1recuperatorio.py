@@ -59,6 +59,8 @@ def leer_raster(archivo, size, queue):
     
 
 def hijo_rojo(extension, size, queue_r, escala):
+    print(".........Trabajando con los pixeles rojos de la imagen.........")
+    time.sleep(1)
     header = leer_encabezado(extension)
     #Creo un archivo para guardar el contenido
     archivo = open("Red_" + extension ,"wb")
@@ -87,7 +89,8 @@ def hijo_rojo(extension, size, queue_r, escala):
         archivo.write(bytes(x))
 
 def hijo_verde(extension,size, queue_g, escala):
-    #print("Trabajando con los pixeles verdes de la imagen")
+    print(".........Trabajando con los pixeles verdes de la imagen.........")
+    time.sleep(1)
     header = leer_encabezado(extension)
     #Creo un archivo para guardar el contenido
     archivo = open("Green_"+ extension, "wb")
@@ -117,6 +120,8 @@ def hijo_verde(extension,size, queue_g, escala):
 
 
 def hijo_azul(extension, size, queue_b, escala):
+    print(".........Trabajando con los pixeles azules de la imagen.........")
+    time.sleep(2)
     header = leer_encabezado(extension)
     #Creo un archivo para guardar el contenido
     archivo = open("Blue_" + extension, "wb")
@@ -199,4 +204,3 @@ if __name__ == "__main__":
         i.start()
         i.join()
     print("El proceso padre terminó")
-    
