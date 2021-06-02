@@ -16,8 +16,16 @@ def h_calc_colorsize(hdr):
     return 1
 
 # @hdr:  diccionario header
-def h_calc_totalbytes(hdr):
+def h_calc_imgbytes(hdr):
     return hdr["ops"]["calc_colorsize"](hdr) * hdr["b_per_px"] * hdr["cols"] * hdr["rows"]
+
+# @hdr:  diccionario header
+def h_calc_hdrbytes(hdr):
+    return len(hdr["content"])
+
+# @hdr:  diccionario header
+def h_calc_totalbytes(hdr):
+    return hdr["ops"]["calc_imgbytes"](hdr) + hdr["ops"]["calc_hdrbytes"](hdr)
 
 def h_swaprc(hdr):
     hdr["cols"], hdr["rows"] = hdr["rows"], hdr["cols"]
@@ -32,12 +40,12 @@ def h_swaprc(hdr):
     hdr["content"] = b'\n'.join(lines)
 
 def h_pixel2rc(hdr, idx):
-    row = idx // hdr["rows"]
-    col = idx % hdr["rows"]
+    row = idx // hdr["cols"]
+    col = idx % hdr["cols"]
     return row, col
 
 def h_rc2pixel(hdr, row, col):
-    idx = row * hdr["rows"] + col
+    idx = row * hdr["cols"] + col
     return idx
 
 # Parsea el header de un archivo .ppm, populando el diccionario hdr global con informacion
@@ -89,6 +97,8 @@ def parse_header(hdr, rb):
     hdr["b_per_px"] = hdr["ops"]["calc_colorsize"](hdr) * NCOLORS
 
 header_ops = {
+    "calc_imgbytes": h_calc_imgbytes,
+    "calc_hdrbytes": h_calc_hdrbytes,
     "calc_totalbytes": h_calc_totalbytes,
     "calc_colorsize": h_calc_colorsize,
     "parse": parse_header,
