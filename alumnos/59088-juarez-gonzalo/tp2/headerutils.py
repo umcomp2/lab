@@ -1,5 +1,3 @@
-import os
-
 NCOLORS = 3
 
 def COLORSIZE(header):
