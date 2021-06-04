@@ -66,13 +66,22 @@ def producer(in_header, filepath, rsize):
         for i in range(NCONSUM):
             nonempty_sem.release()
 
+def write_output(out_filename):
+    out_fd = os.open(out_filename, os.O_CREAT | os.O_RDONLY | os.O_WRONLY, stat.S_IRUSR | stat.S_IWUSR)
+    wc = 0
+    totalsize = FILESIZE(out_header)
+    while wc < totalsize:
+        wb = os.write(out_fd, out_mmap[wc:])
+        wc += wb
+    os.close(out_fd)
+
 if __name__ == "__main__":
     args = parse_args(sys.argv[1:])
 
     if args["sentido"]:
-        rc_rot = r_rc_rot
+        rc_rot = ccw_rc_rot
     else:
-        rc_rot = l_rc_rot
+        rc_rot = cw_rc_rot
 
     in_header = search_fileheader(args["filepath"])
     out_header = header_cp(in_header)
@@ -98,13 +107,12 @@ if __name__ == "__main__":
     for p in pool:
         p.join()
 
-    out_fd = os.open("rot.ppm", os.O_CREAT | os.O_RDONLY | os.O_WRONLY, stat.S_IRUSR | stat.S_IWUSR)
-    wc = 0
-    totalsize = FILESIZE(out_header)
-    while wc < totalsize:
-        wb = os.write(out_fd, out_mmap[wc:])
-        wc += wb
+    if args["sentido"]:
+        out_filename = "ccw." + args["filename"]
+    else:
+        out_filename = "cw." + args["filename"]
 
-    os.close(out_fd)
+    write_output(out_filename)
+
     shm.close()
     out_mmap.close()
