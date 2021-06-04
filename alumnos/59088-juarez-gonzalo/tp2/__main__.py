@@ -66,7 +66,7 @@ def producer(in_header, filepath, rsize):
         for i in range(NCONSUM):
             nonempty_sem.release()
 
-def write_output(out_filename):
+def w_mmap2file(out_filename):
     out_fd = os.open(out_filename, os.O_CREAT | os.O_RDONLY | os.O_WRONLY, stat.S_IRUSR | stat.S_IWUSR)
     wc = 0
     totalsize = FILESIZE(out_header)
@@ -112,7 +112,7 @@ if __name__ == "__main__":
     else:
         out_filename = "cw." + args["filename"]
 
-    write_output(out_filename)
+    w_mmap2file(out_filename)
 
     shm.close()
     out_mmap.close()
