@@ -24,35 +24,27 @@ def consumer(in_header, out_header, n, color_offset, mmnode, rbc):
         color_byte = b + color_offset
         out_byte = byte_rot(rc_rot, in_header, out_header, rbc + color_byte)
         out_mmap[out_byte] = mmnode.mm[color_byte]
-    return n
 
 def consumer_wait(in_header, out_header, rsize, color_offset):
-    leftbytes = BODYSIZE(out_header)
-    rbc = 0
+    bodybytes = BODYSIZE(out_header)
+    leftbytes = bodybytes
     curr = mm_list.head
-    prev = None
+    next = None
     while leftbytes > 0:
 
         mm_mtx.acquire()
-        if not curr.next:
+        next = mm_list.dequeue_ref(curr)
+        while not next:
             mm_condvar.wait()
+            next = mm_list.dequeue_ref(curr)
 
-        if not curr.next:
-            mm_list.print_list()
-            print(curr, curr.__dict__)
-            raise ValueError()
-
-        curr = curr.next
+        curr = next
         mm_mtx.release()
 
         n = rsize if rsize < leftbytes else leftbytes
-        consumer(in_header, out_header, n, color_offset, curr, rbc)
+        consumer(in_header, out_header, n, color_offset, curr, bodybytes - leftbytes)
         leftbytes -= n
-        rbc += n
 
-        mm_mtx.acquire()
-        curr.ref -= 1
-        mm_mtx.release()
 
 def producer(in_header, filepath, rsize):
     rb = b""
@@ -65,7 +57,7 @@ def producer(in_header, filepath, rsize):
         mm = mmap.mmap(-1, len(rb))
         mm.write(rb)
         mmnode = Mem_Node(mm, NCONSUM)
-        mm_list.add(mmnode)
+        mm_list.enqueue(mmnode)
 
         mm_condvar.notify_all()
         mm_mtx.release()
@@ -97,7 +89,7 @@ if __name__ == "__main__":
 
     rsize = PPM_ALIGN(in_header, args["rsize"])
 
-    mm_list = List()
+    mm_list = Mem_List()
     mm_mtx = threading.Lock()
     mm_condvar = threading.Condition(mm_mtx)
 
