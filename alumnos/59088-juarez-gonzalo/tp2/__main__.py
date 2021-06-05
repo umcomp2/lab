@@ -6,6 +6,7 @@ import threading
 
 from parse import *
 from rot import *
+from llist import *
 
 NCHILD = NCOLORS
 NCONSUM = NCOLORS
@@ -13,44 +14,45 @@ NCONSUM = NCOLORS
 out_mmap = None
 rc_rot = None
 
+mm_list = None
+mm_mtx = None
+mm_condvar = None
 
-# =============== shm & shm sync ================
-#
-#   Sincronizacion necesaria en algoritmo producer-consumer
+def consumer(in_header, out_header, n, color_offset, mmnode, rbc):
+    b_per_px = BYTES_PER_PX(out_header)
+    for b in range(0, n, b_per_px):
+        color_byte = b + color_offset
+        out_byte = byte_rot(rc_rot, in_header, out_header, rbc + color_byte)
+        out_mmap[out_byte] = mmnode.mm[color_byte]
+    return n
 
-shm = None          # el buffer compartido
-empty_sem = None    # shm esta vacio
-nonempty_sem = None # shm tiene contenido
-
-# =============== consumers sync ===============
-#
-#   Sincronizacion necesaria para que todos los consumers
-#   lean bloque a bloque a la par
-
-c_barrier = None
-
-def empty_sem_up():
-    empty_sem.release()
-
-def consumer(in_header, out_header, rsize, color_offset):
+def consumer_wait(in_header, out_header, rsize, color_offset):
     leftbytes = BODYSIZE(out_header)
     rbc = 0
-    b_per_px = BYTES_PER_PX(out_header)
+    curr = mm_list.head
+    prev = None
+    while leftbytes > 0:
 
-    while leftbytes:
-        nonempty_sem.acquire()
+        mm_mtx.acquire()
+        if not curr.next:
+            mm_condvar.wait()
+
+        if not curr.next:
+            mm_list.print_list()
+            print(curr, curr.__dict__)
+            raise ValueError()
+
+        curr = curr.next
+        mm_mtx.release()
 
         n = rsize if rsize < leftbytes else leftbytes
-        shm.seek(0, os.SEEK_SET)
-        rb = shm.read(n)
+        consumer(in_header, out_header, n, color_offset, curr, rbc)
         leftbytes -= n
-        for b in range(0, n, b_per_px):
-            color_byte = b + color_offset
-            out_byte = byte_rot(rc_rot, in_header, out_header, rbc + color_byte)
-            out_mmap[out_byte] = rb[color_byte]
         rbc += n
 
-        c_barrier.wait()
+        mm_mtx.acquire()
+        curr.ref -= 1
+        mm_mtx.release()
 
 def producer(in_header, filepath, rsize):
     rb = b""
@@ -58,13 +60,16 @@ def producer(in_header, filepath, rsize):
 
     os.lseek(in_fd, HEADERSIZE(in_header), os.SEEK_SET)
     while (rb := os.read(in_fd, rsize)) != b"":
-        empty_sem.acquire()
+        mm_mtx.acquire()
 
-        shm.seek(0, os.SEEK_SET)
-        shm.write(rb)
+        mm = mmap.mmap(-1, len(rb))
+        mm.write(rb)
+        mmnode = Mem_Node(mm, NCONSUM)
+        mm_list.add(mmnode)
 
-        for i in range(NCONSUM):
-            nonempty_sem.release()
+        mm_condvar.notify_all()
+        mm_mtx.release()
+
 
 def w_mmap2file(out_filename):
     out_fd = os.open(out_filename, os.O_CREAT | os.O_RDONLY | os.O_WRONLY, stat.S_IRUSR | stat.S_IWUSR)
@@ -92,15 +97,13 @@ if __name__ == "__main__":
 
     rsize = PPM_ALIGN(in_header, args["rsize"])
 
-    shm = mmap.mmap(-1, rsize)
-    empty_sem = threading.Semaphore(1)
-    nonempty_sem = threading.Semaphore(0)
-
-    c_barrier = threading.Barrier(NCHILD, empty_sem_up)
+    mm_list = List()
+    mm_mtx = threading.Lock()
+    mm_condvar = threading.Condition(mm_mtx)
 
     pool = []
     for i in range(NCHILD):
-        pool.append(threading.Thread(target=consumer, args=(in_header, out_header, rsize, i)))
+        pool.append(threading.Thread(target=consumer_wait, args=(in_header, out_header, rsize, i)))
         pool[i].start()
 
     producer(in_header, args["filepath"], rsize)
@@ -114,5 +117,4 @@ if __name__ == "__main__":
 
     w_mmap2file(out_filename)
 
-    shm.close()
     out_mmap.close()
