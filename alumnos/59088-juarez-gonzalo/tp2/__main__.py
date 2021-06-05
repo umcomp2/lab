@@ -54,8 +54,9 @@ def producer(in_header, filepath, rsize):
     while (rb := os.read(in_fd, rsize)) != b"":
         mm_mtx.acquire()
 
-        mm = mmap.mmap(-1, len(rb))
-        mm.write(rb)
+        #mm = mmap.mmap(-1, len(rb))
+        #mm.write(rb)
+        mm = rb
         mmnode = Mem_Node(mm, NCONSUM)
         mm_list.enqueue(mmnode)
 
