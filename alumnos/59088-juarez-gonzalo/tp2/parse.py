@@ -17,11 +17,12 @@ def usagendie():
     h += "\t-h, --help\tMuestra esta ayuda\n"
     h += "\t-s, --size\tTamaño del bloque de lectura\n"
     h += "\t-f, --file\tArchivo a procesar\n"
+    h += "\t-s, --signed\tModifica la rotacion default (sentido de agujas del reloj) a contrarreloj\n"
     sys.stdout.write(h)
     sys.exit(1)
 
 def parse_args(argv):
-    opt, args = getopt.getopt(argv, "s:f:", ["size=", "file=", "sentido"])
+    opt, args = getopt.getopt(argv, "s:f:h", ["size=", "file=", "sentido", "help"])
     filename = ""
     filepath = ""
     rsize = 0
