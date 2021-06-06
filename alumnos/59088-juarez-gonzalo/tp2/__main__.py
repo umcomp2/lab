@@ -59,7 +59,7 @@ def producer(in_header, filepath, rsize):
         #mm.write(rb)
         mm = rb
         mmnode = Mem_Node(mm, NCONSUM)
-        mm_list.enqueue(mmnode)
+        mm_list.add_tail(mmnode)
 
         mm_condvar.notify_all()
         mm_mtx.release()
