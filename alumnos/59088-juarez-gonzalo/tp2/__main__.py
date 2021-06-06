@@ -28,16 +28,17 @@ def consumer(in_header, out_header, n, color_offset, mmnode, rbc):
 def consumer_wait(in_header, out_header, rsize, color_offset):
     bodybytes = BODYSIZE(out_header)
     leftbytes = bodybytes
+
     curr = mm_list.head
     next = None
     while leftbytes > 0:
 
         mm_mtx.acquire()
-        next = mm_list.dequeue_ref(curr)
+        next = mm_list.singly_next_safe(curr)
         while not next:
             mm_condvar.wait()
-            next = mm_list.dequeue_ref(curr)
-
+            next = mm_list.singly_next_safe(curr)
+        mm_list.delete_ttl(curr)
         curr = next
         mm_mtx.release()
 
@@ -90,7 +91,7 @@ if __name__ == "__main__":
 
     rsize = PPM_ALIGN(in_header, args["rsize"])
 
-    mm_list = Mem_List()
+    mm_list = Ttl_List()
     mm_mtx = threading.Lock()
     mm_condvar = threading.Condition(mm_mtx)
 

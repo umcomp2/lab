@@ -44,21 +44,25 @@ class List():
             self.delete(self.head.next)
         return dq
 
+    def singly_next_safe(self, curr):
+        next = None
+        if curr.next != self.head:
+            next = curr.next
+        return next
+
 class Mem_Node(List_Head):
-    # necesita exclusion mutua externa antes de modificar ref
+    # necesita exclusion mutua externa antes de modificar ttl
     # mmap y mmunmap externos
-    def __init__(self, mm, ref):
+    def __init__(self, mm, ttl):
         self.mm = mm
-        self.ref = ref
+        self.ttl = ttl
         super().__init__()
 
-class Mem_List(List):
-    def dequeue_ref(self, mmnode):
-        dq = None
-        if mmnode.next != self.head:
-            dq = mmnode.next
-        if mmnode != self.head and dq:
-            mmnode.ref -= 1
-            if mmnode.ref == 0:
-                self.delete(mmnode)
-        return dq
+class Ttl_List(List):
+    def delete_ttl(self, rm):
+        # head no tiene .ttl, es un stub que hace mas facil el uso de la lista
+        if rm == self.head:
+            return
+        rm.ttl -= 1
+        if rm.ttl == 0:
+            self.delete(rm)
