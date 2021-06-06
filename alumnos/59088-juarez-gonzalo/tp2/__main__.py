@@ -38,14 +38,13 @@ def consumer_wait(in_header, out_header, rsize, color_offset):
         while not next:
             mm_condvar.wait()
             next = mm_list.singly_next_safe(curr)
-        mm_list.delete_ttl(curr)
+        mm_list.delete(curr)
         curr = next
         mm_mtx.release()
 
         n = rsize if rsize < leftbytes else leftbytes
         consumer(in_header, out_header, n, color_offset, curr, bodybytes - leftbytes)
         leftbytes -= n
-
 
 def producer(in_header, filepath, rsize):
     rb = b""
@@ -55,15 +54,12 @@ def producer(in_header, filepath, rsize):
     while (rb := os.read(in_fd, rsize)) != b"":
         mm_mtx.acquire()
 
-        #mm = mmap.mmap(-1, len(rb))
-        #mm.write(rb)
         mm = rb
         mmnode = Mem_Node(mm, NCONSUM)
         mm_list.add_tail(mmnode)
 
         mm_condvar.notify_all()
         mm_mtx.release()
-
 
 def w_mmap2file(out_filename):
     out_fd = os.open(out_filename, os.O_CREAT | os.O_RDONLY | os.O_WRONLY, stat.S_IRUSR | stat.S_IWUSR)

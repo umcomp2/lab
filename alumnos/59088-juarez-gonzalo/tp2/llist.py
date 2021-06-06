@@ -59,7 +59,7 @@ class Mem_Node(List_Head):
         super().__init__()
 
 class Ttl_List(List):
-    def delete_ttl(self, rm):
+    def delete(self, rm):
         # head no tiene .ttl, es un stub que hace mas facil el uso de la lista
         if rm == self.head:
             return
