@@ -8,16 +8,16 @@ def multiplo3(num):
     return aprox
 
 def header_size(fd):
-    lectura = os.read(fd, 50)
-    lectura = lectura.split(b'\n')
-    size = 0
-    for i in range(0,len(lectura)):
-        if lectura[i] == b'255':
+    leer_header = os.read(fd, 50)
+    leer_header = (leer_header.split(b'\n'))  # Crea una lista con los elementos del header separados por \n
+    len_header = 0
+    for i in range(len(leer_header)):
+        if leer_header[i-1] == b'255':   # Compara el último elemento tomado por 'i'
             break
-        size += (len(lectura[i])+1)
-    size += (len(lectura[i])+1)
-    os.lseek(fd,0,0)
-    return size 
+        len_header += (len(leer_header[i]))
+        len_header += 1    # Representa los saltos de línea
+    os.lseek(fd, 0, 0)
+    return len_header
 
 def escalar_valor(byte,escala):
     value = int.from_bytes(byte,'big')
@@ -30,7 +30,6 @@ def generador_filtro(color,nombre_archivo,escala,header,conn,size):
     archivo_new= str(f'{color}_') + str(nombre_archivo)
     filtro = os.open(archivo_new,os.O_RDWR | os.O_CREAT)
     os.write(filtro,header)
-    os.lseek(filtro,header_size(filtro),0)
     while True:
         chunk = conn.recv()
         pixels=list()
@@ -70,10 +69,8 @@ if __name__ == '__main__':
     args =  parser.parse_args()
     
     foto = os.open(args.file,os.O_RDONLY)
-    os.lseek(foto,0,0)
     header = os.read(foto,header_size(foto))
     size = multiplo3(args.size)
-    os.lseek(foto,header_size(foto),0)
     print(header)
 
     colores = ['r','g','b']
@@ -99,4 +96,3 @@ if __name__ == '__main__':
     os.close(foto)
     for i in pipes:
         i.close()
-    
