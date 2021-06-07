@@ -2,22 +2,22 @@
 import argparse
 import multiprocessing as mp
 import os
+import sys
 
 def multiplo3(num):
     aprox=int(num-(num%3))
     return aprox
 
 def header_size(fd):
-    leer_header = os.read(fd, 50)
-    leer_header = (leer_header.split(b'\n'))  # Crea una lista con los elementos del header separados por \n
-    len_header = 0
-    for i in range(len(leer_header)):
-        if leer_header[i-1] == b'255':   # Compara el último elemento tomado por 'i'
+    lectura = os.read(fd, 50)
+    lectura = (lectura.split(b'\n'))  
+    size = 0
+    for i in range(len(lectura)):
+        if lectura[i-1] == b'255':   
             break
-        len_header += (len(leer_header[i]))
-        len_header += 1    # Representa los saltos de línea
+        size += (len(lectura[i])+1)   
     os.lseek(fd, 0, 0)
-    return len_header
+    return size
 
 def escalar_valor(byte,escala):
     value = int.from_bytes(byte,'big')
@@ -67,11 +67,18 @@ if __name__ == '__main__':
     parser.add_argument('-b', '--blue_scale',action="store", type=float,default=1, required=False, help="Intensidad del color en el filtro azul")
     parser.add_argument('-f', '--file',action="store", required=True, type=str, help="Imagen que se usara")
     args =  parser.parse_args()
-    
+
+    try:
+        foto = os.open(args.file, os.O_RDONLY)
+    except FileNotFoundError as err:
+        print("No se encontro el archivo a modificar")
+
     foto = os.open(args.file,os.O_RDONLY)
     header = os.read(foto,header_size(foto))
     size = multiplo3(args.size)
-    print(header)
+
+    if os.read(foto,2) != b'P6':
+        raise Exception("El archivo ingresado tiene un formato incorrecto")
 
     colores = ['r','g','b']
     escalas = [args.red_scale,args.green_scale,args.blue_scale]
@@ -91,7 +98,10 @@ if __name__ == '__main__':
         lectura = os.read(foto,size)
         for i in range(3):
             pipes[i].send(lectura)
+        print("Generando archivos")
         if len(lectura) < size and b'' in lectura:
+            print("##################################")
+            print("FIN Se han generado los archivos correctamente")
             break
     os.close(foto)
     for i in pipes:
