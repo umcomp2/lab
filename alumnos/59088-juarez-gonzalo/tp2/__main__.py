@@ -80,10 +80,13 @@ if __name__ == "__main__":
     else:
         rc_rot = ccw_rc_rot
 
+    colorfilter = args["colorfilter"]
+    doswap = args["rotopt"] != WALSH
+
     in_header = search_fileheader(args["filepath"])
     out_header = header_cp(in_header)
 
-    if args["rotopt"] != 3:
+    if doswap:
         swap_rc(out_header)
 
     out_mmap = mmap.mmap(-1, FILESIZE(out_header))
@@ -97,8 +100,9 @@ if __name__ == "__main__":
 
     pool = []
     for i in range(NCHILD):
-        pool.append(threading.Thread(target=consumer_wait, args=(in_header, out_header, rsize, i)))
-        pool[i].start()
+        if 1 << i & colorfilter:
+            pool.append(threading.Thread(target=consumer_wait, args=(in_header, out_header, rsize, i)))
+            pool[-1].start()
 
     producer(in_header, args["filepath"], rsize)
     for p in pool:
