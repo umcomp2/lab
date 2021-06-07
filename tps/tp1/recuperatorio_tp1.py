@@ -95,7 +95,7 @@ def manejo_de_errores(parser, filename, size):
     if not filename.endswith(".ppm"):
         parser.error('ERROR EN EL ARGUMENTO [-f] [--file]! El archivo ingresado no es .ppm')
 
-    # si el n ingresado es negativo
+    # si el s ingresado es negativo
     if size < 0:
         parser.error('ERROR EN EL ARGUMENTO [-n] ! El tamano del bloque a leer no puede ser un numero negativo.')
 
