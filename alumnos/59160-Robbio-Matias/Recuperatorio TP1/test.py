@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 import argparse
-import multiprocessing as mp
 import os
+from multiprocessing import Pipe,Process
+
 
 def multiplo3(num):
     aprox=int(num-(num%3))
@@ -26,13 +27,11 @@ def escalar_valor(byte,escala):
         value = 255
     return value.to_bytes(1,'big')
 
-def generador_filtro(color,nombre_archivo,escala,header,conn,size):
+def generador_filtro(color,nombre_archivo,escala,header,chunk,size):
     archivo_new= str(f'{color}_') + str(nombre_archivo)
     filtro = os.open(archivo_new,os.O_RDWR | os.O_CREAT)
     os.write(filtro,header)
-    os.lseek(filtro,header_size(filtro),0)
     while True:
-        chunk = conn.recv()
         pixels=list()
         for i in chunk:
             pixels.append(bytes([i]))
@@ -54,49 +53,31 @@ def generador_filtro(color,nombre_archivo,escala,header,conn,size):
         pixels_mod = b''
         for i in pixels:
             pixels_mod = pixels_mod + i
-        os.write(filtro,pixels_mod)
         if len(chunk) < size:
             break
-    return (f'Se genero el filtro {color}')
+    os.lseek(filtro,header_size(filtro),0)
+    os.write(filtro,pixels_mod)
+            
             
          
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Tp1 - procesa ppm')
     parser.add_argument('-s', '--size',action="store", type= int, required=True, help="Bloque de lectura(Preferentemente un numero multiplo de 3)")
-    parser.add_argument('-r', '--red_scale',action="store", type=float,default=1, required=False, help="Intensidad del color en el filtro rojo")
-    parser.add_argument('-g', '--green_scale',action="store", type=float,default=1, required=False, help="Intensidad del color en el filtro verde")
-    parser.add_argument('-b', '--blue_scale',action="store", type=float,default=1, required=False, help="Intensidad del color en el filtro azul")
+    parser.add_argument('-r', '--red_multiplier',action="store", type=float,default=1, required=False, help="Intensidad del color en el filtro rojo")
+    parser.add_argument('-g', '--green_multiplier',action="store", type=float,default=1, required=False, help="Intensidad del color en el filtro verde")
+    parser.add_argument('-b', '--blue_multiplier',action="store", type=float,default=1, required=False, help="Intensidad del color en el filtro azul")
     parser.add_argument('-f', '--file',action="store", required=True, type=str, help="Imagen que se usara")
     args =  parser.parse_args()
-    
+
     foto = os.open(args.file,os.O_RDONLY)
     os.lseek(foto,0,0)
+    print(header_size(foto))
     header = os.read(foto,header_size(foto))
-    size = multiplo3(args.size)
+    size = args.size
     os.lseek(foto,header_size(foto),0)
+    chunk = os.read(foto,size)
+    generador_filtro('r',args.file,1,header,chunk,size)
+    generador_filtro('g',args.file,1,header,chunk,size)
+    print(generador_filtro('b',args.file,1,header,chunk,size))
     print(header)
-
-    colores = ['r','g','b']
-    escalas = [args.red_scale,args.green_scale,args.blue_scale]
-    hijos = list()
-    pipes = list()
-    
-    for i in range(3):
-        parent_conn,child_conn = mp.Pipe()
-        hijo = mp.Process(target=generador_filtro,args=(colores[i],args.file,escalas[i],header,child_conn,size))
-        hijos.append(hijo)
-        pipes.append(parent_conn)
-    
-    for i in hijos:
-        i.start()
-    
-    while True:
-        lectura = os.read(foto,size)
-        for i in range(3):
-            pipes[i].send(lectura)
-        if len(lectura) < size and b'' in lectura:
-            break
-    os.close(foto)
-    for i in pipes:
-        i.close()
     
