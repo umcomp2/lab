@@ -8,7 +8,6 @@ from parse import *
 from rot import *
 
 NCHILD = NCOLORS
-NCONSUM = NCOLORS
 
 out_mmap = None
 rc_rot = None
@@ -52,7 +51,7 @@ def consumer(in_header, out_header, rsize, color_offset):
 
         c_barrier.wait()
 
-def producer(in_header, filepath, rsize):
+def producer(in_header, filepath, rsize, nconsum):
     rb = b""
     in_fd = os.open(filepath, os.O_RDONLY)
 
@@ -63,7 +62,7 @@ def producer(in_header, filepath, rsize):
         shm.seek(0, os.SEEK_SET)
         shm.write(rb)
 
-        for i in range(NCONSUM):
+        for i in range(nconsum):
             nonempty_sem.release()
 
 def w_mmap2file(out_filename):
@@ -85,11 +84,19 @@ if __name__ == "__main__":
     else:
         rc_rot = ccw_rc_rot
 
+    colorfilter = args["colorfilter"]
+    doswap = args["rotopt"] != WALSH
+
     in_header = search_fileheader(args["filepath"])
     out_header = header_cp(in_header)
 
-    if args["rotopt"] != 3:
+    if doswap:
         swap_rc(out_header)
+
+    nconsum = 0
+    for i in range(NCHILD):
+        if 1 << i & colorfilter:
+            nconsum += 1
 
     out_mmap = mmap.mmap(-1, FILESIZE(out_header))
     out_mmap.write(out_header["content"])
@@ -100,14 +107,15 @@ if __name__ == "__main__":
     empty_sem = threading.Semaphore(1)
     nonempty_sem = threading.Semaphore(0)
 
-    c_barrier = threading.Barrier(NCHILD, empty_sem_up)
+    c_barrier = threading.Barrier(nconsum, empty_sem_up)
 
     pool = []
     for i in range(NCHILD):
-        pool.append(threading.Thread(target=consumer, args=(in_header, out_header, rsize, i)))
-        pool[i].start()
+        if 1 << i & colorfilter:
+            pool.append(threading.Thread(target=consumer, args=(in_header, out_header, rsize, i)))
+            pool[-1].start()
 
-    producer(in_header, args["filepath"], rsize)
+    producer(in_header, args["filepath"], rsize, nconsum)
     for p in pool:
         p.join()
 
