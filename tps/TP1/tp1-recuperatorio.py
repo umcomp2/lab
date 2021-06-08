@@ -188,7 +188,6 @@ if __name__=="__main__":
 
     #Iniciar hijos
     for i in lista_hijos:
-        time.sleep(2)
         print("Iniciando hijo...")
         i.start()
     
@@ -196,7 +195,5 @@ if __name__=="__main__":
     for i in lista_hijos:
         i.join()
 
-    time.sleep(2)
     print("Las imagenes han sido filtradas con exito")
-    time.sleep(1)
     print("El padre finalizo...")
