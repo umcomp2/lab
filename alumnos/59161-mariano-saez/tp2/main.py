@@ -79,20 +79,46 @@ def gen_file(header: str, name: str):
     new_header = f'P6\n{new_high} {new_wide}\n255\n'
     os.write(fd_img, bytes(new_header, 'utf-8'))
 
-    # Crear y [volcar ruster]
+    # Crear matriz rotada
     matrix = [[[0, 0, 0] for i in range(new_wide)] for j in range(new_high)]
-    chorizo = b''
-    for i in range(new_high):
-        for j in range(new_wide):
+
+
+
+    return fd_img, len(new_header), matrix, new_wide
+
+# Indice global
+global_index = 0
+# Esta funcion se encarga de colocar los bytes del color correspondiente
+# en cada elemento de l matriz que recibe por parametro
+#   @matrix: Matriz en donde reemplazar los elementos
+#   @color: Color que se reemplazara dentro de cada pixel
+#       Rojo: 0
+#       Verde: 1
+#       Azul: 2
+#   @buff: Buffer de donde leer los pixeles que reemplezan elementosç
+#          en la matriz
+def fill_matrix(matrix, color, buff, width):
+    global global_index
+    for i in range(len(buff)):
+        if global_index % 3 == color:
+            row = int(global_index/width)
+            col = global_index % width
+            matrix[row][col][color] = buff[i]
+        global_index += 1
+    print(f"{matrix}")
+
+
+def dump_matrix(dump_fd, matrix):
+    dump_buff = b''
+    for i in range(len(matrix)):
+        for j in range(len(matrix[i])):
             for k in matrix[i][j]:
-                chorizo += k
-    os.write(fd_img, chorizo)
-
-    return fd_img, len(new_header)
-
-def rotate(high=256, wide=256):
-    # Matriz de elementos que representan la imagen
-    matrix = [[b'\xff', b'\xff', b'\xff'] for i in range(high*wide)]
+                dump_buff += bytes([k])
+    os.write(dump_fd, dump_buff)
+    print('Exito xd')
+# def rotate(high=256, wide=256):
+#     # Matriz de elementos que representan la imagen
+#     matrix = [[b'\xff', b'\xff', b'\xff'] for i in range(high*wide)]
 
 
 
@@ -124,7 +150,13 @@ if __name__ == "__main__":
     inicio_pl, header = seek_payload(m_img)
     m_img.close()
 
-    rot_fd, start = gen_file(header, args.file)
-    # rotate()
+    rot_fd, start, matrix, width = gen_file(header, args.file)
 
+    os.lseek(fd, inicio_pl, 0)    
+    buff = os.read(fd, args.size)
+    print(buff)
+
+    fill_matrix(matrix, 0, buff, width)
+
+    dump_matrix(rot_fd, matrix)
 
