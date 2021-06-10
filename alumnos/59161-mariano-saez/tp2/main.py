@@ -80,14 +80,15 @@ def gen_file(header: str, name: str):
     os.write(fd_img, bytes(new_header, 'utf-8'))
 
     # Crear matriz rotada
-    matrix = [[[0, 0, 0] for i in range(new_wide)] for j in range(new_high)]
-
-
+    matrix = [[[0, 0, 0] for i in range(new_high)] for j in range(new_wide)]
 
     return fd_img, len(new_header), matrix, new_wide
 
+
 # Indice global
-global_index = 0
+rglobal_index = 0
+gglobal_index = 0
+bglobal_index = 0
 # Esta funcion se encarga de colocar los bytes del color correspondiente
 # en cada elemento de l matriz que recibe por parametro
 #   @matrix: Matriz en donde reemplazar los elementos
@@ -95,31 +96,55 @@ global_index = 0
 #       Rojo: 0
 #       Verde: 1
 #       Azul: 2
-#   @buff: Buffer de donde leer los pixeles que reemplezan elementosç
+#   @buff: Buffer de donde leer los pixeles que reemplezan elementos
 #          en la matriz
-def fill_matrix(matrix, color, buff, width):
-    global global_index
-    for i in range(len(buff)):
-        if global_index % 3 == color:
-            row = int(global_index/width)
-            col = global_index % width
-            matrix[row][col][color] = buff[i]
-        global_index += 1
-    print(f"{matrix}")
+def rfill_matrix(matrix, color, buff, width):
+    global rglobal_index
+    for i in range(color, len(buff), 3):
+        col = int(rglobal_index/width)
+        row = width - rglobal_index % width - 1
+        matrix[row][col][color] = buff[i]
+        rglobal_index += 1
 
 
+def gfill_matrix(matrix, color, buff, width):
+    global gglobal_index
+    for i in range(color, len(buff), 3):
+        col = int(gglobal_index/width)
+        row = width - gglobal_index % width - 1
+        matrix[row][col][color] = buff[i]
+        gglobal_index += 1
+
+
+def bfill_matrix(matrix, color, buff, width):
+    global bglobal_index
+    for i in range(color, len(buff), 3):
+        col = int(bglobal_index/width)
+        row = width - bglobal_index % width - 1
+        matrix[row][col][color] = buff[i]
+        bglobal_index += 1
+
+
+# Guarda la matriz en disco
+# TODO: Escribir por chunks mientras se construye la matriz
+#       podria ser una aproximacion valida?
 def dump_matrix(dump_fd, matrix):
-    dump_buff = b''
-    for i in range(len(matrix)):
-        for j in range(len(matrix[i])):
-            for k in matrix[i][j]:
-                dump_buff += bytes([k])
-    os.write(dump_fd, dump_buff)
-    print('Exito xd')
-# def rotate(high=256, wide=256):
-#     # Matriz de elementos que representan la imagen
-#     matrix = [[b'\xff', b'\xff', b'\xff'] for i in range(high*wide)]
+    for i in matrix:
+        dump_buff = b''
+        for j in i:
+            # En lugar de un tercer bucle usar indexacion
+            # reduce el tiempo de rotacion de code.ppm [1.7MB]
+            # de 2m16,041s a 1m20,580s
+            # for k in j:
+            #     dump_buff += bytes([k])
+            dump_buff += bytes([j[0], j[1], j[2]])
+        os.write(dump_fd, dump_buff)
 
+
+# Funcion de prueba para ver la matriz
+def print_matrix(matrix):
+    for i in matrix:
+        print(f"{i}")
 
 
 if __name__ == "__main__":
@@ -141,6 +166,8 @@ if __name__ == "__main__":
                         required=False)
     args = parser.parse_args()
 
+    args.size = args.size - (args.size % 3)
+
     # Se abre el archivo con manejo de errores
     fd = open_image(f'{args.file}')
 
@@ -150,13 +177,30 @@ if __name__ == "__main__":
     inicio_pl, header = seek_payload(m_img)
     m_img.close()
 
+    # Crear el archivo donde se va a volcar y la matriz transpuesta
     rot_fd, start, matrix, width = gen_file(header, args.file)
+    
+    # Pararnos en el comienzo del ruster
+    os.lseek(fd, inicio_pl, 0)
+    
+    # Leer por chunks el archivo
+    while True:
+        buff = os.read(fd, args.size)
 
-    os.lseek(fd, inicio_pl, 0)    
-    buff = os.read(fd, args.size)
-    print(buff)
+        # Comprobar el caso que termine con \n
+        if len(buff) % 3 != 0:
+            buff = buff[:-1]
 
-    fill_matrix(matrix, 0, buff, width)
+        rfill_matrix(matrix, 0, buff, width)
+        gfill_matrix(matrix, 1, buff, width)
+        bfill_matrix(matrix, 2, buff, width)
 
+        if len(buff) < args.size:
+            break
+
+    print_matrix(matrix)
+
+    # Volcamos a disco lo procesado
     dump_matrix(rot_fd, matrix)
 
+    exit(0)
