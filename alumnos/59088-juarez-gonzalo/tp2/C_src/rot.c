@@ -1,4 +1,7 @@
+#ifndef HEADER
+#define HEADER
 #include "header.c"
+#endif
 
 #define BODYPX_OFFSET(offset) ({                \
     (unsigned long) (offset / NCOLORS);         \
@@ -47,6 +50,17 @@ void cw_rc_rot(
 {
     *out_rp = in_c;
     *out_cp = out_headerp->cols - in_r - 1;
+}
+
+void walsh_rc_rot(
+    struct header *out_headerp,
+    unsigned int in_r,
+    unsigned int in_c,
+    unsigned int *out_rp,
+    unsigned int *out_cp)
+{
+    *out_rp = out_headerp->rows - in_r - 1;
+    *out_cp = out_headerp->cols - in_c - 1;
 }
 
 unsigned long byte_rot(

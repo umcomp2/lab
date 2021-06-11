@@ -1,12 +1,16 @@
+#ifndef LIB
+#define LIB
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <string.h>
-
 #include <fcntl.h>
+#endif
 
+#ifndef HEADER
+#define HEADER
 #include "header.c"
+#endif
 
 
 #define CCW 1
@@ -40,6 +44,7 @@ void parse_args(int argc, char **argv, struct arguments *arg_struct)
 {
     int opt;
     arg_struct->rotopt = CCW;
+    arg_struct->colorfilter = RGB_FLAG;
 
     while ((opt = getopt(argc, argv, "f:s:c:w")) != -1) {
         switch (opt) {
