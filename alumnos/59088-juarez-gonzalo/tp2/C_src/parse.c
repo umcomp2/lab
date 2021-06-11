@@ -1,37 +1,12 @@
-#ifndef LIB
-#define LIB
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <fcntl.h>
+#ifndef COMMON
+#define common
+#include "common.h"
 #endif
 
-#ifndef HEADER
-#define HEADER
-#include "header.c"
+#ifndef PARSE
+#define PARSE
+#include "parse.h"
 #endif
-
-
-#define CCW 1
-#define CW 2
-#define WALSH 3
-
-#define R_FLAG 1
-#define G_FLAG 2
-#define B_FLAG 4
-#define RGB_FLAG 7
-
-#define MAX_FILENAME 128
-#define MAX_FILEPATH 2048
-
-struct arguments {
-    char filename[MAX_FILENAME];
-    char filepath[MAX_FILEPATH];
-    unsigned long rsize;
-    unsigned int rotopt;
-    unsigned int colorfilter;
-};
 
 void usagendie()
 {
@@ -77,7 +52,7 @@ void parse_args(int argc, char **argv, struct arguments *arg_struct)
 
 #define INFONL 3
 /* expects pointer to 0 initialized struct header */
-void parseheader(char *str, struct header *headerp)
+static void parseheader(char *str, struct header *headerp)
 {
     char *uncmmnt;
     int in_cmmnt;

@@ -1,25 +1,12 @@
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
+#ifndef COMMON
+#define COMMON
+#include "common.h"
+#endif
 
-#define NCOLORS 3
-#define H_MAXSIZE 512
-
-struct header {
-    char content[H_MAXSIZE];
-    char magic[3];
-    unsigned int cols;
-    unsigned int rows;
-    unsigned short maxcolor;
-};
-
-#define COLORSIZE(headerp) ({               \
-    (headerp)->maxcolor & 0xff00 ? 2 : 1;   \
-    })
-
-#define BYTES_PER_PX(headerp) ({            \
-    COLORSIZE(headerp) * NCOLORS;           \
-    })
+#ifndef HEADER
+#define HEADER
+#include "header.h"
+#endif
 
 int headersize(struct header *headerp)
 {
@@ -47,7 +34,7 @@ unsigned long ppm_align(struct header *headerp, unsigned long size)
     return (size / b_per_px) * b_per_px;
 }
 
-void _swap_rc_content(char *str)
+static void _swap_rc_content(char *str)
 {
     char newstr[20];
     char *space;
@@ -77,7 +64,7 @@ void _swap_rc_content(char *str)
  * Heavily relies on headerp->content being lines separated by
  *'\n' and terminating '\x00' after the final '\n'
  */
-void swap_rc_content(struct header *headerp)
+static void swap_rc_content(struct header *headerp)
 {
     unsigned int rows, cols, count;
     char *c;
@@ -103,7 +90,7 @@ void swap_rc_content(struct header *headerp)
     }
 }
 
-void _swap_rc(struct header *headerp)
+static void _swap_rc(struct header *headerp)
 {
     unsigned int tmp;
 

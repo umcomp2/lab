@@ -1,4 +1,7 @@
+#ifndef LIST
+#define LIST
 #include "list.c"
+#endif
 
 struct mm_node {
     char *mm;

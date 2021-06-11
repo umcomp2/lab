@@ -1,22 +1,9 @@
-#ifndef HEADER
-#define HEADER
-#include "header.c"
+#ifndef ROT
+#define ROT
+#include "rot.h"
 #endif
 
-#define BODYPX_OFFSET(offset) ({                \
-    (unsigned long) (offset / NCOLORS);         \
-    })
-
-#define PXBYTE_OFFSET(offset) ({                \
-    (unsigned long) (offset % NCOLORS);         \
-    })
-
-#define BODYBYTE_OFFSET(pixel, offset) ({       \
-    NCOLORS * pixel + PXBYTE_OFFSET(offset);    \
-    })
-
-void pixel2rc(
-    struct header *headerp,
+void pixel2rc(struct header *headerp,
     unsigned long pixel,
     unsigned int *r,
     unsigned int *c)
@@ -30,8 +17,7 @@ unsigned long rc2pixel(struct header *headerp, unsigned int row, unsigned col)
     return row * headerp->cols + col;
 }
 
-void ccw_rc_rot(
-    struct header *out_headerp,
+void ccw_rc_rot(struct header *out_headerp,
     unsigned int in_r,
     unsigned int in_c,
     unsigned int *out_rp,
@@ -41,8 +27,7 @@ void ccw_rc_rot(
     *out_cp = in_r;
 }
 
-void cw_rc_rot(
-    struct header *out_headerp,
+void cw_rc_rot(struct header *out_headerp,
     unsigned int in_r,
     unsigned int in_c,
     unsigned int *out_rp,
@@ -52,8 +37,7 @@ void cw_rc_rot(
     *out_cp = out_headerp->cols - in_r - 1;
 }
 
-void walsh_rc_rot(
-    struct header *out_headerp,
+void walsh_rc_rot(struct header *out_headerp,
     unsigned int in_r,
     unsigned int in_c,
     unsigned int *out_rp,

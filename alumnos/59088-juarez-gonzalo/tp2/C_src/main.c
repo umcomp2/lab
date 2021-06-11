@@ -7,16 +7,22 @@
 #define PTHREAD
 #include <pthread.h>
 
+#define COMMON
+#include "common.h"
+
+#define HEADER
+#include "header.h"
+
 #define PARSE
-#include "parse.c"
+#include "parse.h"
 
 #define ROT
-#include "rot.c"
+#include "rot.h"
 
-#define LIST
 #include "ttl_list.c"
 
 #define NTHREADS 3
+
 pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t condvar = PTHREAD_COND_INITIALIZER;
 pthread_t thread_pool[NTHREADS];
