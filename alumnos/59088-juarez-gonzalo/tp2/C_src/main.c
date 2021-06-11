@@ -193,24 +193,24 @@ int main(int argc, char **argv)
     ret = 0;
     argp = malloc(sizeof(struct arguments));
     if (argp == NULL) {
-        goto failed_argp;
         ret = 1;
+        goto failed_argp;
     }
     memset(argp, '\x00', sizeof(struct arguments));
     parse_args(argc, argv, argp);
 
     headerp = malloc(sizeof(struct header));
     if (headerp == NULL) {
-        goto failed_headerp;
         ret = 1;
+        goto failed_headerp;
     }
     memset(headerp, '\x00', sizeof(struct header));
     search_fileheader(argp->filepath, headerp);
 
     out_headerp = malloc(sizeof(struct header));
     if (out_headerp == NULL) {
-        goto failed_out_headerp;
         ret = 1;
+        goto failed_out_headerp;
     }
     memcpy(out_headerp, headerp, sizeof(struct header));
 
@@ -230,8 +230,8 @@ int main(int argc, char **argv)
         MAP_SHARED | MAP_ANONYMOUS,
         -1, 0);
     if (anonmap == MAP_FAILED) {
-        goto failed_anonmap;
         ret = 1;
+        goto failed_anonmap;
     }
     memset(anonmap, '\x00', filesize(out_headerp));
 
@@ -250,11 +250,15 @@ int main(int argc, char **argv)
     fsize = filesize(out_headerp);
     while (wc < fsize) {
         wb = write(out_fd, anonmap + wc, fsize-wc);
+        if (wb < 0) {
+            ret = 1;
+            goto failed_write;
+        }
         wc += wb;
     }
-    close(out_fd);
 
 failed_write:
+    close(out_fd);
     munmap(anonmap, filesize(out_headerp));
 failed_anonmap:
     free(out_headerp);
