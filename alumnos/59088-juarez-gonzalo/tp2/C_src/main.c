@@ -35,7 +35,9 @@ void (*rc_rot)(struct header *, unsigned int, unsigned int, unsigned int *, unsi
 struct header *headerp;
 struct header *out_headerp;
 unsigned long rsize;
-int offsets[3] = {0, 1, 2};
+
+enum colors {red, green, blue};
+int offsets[3] = {red, green, blue};
 
 static inline void consumer(struct mm_node *mm_nodep,
     unsigned int n,
