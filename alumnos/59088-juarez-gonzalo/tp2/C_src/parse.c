@@ -112,10 +112,11 @@ void parseheader(char *str, struct header *headerp)
 
                 break;
             default:
-                if (in_cmmnt)
-                    break;
-                *uncmmnt_ptr = *c;
-                uncmmnt_ptr++;
+                if (!in_cmmnt) {
+                    *uncmmnt_ptr = *c;
+                    uncmmnt_ptr++;
+                }
+                break;
         }
         if (nl_count == INFONL) {
             c++;
