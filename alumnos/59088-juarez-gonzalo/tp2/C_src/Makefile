@@ -12,3 +12,6 @@ parse.o: parse.c common.h parse.h header.h
 
 rot.o: rot.c rot.h header.h
 	cc -o rot.o -c rot.c
+
+clean:
+	rm *.o
