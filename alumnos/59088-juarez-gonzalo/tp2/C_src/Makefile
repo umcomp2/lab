@@ -1,5 +1,5 @@
-build: main.o header.o parse.o rot.o
-	cc *.o -o a.out -pthread
+a.out: main.o header.o parse.o rot.o
+	cc *.o -pthread
 
 main.o: main.c common.h header.h parse.h rot.h ttl_list.c list.c
 	cc -c main.c
