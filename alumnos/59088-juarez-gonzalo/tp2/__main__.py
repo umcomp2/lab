@@ -61,6 +61,8 @@ def producer(in_header, filepath, rsize):
         mm_condvar.notify_all()
         mm_mtx.release()
 
+    os.close(in_fd)
+
 def w_mmap2file(out_filename):
     out_fd = os.open(out_filename, os.O_CREAT | os.O_RDONLY | os.O_WRONLY, stat.S_IRUSR | stat.S_IWUSR)
     wc = 0
