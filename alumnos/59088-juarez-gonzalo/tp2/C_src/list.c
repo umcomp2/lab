@@ -52,6 +52,13 @@ static inline void list_del_tail(struct list_head *headp)
 	list_del(headp->prev);
 }
 
+static inline struct list_head *singly_next_safe(struct list_head *curr, struct list_head *headp)
+{
+    struct list_head *next = 0;
+    if (curr->next != headp)
+        next = curr->next;
+    return next;
+}
 
 /*
  * Macros for queue over already implemented functions/macros.
