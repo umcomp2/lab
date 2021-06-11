@@ -70,22 +70,30 @@ out:
 int main(int argc, char **argv)
 {
     struct arguments *argp;
+    int ret;
 
+    ret = 0;
     argp = malloc(sizeof(struct arguments));
-    if (argp == NULL)
+    if (argp == NULL) {
         goto failed_argp;
+        ret = 1;
+    }
     memset(argp, '\x00', sizeof(struct arguments));
     parse_args(argc, argv, argp);
 
     headerp = malloc(sizeof(struct header));
-    if (headerp == NULL)
+    if (headerp == NULL) {
         goto failed_headerp;
+        ret = 1;
+    }
     memset(headerp, '\x00', sizeof(struct header));
     search_fileheader(argp->filepath, headerp);
 
     out_headerp = malloc(sizeof(struct header));
-    if (out_headerp == NULL)
+    if (out_headerp == NULL) {
         goto failed_out_headerp;
+        ret = 1;
+    }
     memcpy(out_headerp, headerp, sizeof(struct header));
 
     if (argp->rotopt != WALSH) {
@@ -103,8 +111,10 @@ int main(int argc, char **argv)
         MAP_SHARED | MAP_ANONYMOUS,
         -1, 0);
 
-    if (anonmap == MAP_FAILED)
+    if (anonmap == MAP_FAILED) {
         goto failed_anonmap;
+        ret = 1;
+    }
 
     rsize = ppm_align(headerp, rsize);
 
@@ -112,12 +122,13 @@ int main(int argc, char **argv)
     wait_pool();
 
 
-failed_anonmap:
     munmap(anonmap, filesize(out_headerp));
-failed_out_headerp:
+failed_anonmap:
     free(out_headerp);
-failed_headerp:
+failed_out_headerp:
     free(headerp);
-failed_argp:
+failed_headerp:
     free(argp);
+failed_argp:
+    return ret;
 }
