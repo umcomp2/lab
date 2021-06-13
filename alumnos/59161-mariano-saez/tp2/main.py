@@ -6,6 +6,7 @@ import errores
 import sys
 import re
 import mmap
+from worker import Worker
 
 
 # ===================== PPM ROTOR ============================
@@ -65,9 +66,16 @@ def seek_payload(m_space: mmap):
 # Funcion encargada de crear una imagen rotada en DISCO
 #   @header: Header de la imagen a rotar
 #   @name: Nombre del archivo [para nombrar el nuevo]
-def gen_file(header: str, name: str):
+def gen_file(header: str, name: str, sentido: int):
     # Crear imagen en disco
-    fd_img = os.open(f'left_{name}', os.O_CREAT | os.O_RDWR)
+    try:
+        if sentido == 90:
+            fd_img = os.open(f'r_{name}', os.O_CREAT | os.O_RDWR)
+        else:
+            fd_img = os.open(f'l_{name}', os.O_CREAT | os.O_RDWR)
+    except Exception as e:
+        print(f'Error inesperado al crear imagen rotada. {e}')
+        sys.exit(1)
 
     # Encontrar dimensiones del archivo ppm
     regex = r'(#.*\n)*(P6|P3)(\n|\s){0,2}(#.*\n)*(\d+)(\n|\s){0,2}(#.*\n)*(\d+)(\n|\s){0,2}'
@@ -82,52 +90,11 @@ def gen_file(header: str, name: str):
     # Crear matriz rotada
     matrix = [[[0, 0, 0] for i in range(new_high)] for j in range(new_wide)]
 
-    return fd_img, len(new_header), matrix, new_wide
+    return fd_img, len(new_header), matrix, new_wide, new_high
 
 
-# Indice global
-rglobal_index = 0
-gglobal_index = 0
-bglobal_index = 0
-# Esta funcion se encarga de colocar los bytes del color correspondiente
-# en cada elemento de l matriz que recibe por parametro
-#   @matrix: Matriz en donde reemplazar los elementos
-#   @color: Color que se reemplazara dentro de cada pixel
-#       Rojo: 0
-#       Verde: 1
-#       Azul: 2
-#   @buff: Buffer de donde leer los pixeles que reemplezan elementos
-#          en la matriz
-def rfill_matrix(matrix, color, buff, width):
-    global rglobal_index
-    for i in range(color, len(buff), 3):
-        col = int(rglobal_index/width)
-        row = width - rglobal_index % width - 1
-        matrix[row][col][color] = buff[i]
-        rglobal_index += 1
-
-
-def gfill_matrix(matrix, color, buff, width):
-    global gglobal_index
-    for i in range(color, len(buff), 3):
-        col = int(gglobal_index/width)
-        row = width - gglobal_index % width - 1
-        matrix[row][col][color] = buff[i]
-        gglobal_index += 1
-
-
-def bfill_matrix(matrix, color, buff, width):
-    global bglobal_index
-    for i in range(color, len(buff), 3):
-        col = int(bglobal_index/width)
-        row = width - bglobal_index % width - 1
-        matrix[row][col][color] = buff[i]
-        bglobal_index += 1
-
-
-# Guarda la matriz en disco
-# TODO: Escribir por chunks mientras se construye la matriz
-#       podria ser una aproximacion valida?
+# Guarda la matriz en disco por filas, es decir, si la matriz de
+# k filas * n columnas, se realizaran k syscalls a write
 def dump_matrix(dump_fd, matrix):
     for i in matrix:
         dump_buff = b''
@@ -163,13 +130,18 @@ if __name__ == "__main__":
                         metavar='SENTIDO',
                         help='Sentido de rotacion',
                         type=int,
-                        required=False)
+                        required=False,
+                        default=-90)
     args = parser.parse_args()
 
-    args.size = args.size - (args.size % 3)
+    args.size = args.size - args.size % 3
+
+    # Lista de fd para cerrarlos mas facil
+    fd_list = list()
 
     # Se abre el archivo con manejo de errores
     fd = open_image(f'{args.file}')
+    fd_list.append(fd)
 
     # Mapear imagen a memoria, posicionarse en el payload y obtener
     # el header
@@ -178,29 +150,73 @@ if __name__ == "__main__":
     m_img.close()
 
     # Crear el archivo donde se va a volcar y la matriz transpuesta
-    rot_fd, start, matrix, width = gen_file(header, args.file)
-    
+    rot_fd, start, matrix, width, high = gen_file(header, args.file, args.sentido)
+    fd_list.append(rot_fd)
+
     # Pararnos en el comienzo del ruster
     os.lseek(fd, inicio_pl, 0)
-    
+
+    # Buffer de lectura
+    buff = list(b'\x00')
+
+    # Barrier para sincronizacion
+    b1 = th.Barrier(4)
+
+    # Instanciar trabajadores de cada color [RGB]
+    workers = list()
+    for i in range(3):
+        try:
+            worker = Worker(i, width, high, matrix, buff, b1, args.size, args.sentido)
+            workers.append(worker)
+        except th.ThreadError as e:
+            print(f'Error al crear hilos de trabajo. {e}')
+            for i in fd_list:
+                os.close(i)
+            sys.exit(1)
+
+    # Variables de control
+    ruster_sz = width*high*3
+    read_bytes = 0
+
     # Leer por chunks el archivo
     while True:
-        buff = os.read(fd, args.size)
+        # Cargar el buffer
+        chunk = os.read(fd, args.size)
+        buff[0] = chunk
+
+        # Bytes leidos
+        read_bytes += len(chunk)
 
         # Comprobar el caso que termine con \n
-        if len(buff) % 3 != 0:
-            buff = buff[:-1]
+        if len(buff[0]) % 3 != 0:
+            buff[0] = buff[0][:-1]
 
-        rfill_matrix(matrix, 0, buff, width)
-        gfill_matrix(matrix, 1, buff, width)
-        bfill_matrix(matrix, 2, buff, width)
+        # En caso de ser la 1er iteracion activar los hilos
+        if not workers[0].is_alive():
+            for i in workers:
+                i.start()
 
-        if len(buff) < args.size:
+        # 1er barrier para indicar que ya se cargo el buffer
+        b1.wait()
+
+        if len(buff[0]) < args.size and read_bytes >= ruster_sz:
             break
 
-    print_matrix(matrix)
+        # 2do barrier esperar que todos terminen de leer
+        b1.wait()
+
+    # Tareas del hogar
+
+    # Esperamos a los hilos
+    for i in workers:
+        i.join()
 
     # Volcamos a disco lo procesado
     dump_matrix(rot_fd, matrix)
 
-    exit(0)
+    for i in fd_list:
+        os.close(i)
+
+    print(f"Imagen rotada {args.sentido} grados con exito!")
+
+    sys.exit(0)
