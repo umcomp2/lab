@@ -62,6 +62,8 @@ r_tux.txt
 ### Referencias
 man ppm
 
+man pgmhist
+
 http://netpbm.sourceforge.net/doc/ppm.html
 
 https://es.wikipedia.org/wiki/Histograma
