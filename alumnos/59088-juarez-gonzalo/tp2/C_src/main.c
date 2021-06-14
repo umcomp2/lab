@@ -67,9 +67,15 @@ static void *consumer_wait(void* arg)
     color_offset = *((int *)arg);
     bodybytes = leftbytes = bodysize(out_headerp);
 
+    mm_nodep = malloc(sizeof(struct mm_node));
+    if (mm_nodep == NULL) {
+        printf("Failed allocating mm_nodep stub");
+        goto out;
+    }
+    memset(mm_nodep, '\x00', sizeof(struct mm_node));
+
     curr = &mm_list;
     next = NULL;
-    mm_nodep = container_of(curr, struct mm_node, list);
     while (leftbytes > 0) {
 
         pthread_mutex_lock(&mtx);
@@ -82,7 +88,6 @@ static void *consumer_wait(void* arg)
 
         list_ttl_del(curr, &mm_list);
         if (mm_nodep->ttl == 0) {
-            //printf("released node %p\n", mm_nodep);
             free(mm_nodep->mm);
             free(mm_nodep);
         }
@@ -92,21 +97,19 @@ static void *consumer_wait(void* arg)
         pthread_mutex_unlock(&mtx);
 
         n = rsize < leftbytes ? rsize : leftbytes;
-        //printf("Got node %p, leftbytes = %lu, color_offset = %d\n", mm_nodep, leftbytes, color_offset);
         consumer(mm_nodep, n, bodybytes-leftbytes, color_offset, b_per_px);
         leftbytes -= n;
     }
     /* for the last node */
     list_ttl_del(curr, &mm_list);
     if (mm_nodep->ttl == 0) {
-        //printf("released node %p\n", mm_nodep);
         free(mm_nodep->mm);
         free(mm_nodep);
     }
     curr = next = NULL;
     mm_nodep = NULL;
-    //printf("Ended thread with color offset = %d, leftbytes = %lu\n", color_offset, leftbytes);
 
+out:
     return NULL;
 }
 
@@ -146,9 +149,7 @@ static void producer(char *filepath)
 
         pthread_cond_broadcast(&condvar);
         pthread_mutex_unlock(&mtx);
-        //printf("appended node %p, rb_total/filesize = %lu/%lu, rb = %lu\n", mm_nodep, rb_total, bsize, rb);
     }
-    //printf("rb_total: %lu", rb_total);
 
 out:
     close(fd);
