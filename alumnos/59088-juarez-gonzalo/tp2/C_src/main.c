@@ -68,9 +68,9 @@ static void *consumer_wait(void* arg)
     color_offset = *((int *)arg);
     bodybytes = leftbytes = bodysize(out_headerp);
 
+    mm_nodep = &mm_list;
     curr = &mm_list.list;
     next = NULL;
-    mm_nodep = &mm_list;
     while (leftbytes > 0) {
 
         pthread_mutex_lock(&mtx);
@@ -83,11 +83,13 @@ static void *consumer_wait(void* arg)
 
         list_ttl_del(curr, &mm_list.list);
         if (mm_nodep->ttl == 0 && mm_nodep != &mm_list) {
+            //printf("released %p, color_filter: %d\n", mm_nodep, color_offset);
             free(mm_nodep->mm);
             free(mm_nodep);
         }
         curr = next;
         mm_nodep = container_of(curr, struct mm_node, list);
+        //printf("got %p, color_filter: %d\n", mm_nodep, color_offset);
 
         pthread_mutex_unlock(&mtx);
 
@@ -96,9 +98,10 @@ static void *consumer_wait(void* arg)
         leftbytes -= n;
     }
 
-    /* for the last node */
+    /* last node */
     list_ttl_del(curr, &mm_list.list);
     if (mm_nodep->ttl == 0) {
+        //printf("released %p, color_filter: %d\n", mm_nodep, color_offset);
         free(mm_nodep->mm);
         free(mm_nodep);
     }
@@ -142,6 +145,7 @@ static void producer(char *filepath)
         rb_total += rb;
 
         list_add_tail(&mm_nodep->list, &mm_list.list);
+        //printf("appended %p\n", mm_nodep);
 
         pthread_cond_broadcast(&condvar);
         pthread_mutex_unlock(&mtx);
@@ -179,7 +183,6 @@ static inline void wait_pool()
             printf("Error joining thread number %d", i);
             goto out;
         }
-        //printf("joined thread %d\n", i);
     }
 out:
     return;
