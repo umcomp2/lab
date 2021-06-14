@@ -104,26 +104,3 @@ void swap_rc(struct header *headerp)
     swap_rc_content(headerp);
     _swap_rc(headerp);
 }
-
-/*
-struct header hdr = {
-    .content = "P6\n# Imagen ppm\n200 298\n255\n",
-    .rows = 512,
-    .cols = 200,
-    .magic = "P6",
-    .maxcolor = 0xFF,
-};
-
-int main()
-{
-    printf("headersize %d\n", headersize(&hdr));
-    printf("bodysize %lu\n", bodysize(&hdr));
-    printf("filesize %lu\n", filesize(&hdr));
-    printf("ppm_align(512) = %lu\n", ppm_align(&hdr, 512));
-    printf("%s\tstrlen(hdr): %lu\n", hdr.content, strlen(hdr.content));
-    swap_rc(&hdr);
-    printf("%s\tstrlen(hdr): %lu\n", hdr.content, strlen(hdr.content));
-
-    return 0;
-}
-*/
