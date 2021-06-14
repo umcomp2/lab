@@ -2,35 +2,36 @@ import threading
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 import re
-from threading import Condition
 
 candadoImg = threading.Lock()
 barreraLectura = threading.Barrier(4)
 barreraEscritura = threading.Barrier(4)
 bloque = bytes
 
-def rotador(color, filas, columnas):
+def rotador(color, marca, filas, columnas):
     global img_inv
     global bloque
     pos=0
     fila = int(filas) -1
     columna = 0
-    marca = 0
-    if color == "Verde":
-        marca = 1
-    if color == "Azul":
-        marca=2
+
+    print(f"Hijo {color} inicializado")
     barreraLectura.wait()
+
     while True:
 
         barreraEscritura.wait()
+
         if bloque == 'EOF':
-            break       
+            break      
+
         for c in bloque:
             if pos == marca:
+
                 candadoImg.acquire()
                 img_inv[fila][columna][marca] = c
                 candadoImg.release()
+
             pos += 1
             if pos == 3:
                 pos = 0
@@ -43,10 +44,8 @@ def rotador(color, filas, columnas):
 
         barreraLectura.wait()
 
-def writePPM(file, img):
-    """
-    """
-    
+def escribirPPM(file, img):
+
     file.write(bytearray('P6\n'+
                          str(len(img[0]))+
                          ' '+str(len(img))
@@ -58,7 +57,7 @@ def writePPM(file, img):
             file.write(bytes(rgb))
 
     file.close()
-    return None
+
 def headerReader(file_reader):
     header = file_reader.readline().strip()
     if header == b'P6':
@@ -75,6 +74,7 @@ def headerReader(file_reader):
     header = file_reader.readline().strip()
     print(f'Max color value: {int(header)}')
     return rows,cols
+    
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Rotacion RGB imagen - Tp2')
@@ -100,11 +100,12 @@ if __name__ == '__main__':
     with open(args.file, 'rb') as file_reader:
         rows, cols = headerReader(file_reader)
         img_inv = [ [[ 0 for i in range(int(3)) ] for j in range(int(rows))]for k in range(int(cols))]
+
         #Leer por bloques y enviar byte correspondiente a los hilos
         with ThreadPoolExecutor(max_workers=3) as executor:
-            future1 = executor.submit(rotador,'Rojo', int(cols), int(rows))
-            future2 = executor.submit(rotador,'Verde', int(cols), int(rows))
-            future3 = executor.submit(rotador,'Azul', int(cols), int(rows))
+            future1 = executor.submit(rotador,'Rojo', 0, int(cols), int(rows))
+            future2 = executor.submit(rotador,'Verde', 1, int(cols), int(rows))
+            future3 = executor.submit(rotador,'Azul', 2, int(cols), int(rows))
             
             while True:
                 chunk = file_reader.read(args.size)
@@ -120,9 +121,9 @@ if __name__ == '__main__':
             barreraEscritura.wait()
   
     if(args.fileo is None):
-        file = open("myOutFile.ppm", "bw")
+        file = open("rotado.ppm", "bw")
     else:
         file = open(f"{args.fileo}.ppm", "bw")
-    writePPM(file,img_inv)
+    escribirPPM(file,img_inv)
 
     print("Termino el padre")
