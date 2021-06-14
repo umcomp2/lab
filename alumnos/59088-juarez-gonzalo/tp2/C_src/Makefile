@@ -16,4 +16,4 @@ rot.o: rot.c rot.h header.h
 	${CC} -c rot.c
 
 clean:
-	rm *.o
+	rm *.o a.out output.ppm

@@ -69,7 +69,7 @@ static void *consumer_wait(void* arg)
 
     mm_nodep = malloc(sizeof(struct mm_node));
     if (mm_nodep == NULL) {
-        printf("Failed allocating mm_nodep stub");
+        printf("Failed allocating mm_node stub\n");
         goto out;
     }
     memset(mm_nodep, '\x00', sizeof(struct mm_node));
@@ -124,7 +124,7 @@ static void producer(char *filepath)
 
     bsize = bodysize(headerp);
     rb_total = 0;
-    while (rb_total < bsize-1) {
+    while (rb_total < bsize) {
         pthread_mutex_lock(&mtx);
 
         mm_nodep = malloc(sizeof(struct mm_node));
@@ -139,7 +139,7 @@ static void producer(char *filepath)
             goto out;
         }
 
-        n = bsize-rb_total-1 < rsize ? bsize-rb_total-1 : rsize;
+        n = bsize-rb_total < rsize ? bsize-rb_total : rsize;
         rb = 0;
         while (rb < n)
             rb += read(fd, mm_nodep->mm + rb, n-rb);
