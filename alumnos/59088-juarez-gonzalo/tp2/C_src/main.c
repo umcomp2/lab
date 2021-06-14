@@ -67,12 +67,13 @@ static void *consumer_wait(void* arg)
     color_offset = *((int *)arg);
     bodybytes = leftbytes = bodysize(out_headerp);
 
+    /* node stub for first iteration */
     mm_nodep = malloc(sizeof(struct mm_node));
     if (mm_nodep == NULL) {
         printf("Failed allocating mm_node stub\n");
         goto out;
     }
-    memset(mm_nodep, '\x00', sizeof(struct mm_node));
+    mm_nodep->ttl = 0;
 
     curr = &mm_list;
     next = NULL;
@@ -100,6 +101,7 @@ static void *consumer_wait(void* arg)
         consumer(mm_nodep, n, bodybytes-leftbytes, color_offset, b_per_px);
         leftbytes -= n;
     }
+
     /* for the last node */
     list_ttl_del(curr, &mm_list);
     if (mm_nodep->ttl == 0) {
