@@ -174,14 +174,12 @@ static inline void wait_pool()
     int i;
     int ret;
     for (i = 0; i < NTHREADS; i++) {
-        if (thread_pool[i] != NULL) {
-            ret = pthread_join(thread_pool[i], NULL);
-            if (ret != 0) {
-                printf("Error joining thread number %d", i);
-                goto out;
-            }
-            //printf("joined thread %d\n", i);
+        ret = pthread_join(thread_pool[i], NULL);
+        if (ret != 0) {
+            printf("Error joining thread number %d", i);
+            goto out;
         }
+        //printf("joined thread %d\n", i);
     }
 out:
     return;
