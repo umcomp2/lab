@@ -16,11 +16,16 @@ class PPMParser():
             try:
                 pixels.append((c[i], c[i+1], c[i+2]))
             except:
-                pixels.append((None, None, None))
+                break
         os.lseek(self.filefd, 0, os.SEEK_SET)
         return pixels
 
     def parseMetaData(self):
+        """Returns a list with the metadata.
+        Index 0: file signature (P6).
+        Index 1: width.
+        Index 2: height.
+        Index 3: depth."""
         image = open(self.filefd)
         metadata = []
         while len(metadata) < 4:
