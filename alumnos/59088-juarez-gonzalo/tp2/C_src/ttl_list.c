@@ -21,6 +21,18 @@ static inline void list_ttl_del(struct list_head *rm, struct list_head *headp)
 }
 
 /*
+#include <stdio.h>
+struct mm_node mm_list;
+
+int main()
+{
+    printf("mm_list: %p, mm_list.list: %p, prev: %p, next: %p\n", &mm_list, &mm_list.list, mm_list.list.prev, mm_list.list.next);
+    INIT_HEAD_LIST(&mm_list.list);
+    printf("mm_list: %p, mm_list.list: %p, prev: %p, next: %p\n", &mm_list, &mm_list.list, mm_list.list.prev, mm_list.list.next);
+}
+*/
+
+/*
 LIST_HEAD_INIT(lh);
 
 int main()

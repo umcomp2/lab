@@ -27,7 +27,8 @@ pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t condvar = PTHREAD_COND_INITIALIZER;
 pthread_t thread_pool[NTHREADS];
 
-LIST_HEAD_INIT(mm_list);
+/* call INIT_HEAD_LIST from main */
+struct mm_node mm_list;
 
 char *anonmap;
 void (*rc_rot)(struct header *, unsigned int, unsigned int, unsigned int *, unsigned int *);
@@ -67,28 +68,21 @@ static void *consumer_wait(void* arg)
     color_offset = *((int *)arg);
     bodybytes = leftbytes = bodysize(out_headerp);
 
-    /* node stub for first iteration */
-    mm_nodep = malloc(sizeof(struct mm_node));
-    if (mm_nodep == NULL) {
-        printf("Failed allocating mm_node stub\n");
-        goto out;
-    }
-    mm_nodep->ttl = 0;
-
-    curr = &mm_list;
+    curr = &mm_list.list;
     next = NULL;
+    mm_nodep = &mm_list;
     while (leftbytes > 0) {
 
         pthread_mutex_lock(&mtx);
 
-        next = singly_next_safe(curr, &mm_list);
+        next = singly_next_safe(curr, &mm_list.list);
         while (next == NULL) {
             pthread_cond_wait(&condvar, &mtx);
-            next = singly_next_safe(curr, &mm_list);
+            next = singly_next_safe(curr, &mm_list.list);
         }
 
-        list_ttl_del(curr, &mm_list);
-        if (mm_nodep->ttl == 0) {
+        list_ttl_del(curr, &mm_list.list);
+        if (mm_nodep->ttl == 0 && mm_nodep != &mm_list) {
             free(mm_nodep->mm);
             free(mm_nodep);
         }
@@ -103,7 +97,7 @@ static void *consumer_wait(void* arg)
     }
 
     /* for the last node */
-    list_ttl_del(curr, &mm_list);
+    list_ttl_del(curr, &mm_list.list);
     if (mm_nodep->ttl == 0) {
         free(mm_nodep->mm);
         free(mm_nodep);
@@ -147,7 +141,7 @@ static void producer(char *filepath)
             rb += read(fd, mm_nodep->mm + rb, n-rb);
         rb_total += rb;
 
-        list_add_tail(&mm_nodep->list, &mm_list);
+        list_add_tail(&mm_nodep->list, &mm_list.list);
 
         pthread_cond_broadcast(&condvar);
         pthread_mutex_unlock(&mtx);
@@ -249,6 +243,8 @@ int main(int argc, char **argv)
     memcpy(anonmap, out_headerp->content, strlen(out_headerp->content));
 
     rsize = ppm_align(headerp, rsize);
+
+    INIT_HEAD_LIST(&mm_list.list);
 
     start_pool();
 
