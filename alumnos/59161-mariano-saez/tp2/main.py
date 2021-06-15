@@ -134,7 +134,10 @@ if __name__ == "__main__":
                         default=-90)
     args = parser.parse_args()
 
-    args.size = args.size - args.size % 3
+    if args.size < 3:
+        args.size = 3
+    else:
+        args.size = args.size - args.size % 3
 
     # Lista de fd para cerrarlos mas facil
     fd_list = list()
