@@ -77,8 +77,8 @@ if __name__ == '__main__':
     header = os.read(foto,header_size(foto))
     size = multiplo3(args.size)
 
-    if os.read(foto,2) != b'P6':
-        raise Exception("El archivo ingresado tiene un formato incorrecto")
+   # if os.read(foto,2) != b'P6':
+   #     raise Exception("El archivo ingresado tiene un formato incorrecto")
 
     colores = ['r','g','b']
     escalas = [args.red_scale,args.green_scale,args.blue_scale]
@@ -106,3 +106,5 @@ if __name__ == '__main__':
     os.close(foto)
     for i in pipes:
         i.close()
+    for i in hijos:
+        i.join()
