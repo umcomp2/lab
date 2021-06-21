@@ -124,6 +124,9 @@ if __name__ == '__main__':
                         help='Ingrese cantidad de bytes a leer.')
     parser.add_argument('-f', '--file', action="store", dest="ppm_file", metavar='archivo ppm', type=str,
                         required=True, help="Nombre del archivo PPM")
+    parser.add_argument('-sentido', '--sentido', action="store", dest="sentido", metavar='Sentido rotación', type=str,
+                        required=False, default='left', choices=['left', 'right'],
+                        help="Sentido Rotación PPM")
 
     options = parser.parse_args()
 
@@ -197,7 +200,7 @@ if __name__ == '__main__':
 
     if pools[0].done() and pools[1].done() and pools[2].done():
         print('Terminaron los hilos')
-        create_file_output(header=header_data, direction='left', filename=options.ppm_file)
+        create_file_output(header=header_data, direction=options.sentido, filename=options.ppm_file)
 
     f.close()
     sys.exit()
