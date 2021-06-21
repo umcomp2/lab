@@ -19,10 +19,11 @@ def rotar(height, color, chunk):
     global columna_b
     global fila_b
     global matriz
+    global pixeles
     if color == 'r':
         threadLock.acquire()
         for i in range(0,len(chunk)-1,3):
-            matriz[fila_r][columna_r][0] = chr(chunk[i]).encode("utf-8")
+            matriz[fila_r][columna_r][0] = pixeles[i] #chr(chunk[i]).encode("utf-8")
             fila_r-=1
             if fila_r == -1:
                 fila_r = height -1 
@@ -33,7 +34,7 @@ def rotar(height, color, chunk):
     if color == 'g':
         threadLock.acquire()
         for i in range(1,len(chunk),3):
-            matriz[fila_g][columna_g][1] = chr(chunk[i]).encode("utf-8")
+            matriz[fila_g][columna_g][1] = pixeles[i] #chr(chunk[i]).encode("utf-8")
             fila_g-=1
             if fila_g == -1:
                 fila_g = height -1 
@@ -45,7 +46,7 @@ def rotar(height, color, chunk):
     if color == 'b':  
         threadLock.acquire()      
         for i in range(2,len(chunk),3):
-            matriz[fila_b][columna_b][2] = chr(chunk[i]).encode("utf-8")
+            matriz[fila_b][columna_b][2] = pixeles[i] #chr(chunk[i]).encode("utf-8")
             fila_b-=1
             if fila_b == -1:
                 fila_b = height -1 
@@ -92,8 +93,12 @@ if __name__ == '__main__':
     threadLock = threading.Lock()
 
     threads = []
+    
     while True:
         chunk = os.read(fd, chunk_sz)
+        pixeles = list()
+        for i in chunk:
+            pixeles.append(bytes([i]))
         #print(chunk)
         t1 = threading.Thread(target=rotar, args=(height, 'r', chunk,))
         t2 = threading.Thread(target=rotar, args=(height, 'g', chunk,))
@@ -111,13 +116,12 @@ if __name__ == '__main__':
         t.join()
 
     #print(matriz)
-    cont = 0
 
     for i in matriz:
         for j in i:
             for k in j:
-                cont += 1
                 #rotated_ppm.write(bytes(k))
                 os.write(rotated_ppm, bytes(k))
-
-    print(cont)
+    
+    '''archivo = open("matriz_incorrecta.txt", 'w')
+    archivo.write(str(matriz))'''
