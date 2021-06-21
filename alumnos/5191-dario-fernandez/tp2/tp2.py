@@ -101,10 +101,11 @@ def create_header_ppm(data=None):
     header += str(data.get('max_color')) + '\n'
     return header
 
+
 def create_file_output(header=None, direction=None, filename=None):
     global new_ppm
 
-    f_output = direction + '_' + filename + '.ppm'
+    f_output = direction + '_' + filename
     header_ppm = create_header_ppm(data=header)
     with open(f_output, 'wb') as fo:
         fo.write(bytes(header_ppm.encode()))
