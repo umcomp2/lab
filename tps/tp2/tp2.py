@@ -145,7 +145,7 @@ if __name__ == '__main__':
         fila_g = 0
         fila_b = 0
 
-    threadLock = threading.Lock()
+    #threadLock = threading.Lock()
     b = threading.Barrier(3)
 
     threads = []
