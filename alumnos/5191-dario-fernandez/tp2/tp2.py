@@ -57,14 +57,46 @@ def get_header_data(ppm_file):
         data_header['valid'] = True
     return data_header
 
-
-def process_image(color):
+def rotate_left(block_color_item=None, index_color=None):
     global new_ppm
-    global block_colors_data
     global index_chunk_row
     global index_chunk_col
-    global thread_color_terminate
     global color_dimension
+
+    row = color_dimension.get(color).get('rows') - 1 - index_chunk_row[index_color]
+    col = index_chunk_col[index_color]
+
+    new_ppm[row][col][index_color] = block_color_item
+
+    if row == 0:
+        index_chunk_col[index_color] += 1
+        index_chunk_row[index_color] = 0
+    else:
+        index_chunk_row[index_color] += 1
+
+
+def rotate_right(block_color_item=None, index_color=None):
+    global new_ppm
+    global index_chunk_row
+    global index_chunk_col
+    global color_dimension
+
+    row = index_chunk_row[index_color]
+    col = color_dimension.get(color).get('cols') - 1 + index_chunk_col[index_color]
+
+    new_ppm[row][col][index_color] = block_color_item
+    if row == color_dimension.get(color).get('rows') - 1:
+        index_chunk_row[index_color] = 0
+        index_chunk_col[index_color] -= 1
+    else:
+        index_chunk_row[index_color] += 1
+
+    return None
+
+def process_image(color, sentido):
+    global new_ppm
+    global block_colors_data
+    global thread_color_terminate
 
     while True:
         # print('BARRIER, ', color)
@@ -75,23 +107,15 @@ def process_image(color):
         color_block_end = block_colors_data.get(color + '_end')
 
         for i, x in enumerate(block_color):
-            row = color_dimension.get(color).get('rows') - 1 - index_chunk_row[index_color]
-
-            col = index_chunk_col[index_color]
-
-            new_ppm[row][col][index_color] = x
-
-            if row == 0:
-                index_chunk_col[index_color] += 1
-                index_chunk_row[index_color] = 0
+            if sentido == 'left':
+                rotate_left(block_color_item=x, index_color=index_color)
             else:
-                index_chunk_row[index_color] += 1
+                rotate_right(block_color_item=x, index_color=index_color)
 
         if color_block_end:
             thread_color_terminate[index_color] = True
             break
         barrier_read.wait()
-
 
     return color
 
@@ -166,7 +190,7 @@ if __name__ == '__main__':
 
                 new_ppm = [list([None, None, None] for i in range(header_data.get('height'))) for j in
                            range(header_data.get('width'))]
-                pools = [executor.submit(process_image, color) for color in colors]
+                pools = [executor.submit(process_image, color, options.sentido) for color in colors]
                 header_read = True
 
             ppm_block_data = f.read(options.size)
