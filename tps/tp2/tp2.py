@@ -1,11 +1,11 @@
-import argparse as ap
+from concurrent import futures
 import os
+import argparse as ap
 from concurrent.futures import ThreadPoolExecutor
-import threading
+from manejar_header import find_header, uncomment, rotate_header
 from matriz import inicializar_matriz
-from manejar_header import quitar_header, ppm_size
+import threading
 
-#logging.basicConfig(level=logging.DEBUG, format='%(threadName)s: %(message)s')
 
 def multiplo3(num):
     aprox=int(num-(num%3))
@@ -20,29 +20,39 @@ def rotar(height, color, chunk):
     global fila_b
     global matriz
     if color == 'r':
+        threadLock.acquire()
         for i in range(0,len(chunk)-1,3):
-            matriz[fila_r][columna_r][0] = chunk[i]
+            matriz[fila_r][columna_r][0] = chr(chunk[i]).encode("utf-8")
             fila_r-=1
             if fila_r == -1:
                 fila_r = height -1 
                 columna_r += 1
-    
+        #print(threading.get_ident())
+        threadLock.release()
+
     if color == 'g':
+        threadLock.acquire()
         for i in range(1,len(chunk),3):
-            matriz[fila_g][columna_g][1] = chunk[i]
+            matriz[fila_g][columna_g][1] = chr(chunk[i]).encode("utf-8")
             fila_g-=1
             if fila_g == -1:
                 fila_g = height -1 
                 columna_g += 1
+            
+        #print(threading.get_ident())
+        threadLock.release()
 
-    if color == 'b':        
+    if color == 'b':  
+        threadLock.acquire()      
         for i in range(2,len(chunk),3):
-            matriz[fila_b][columna_b][2] = chunk[i]
+            matriz[fila_b][columna_b][2] = chr(chunk[i]).encode("utf-8")
             fila_b-=1
             if fila_b == -1:
                 fila_b = height -1 
                 columna_b += 1
-
+            
+        #print(threading.get_ident())
+        threadLock.release()
 
 if __name__ == '__main__':
 
@@ -53,57 +63,61 @@ if __name__ == '__main__':
 
     chunk_sz = multiplo3(args.size)
 
-    fd = open(f'{args.file}', 'rb')
-    leido = fd.read()
-    cuerpo, tipo, w_and_h, prof = quitar_header(leido)
-    width, height = ppm_size(w_and_h)
+    fd = os.open(args.file, os.O_RDONLY)
+    header, size = find_header(fd)
+    #print(header)
 
-    new_width = int(height)
-    new_height = int(width)
+    uncommented_header = uncomment(header)
+    #print(uncommented_header)
     
-    if os.path.isfile(f'{args.file}'.replace('.ppm','_rotado.ppm')):
-        os.remove(f'{args.file}'.replace('.ppm','_rotado.ppm'))
-    ppm_rotado = open(f'{args.file}'.replace('.ppm','_rotado.ppm').encode("utf-8"), 'a')
-    ppm_rotado.write(f'{tipo.decode("utf-8")}\n{new_width} {new_height}\n{int(prof)}\n')
+    rotated_header, width, height = rotate_header(uncommented_header)
+
+    rotated_ppm = os.open(f'rotated_{args.file}', os.O_RDWR | os.O_CREAT)
+    os.write(rotated_ppm, rotated_header)
+    
+    '''rotated_ppm = open(f'rotated_file_{args.file}', 'ab')
+    rotated_ppm.write(bytes(rotated_header))'''
+
+    os.lseek(fd, size, 0)
+
+    matriz = inicializar_matriz(width, height)
 
     columna_r = 0
     columna_g = 0
     columna_b = 0
-    fila_r = new_height - 1
-    fila_g = new_height - 1
-    fila_b = new_height - 1
+    fila_r = height - 1
+    fila_g = height - 1
+    fila_b = height - 1
 
-    matriz = inicializar_matriz(new_width, new_height)
+    threadLock = threading.Lock()
+
+    threads = []
+    while True:
+        chunk = os.read(fd, chunk_sz)
+        #print(chunk)
+        t1 = threading.Thread(target=rotar, args=(height, 'r', chunk,))
+        t2 = threading.Thread(target=rotar, args=(height, 'g', chunk,))
+        t3 = threading.Thread(target=rotar, args=(height, 'b', chunk,))
+        t1.start()
+        t2.start()
+        t3.start()
+        threads.append(t1)
+        threads.append(t2)
+        threads.append(t3)
+        if len(chunk) < chunk_sz:
+            break
+
+    for t in threads:
+        t.join()
+
     #print(matriz)
-
-    #threads = []
-
-    executor = ThreadPoolExecutor(max_workers=3)
-
-    colores = ['r', 'g', 'b']
-    '''for color in colores:
-        rotar(new_height,color,cuerpo)'''
-    for i in range(0, len(cuerpo), chunk_sz):
-        chunk = cuerpo[i:i + chunk_sz]
-        for color in colores:
-            rotar(new_height,color,chunk)
-            #t = executor.submit(rotar(new_height, color, chunk))
-            #t = threading.Thread(target=rotar, args=(new_height, color, chunk,))
-            #t.start()
-            #threads.append(t)
-        
-    '''for t in threads:
-        t.join()'''
-
-    #imagen_rotada = open(f'{args.file}'.replace('.ppm','_rotado.ppm'), 'a') 
+    cont = 0
 
     for i in matriz:
         for j in i:
             for k in j:
-                ppm_rotado.write(chr(k))
+                cont += 1
+                #rotated_ppm.write(bytes(k))
+                os.write(rotated_ppm, bytes(k))
 
-    #print(threads)
-    fd.close()
-    ppm_rotado.close()
-    #print(matriz)
-
+    print(cont)
