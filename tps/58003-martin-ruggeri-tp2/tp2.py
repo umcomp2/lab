@@ -47,7 +47,6 @@ def abrir_imagen(path):
         print(f'Error {e}')
     return fd
 
-
 def encontrar_cursor_y_header(m_space):
     cursor = 0
     header = ''
@@ -60,14 +59,12 @@ def encontrar_cursor_y_header(m_space):
             print(f'Error {e}')
     return cursor, header
 
-
 def crear_imagen_en_disco(name):
     try:
         fd_img = os.open(f'r_{name}', os.O_CREAT | os.O_RDWR)
     except Exception as e:
         print(f'Error {e}')
     return fd_img
-
 
 def crear_nuevo_header(header, fd_img):
     regex = r'(#.*\n)*(P6|P3)(\n|\s){0,2}(#.*\n)*(\d+)(\n|\s){0,2}(#.*\n)*(\d+)(\n|\s){0,2}'
@@ -78,11 +75,9 @@ def crear_nuevo_header(header, fd_img):
     os.write(fd_img, bytes(new_header, 'utf-8'))
     return new_header, new_high, new_wide,
 
-
 def crear_matriz_rotada(new_high, new_wide):
     matrix = [[[0, 0, 0] for i in range(new_high)] for j in range(new_wide)]
     return matrix
-
 
 def guarda_matriz_en_disco(fd, matrix):
     for i in matrix:
@@ -90,7 +85,6 @@ def guarda_matriz_en_disco(fd, matrix):
         for j in i:
             buffer_de_lectura += bytes([j[0], j[1], j[2]])
         os.write(fd, buffer_de_lectura)
-
 
 def parser_image():
     parser = argparse.ArgumentParser()
@@ -100,7 +94,6 @@ def parser_image():
                         required=True)
     return parser.parse_args()
 
-
 def validar_bloque_de_lectura(bloque_de_lectura):
     if bloque_de_lectura < 3:
         bloque_de_lectura = 3
@@ -108,7 +101,7 @@ def validar_bloque_de_lectura(bloque_de_lectura):
         bloque_de_lectura = bloque_de_lectura - bloque_de_lectura % 3
     return bloque_de_lectura
 
-def crear_lista_de_hilos():
+def crear_lista_de_hilos(width, high, matrix, buffer_de_lectura, barrier_sincro, bloque_de_lectura):
     lista_de_hilos = list()
     for i in range(3):
         try:
@@ -120,9 +113,7 @@ def crear_lista_de_hilos():
                 os.close(i)
     return lista_de_hilos
 
-
-def leer_x_bloques(fd, bloque_de_lectura, bytes_leidos,
-                   barrier_sincro, ruster):
+def leer_x_bloques(fd, bloque_de_lectura, bytes_leidos, barrier_sincro, ruster):
     while True:
         bloque = os.read(fd, bloque_de_lectura)
         buffer_de_lectura[0] = bloque
@@ -141,16 +132,13 @@ def leer_x_bloques(fd, bloque_de_lectura, bytes_leidos,
         # esperar que todos terminen de leer
         barrier_sincro.wait()
 
-
 def iniciar_hilos(lista_de_hilos):
     for i in lista_de_hilos:
         i.start()
 
-
 def esperar_hilos(lista_de_hilos):
     for i in lista_de_hilos:
         i.join()
-
 
 def cerrar_fds(fd_list):
     for i in fd_list:
@@ -184,7 +172,7 @@ if __name__ == "__main__":
 
     buffer_de_lectura = list(b'\x00')
     barrier_sincro = Barrier(4)
-    lista_de_hilos = crear_lista_de_hilos()
+    lista_de_hilos = crear_lista_de_hilos(width, high, matrix, buffer_de_lectura, barrier_sincro, bloque_de_lectura)
 
     # Variables de control
     ruster = width*high*3
@@ -192,8 +180,7 @@ if __name__ == "__main__":
 
     iniciar_hilos(lista_de_hilos)
 
-    leer_x_bloques(fd, bloque_de_lectura, bytes_leidos,
-                   barrier_sincro, ruster)
+    leer_x_bloques(fd, bloque_de_lectura, bytes_leidos, barrier_sincro, ruster)
     esperar_hilos(lista_de_hilos)
 
     guarda_matriz_en_disco(rot_fd, matrix)
