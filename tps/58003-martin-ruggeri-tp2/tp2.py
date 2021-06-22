@@ -106,7 +106,7 @@ def validar_bloque_de_lectura(bloque_de_lectura):
         bloque_de_lectura = 3
     else:
         bloque_de_lectura = bloque_de_lectura - bloque_de_lectura % 3
-
+    return bloque_de_lectura
 
 def crear_lista_de_hilos():
     lista_de_hilos = list()
@@ -161,7 +161,7 @@ if __name__ == "__main__":
     args = parser_image()
     nombre_archivo = args.file
     bloque_de_lectura = args.valor
-    validar_bloque_de_lectura(bloque_de_lectura)
+    bloque_de_lectura = validar_bloque_de_lectura(bloque_de_lectura)
 
     # Lista de fd para cerrarlos mas facil
     fd_list = list()
