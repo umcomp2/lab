@@ -42,7 +42,7 @@ class PPMParser():
 
     def getMetaDataEnd(self):
         fileSize = os.stat(self.filePath).st_size - 1
-        return fileSize - int(self.metadata[1])*int(self.metadata[2])*3 - 1
+        return fileSize - int(self.metadata[1])*int(self.metadata[2])*3
 
     def getLine(self):
         c = b""
