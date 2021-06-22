@@ -4,6 +4,14 @@ from threading import Thread, Barrier
 import os
 import re
 import mmap
+import logging
+
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(levelname)s hilo: %(threadName)s --> mensaje: %(message)s',
+    datefmt='%H: %M: %S'
+)
 
 
 class HiloDeColor(Thread):
@@ -19,6 +27,7 @@ class HiloDeColor(Thread):
         self.size = size
 
     def run(self):
+        logging.info('Nos ejecutamos en segundo plano, en background')
         while True:
             # Esperar que el buffer_de_lecturaer tenga nuevo contenido
             self.barrier.wait()
@@ -33,6 +42,7 @@ class HiloDeColor(Thread):
             self.barrier.wait()
 
     def rotar(self):
+        logging.info('rotando...')
         for i in range(self.color, len(self.buffer_de_lectura[0]), 3):
             col = int(self.index/self.width)
             row = self.width - self.index % self.width - 1
@@ -187,4 +197,4 @@ if __name__ == "__main__":
 
     cerrar_fds(fd_list)
 
-    print("Imagen rotada con exito!")
+    logging.info("Imagen rotada con exito!")
