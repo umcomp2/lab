@@ -1,6 +1,6 @@
 import os
 
-def manejo_de_errores(parser, filename, size, sentido):
+def manejo_de_errores(parser, filename, size):
 
     # si no se ingresa el nombre de un archivo
     if not filename:
@@ -20,6 +20,3 @@ def manejo_de_errores(parser, filename, size, sentido):
     # si el s ingresado es negativo
     if size < 0:
         parser.error('ERROR EN EL ARGUMENTO [-n]! El tamano del bloque a leer no puede ser un numero negativo.')
-
-    if sentido != 'i' and sentido != 'd':
-        parser.error('ERROR EN EL ARGUMENTO [--sentido]! Sentido inexistente. Debe ingresar i (izquierda) o d (derecha)')

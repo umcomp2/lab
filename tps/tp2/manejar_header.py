@@ -24,8 +24,8 @@ def rotate_header(old_header):
     width = second_line[:second_line_space]
     height = second_line[second_line_space + 1:]
     third_line = old_header[second_enter + 1:]
-    new_width = height
-    new_height = width
+    new_width = width
+    new_height = height
     rotated_header = first_line + b"\n" + new_width + b" " + new_height + b"\n" + third_line
     rotated_header = rotated_header
     return rotated_header, int(new_width), int(new_height)
