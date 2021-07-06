@@ -110,6 +110,7 @@ if __name__ == '__main__':
             # *Guardo header y body
         header = imagen[:findHeader].decode()
         body = imagen[findHeader:]
+        print(len(body))
 
         # *Paso los pixeles a int
         imageInt = [i for i in body]
