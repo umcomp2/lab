@@ -1,16 +1,16 @@
 # COMPUTACION II
 
 
-## TP2
+## RECUPERATORIO TP2
 
-Fecha de entrega: 15/06/2021
+Fecha de entrega: 24/08/2021
 
 
 ### Problema
 
 Es necesario procesar imágenes con python, sin utilizar bibliotecas de procesamiento de imágenes. Para ello realizar una aplicación que abra y lea un archivo de imagen con formato portátil pixmap (ppm) indicado por la opcion "-f archivo"
 
-El proceso debe lanzar 3 hilos para procesar la imagen. Debe ir leyendo la imagen por bloques de n bytes indicadas por la opcion "-n valor", y generar una nueva imagen igual a la anterior, pero rotada 90 grados a la izquierda.
+El proceso debe lanzar 3 hilos para procesar la imagen. Debe ir leyendo la imagen por bloques de n bytes indicadas por la opcion "-n valor", y generar una nueva imagen igual a la anterior, pero espejada horizontalmente.
 
 Cada hilo se debe encargar de procesar un color, rojo, verde o azul, segun corresponda y rehubicar los pixels en el lugar que le corresponda en la nueva imagen.
 
@@ -27,25 +27,18 @@ Cada hilo se debe encargar de procesar un color, rojo, verde o azul, segun corre
 #### Ejemplo modo de uso
 
 ~~~~~~~~~~~~~~~~~~~
-$ ./tp2.py -h
-usage: tp2..py [-h] -s SIZE -f FILE
-
-Tp2 - procesa ppm
-
+$ ./rtp2.py -h
+usage: rtp2.py [-h] -s SIZE -f FILE
+Rtp2 - procesa ppm
 optional arguments:
   -h, --help            show this help message and exit
   -s SIZE, --size SIZE  Bloque de lectura
   -f FILE, --file FILE  archivo a procesar
-
-
-$ ./tp2.py -s 1024 -f tux.ppm 
-
-Se rotó correctamente la imagen
-
+$ ./rtp2.py -s 1024 -f tux.ppm 
+Se espejo correctamente la imagen
 $ ls *ppm
-tux.ppm
-tux_left.ppm
-
+dog.ppm
+dog_mirror.ppm
 ~~~~~~~~~~~~~~~~~~~
 
 
@@ -60,5 +53,4 @@ man ppm
 http://netpbm.sourceforge.net/doc/ppm.html
 
 ### Bonus Track
-El programa debe pedir un argumento mas --sentido para rotar 90 grados a la izquierda o a la derecha
-
+El programa debe pedir un argumento mas --blackwhite para además de espejar la imagen, dejarla en blanco y negro
