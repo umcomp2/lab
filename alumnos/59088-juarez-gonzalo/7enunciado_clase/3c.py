@@ -2,30 +2,40 @@
 import threading
 
 acc = 0
-sem = None
+acc_sem = None
+barrier = None
 
 def suma(num):
     global acc
-    global sem
+    global acc_sem
+    global barrier
 
     print("Saldo = %d, Sumando =  %d" % (acc, num))
     acc += num
-    sem.release()
+    acc_sem.release()
+
+    barrier.wait()
+    print("Acumulador final %d, %d" % (acc, threading.get_native_id()))
 
 def resta(num):
     global acc
-    global sem
+    global acc_sem
+    global barrier
 
-    sem.acquire()
+    acc_sem.acquire()
     print("Saldo = %d, Restando =  %d" % (acc, num))
     acc -= num
+
+    barrier.wait()
+    print("Acumulador final %d, %d" % (acc, threading.get_native_id()))
 
 if __name__ == "__main__":
     dep = 1000
     extrac = 500
 
     pool = []
-    sem = threading.Semaphore(value=0)
+    acc_sem = threading.Semaphore(value=0)
+    barrier = threading.Barrier(2)
 
     pool.append(threading.Thread(target=suma, args=(dep,)))
     pool.append(threading.Thread(target=resta, args=(extrac,)))
@@ -38,5 +48,3 @@ if __name__ == "__main__":
 
     if acc < 0:
         raise ValueError("Acumulador negativo")
-
-    print("Acumulador final %d" % acc)
