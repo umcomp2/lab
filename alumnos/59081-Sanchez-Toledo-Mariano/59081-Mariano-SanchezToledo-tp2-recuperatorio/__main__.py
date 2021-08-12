@@ -1,19 +1,20 @@
 import os
+from queues import *
+from common import *
 from parse import Parser
 from Input import Input
 
 
 
+def main():
+    file = Input(fileInp)
+    header, column, row = file.getHeader()
+    '''file.getBody()
+    qr, qg, qb = createQueue()
+    processQueue(qr, qg, qb)'''
+    print(column, row)
 
-args = Parser.parser()
-fileInp = args.file
 
-image = Input(fileInp)
-header = image.getHeader()
-image.getBody()
 
-with open('test2.ppm', 'wb',os.O_CREAT) as fd:
-    fd.write(header)
-    fw = open('temp.tmp', 'rb')
-    data = fw.read()
-    fd.write(data)
+if __name__ == "__main__":
+    main()

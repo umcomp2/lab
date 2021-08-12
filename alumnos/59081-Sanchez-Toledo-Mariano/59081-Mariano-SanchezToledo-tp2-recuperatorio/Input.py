@@ -1,6 +1,4 @@
-
 import os
-
 
 #Check EoF.
 def is_eof(fileHandle):
@@ -21,14 +19,19 @@ class Input():
     def getHeader(self):
         while True:
             line = self.fileHandle.readline()
+            if line.find(b'#') != -1:
+                continue
             self.header += line
             if line == b'255\n':
                 break
+        
+        headerList = self.header.split()
+        column, row = headerList[1], headerList[2]
         print('Header Done')
-        return self.header
+        return self.header, int(column), int(row)
 
     def getBody(self):
-        tempFile = open('temp.tmp', 'wb')
+        tempFile = open('body.tmp', 'wb')
         while True:
             tempData = self.fileHandle.readline()
             tempFile.write(tempData)
