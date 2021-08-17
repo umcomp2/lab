@@ -20,7 +20,10 @@ server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # Establecemos el socket para escuchar en [HOST] y [PORT]
 server_socket.bind((HOST, PORT))
-server_socket.listen(0)
+# socket.listen([backlog])
+# El backlog es la cantidad de conexiones que puede tener en espera
+# para hacer el SYN-SYN/ACK-ACK
+server_socket.listen()
 
 while True:
 # socket.accept()

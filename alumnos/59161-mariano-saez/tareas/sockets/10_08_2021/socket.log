@@ -17,3 +17,16 @@ total 12
 [16/08/2021 18:50:24] - CMD: ls /xd - CODE: ERROR
 ls: no se puede acceder a '/xd': No existe el fichero o el directorio
 
+[17/08/2021 09:31:52] - CMD: pwd - CODE: OK
+/home/mariano/Facultad/Computacion_II/lab/alumnos/59161-mariano-saez/tareas/sockets/10_08_2021
+
+[17/08/2021 09:31:55] - CMD: ls -l - CODE: OK
+total 16
+-rw-r--r-- 1 mariano mariano 2613 ago 16 18:50 cliente.py
+-rw-r--r-- 1 mariano mariano  228 ago 16 17:04 explode.py
+-rw-r--r-- 1 mariano mariano 1647 ago 17 09:22 server.py
+-rw-r--r-- 1 mariano mariano  679 ago 16 18:51 socket.log
+
+[17/08/2021 09:31:59] - CMD: whoami - CODE: OK
+mariano
+
