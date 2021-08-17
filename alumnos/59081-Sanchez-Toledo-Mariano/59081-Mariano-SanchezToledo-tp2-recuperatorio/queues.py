@@ -3,7 +3,7 @@ from queue import *
 from Input import is_eof
 
 
-def processList(filename="body.tmp"):
+def processQueue(filename="body.tmp"):
     rq = Queue()
     gq = Queue()
     bq = Queue()
