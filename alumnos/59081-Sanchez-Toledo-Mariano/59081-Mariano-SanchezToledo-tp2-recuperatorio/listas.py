@@ -4,33 +4,34 @@ from Input import is_eof
 
 
 def processList(filename="body.tmp"):
-    rlist = []
-    glist = []
-    blist = []
+    rq = Queue()
+    gq = Queue()
+    bq = Queue()
     with open(filename, 'rb') as fd:
         pointer = -1
         while True:
             pointer +=1
             if pointer % 3 == 0:
                 byte = fd.read(1)
-                rlist += byte
+                rq.put(byte)
                 if is_eof(fd):
                     break
             elif pointer % 3 == 1:
                 byte = fd.read(1)
-                glist += byte
+                gq.put(byte)
                 if is_eof(fd):
                     break
             elif pointer % 3 == 2:
                 byte = fd.read(1)
-                blist += byte
+                bq.put(byte)
                 if is_eof(fd):
                     break
             elif is_eof(fd):
                 break
         fd.close()
     remove(filename)
-    return rlist, glist, blist
+    print("Queues Done!")
+    return rq, gq, bq
     
 
     
