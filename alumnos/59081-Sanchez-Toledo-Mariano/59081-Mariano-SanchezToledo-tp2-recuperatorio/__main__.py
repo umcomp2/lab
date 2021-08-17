@@ -1,20 +1,24 @@
-import os
-from queues import *
+from listas import *
 from common import *
-from parse import Parser
-from Input import Input
+from concurrent.futures import *
+
+
+def llenar_matriz(i):
+    pass
 
 
 
 def main():
-    file = Input(fileInp)
-    header, column, row = file.getHeader()
-    '''file.getBody()
-    qr, qg, qb = createQueue()
-    processQueue(qr, qg, qb)'''
-    print(column, row)
+    
+    rlist, glist, blist = processList()
+    print(len(rlist), len(glist), len(blist))
 
-
+    '''with ThreadPoolExecutor(max_workers=3) as executor:
+        
+        executor.map(llenar_matriz, rlist)
+        executor.map(llenar_matriz, glist)
+        executor.map(llenar_matriz, blist)
+    '''
 
 if __name__ == "__main__":
     main()

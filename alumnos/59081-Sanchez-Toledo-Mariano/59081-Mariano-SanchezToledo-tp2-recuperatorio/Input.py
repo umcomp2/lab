@@ -16,7 +16,7 @@ class Input():
         self.fileHandle = open(filename, mode)
         self.header = b''
 
-    def getHeader(self):
+    def processImage(self):
         while True:
             line = self.fileHandle.readline()
             if line.find(b'#') != -1:
@@ -24,10 +24,11 @@ class Input():
             self.header += line
             if line == b'255\n':
                 break
-        
         headerList = self.header.split()
         column, row = headerList[1], headerList[2]
         print('Header Done')
+        self.getBody()
+        print('Body saved in tmp')
         return self.header, int(column), int(row)
 
     def getBody(self):
