@@ -51,3 +51,5 @@ while True:
             respuesta = bytes(f"ERROR\n{exit_stderr}", "utf-8")
 
         conn.send(respuesta)
+        
+    conn.close()
