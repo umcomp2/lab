@@ -23,6 +23,7 @@ def this_analize_the_raw_image(image,size):
 
     raw_data.append(os.read(image,(getsize(image)%size)))
     raw_data = b''.join(raw_data)
+ 
 
     global header
     global body
@@ -39,7 +40,6 @@ def this_analize_the_raw_image(image,size):
     header = raw_data[:header_finder].decode()    #nesesary express the header to decode the image
     body = raw_data[header_finder:]
     data_procesed = [i for i in body]
-
     return data_procesed
 
 def image_analizer(q,namefile,rgb):
@@ -139,6 +139,7 @@ def main():
     print("Launching Child 3:BLUE")
     q.put(data_procesed)
     c3 = mp.Process(target = image_analizer, args = (q,namefile,"BLUE"))
+    
     #start the process
     c1.start()
     c2.start()
@@ -158,8 +159,10 @@ def main():
     c1.terminate()
     c2.terminate()
     c3.terminate()
+
     time.sleep(1)
     print("\nExiting program\n")
 
 if __name__ == "__main__":
     main()
+    
