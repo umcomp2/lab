@@ -1,9 +1,10 @@
-from threading import Semaphore
+from threading import Lock
 from parse import Parser
 from Input import Input
 
 args = Parser.parser()
 fileInp = args.file
 file = Input(fileInp)
+size = args.size
 header, column, row = file.processImage()
-sem = Semaphore(3)
+sem = Lock()
