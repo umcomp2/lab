@@ -3,7 +3,7 @@ import subprocess as sp
 import socket
 import threading as tr
 
-# already synchronized (python3+)
+# already synchronized queue (python3+)
 from queue import Queue
 
 NTHREADS = 64
@@ -25,13 +25,12 @@ def send_msg(s, msg):
     while sent := s.send(msg[acc:]):
         acc += sent
 
-import sys
 def recv_line(s):
     line = bytearray()
     while len(line) < len(MSG_TERM) or\
             line[-len(MSG_TERM):] != MSG_TERM:
         line += s.recv(MAXINPUTSIZE)
-    # bytearray not considered bytes object?? python3
+    # bytearray != bytes ?? python3
     return bytes(line[:-len(MSG_TERM)])
 
 #p = {
@@ -56,7 +55,6 @@ def shell_loop(s):
             msg += bytes("OK. RETCODE: %d" % p.returncode, "utf8")
         msg += b"\n\n" + p.stdout
         send_msg(s, msg)
-
     s.close()
 
 def pool_loop():
@@ -87,7 +85,6 @@ def main():
     while True:
         conn = sv_s.accept()
         conn_q.put(conn)
-
 
 if __name__ == "__main__":
     main()
