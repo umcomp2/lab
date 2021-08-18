@@ -66,8 +66,8 @@ def pool_loop():
 
 def start_tr_pool():
     for i in range(NTHREADS):
-        tr_pool.append(tr.Thread(target=pool_loop, args=()))
-        tr_pool[-1].start()
+        tr_pool[i] = tr.Thread(target=pool_loop, args=())
+        tr_pool[i].start()
 
 def set_tcp_sv():
     sv_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
