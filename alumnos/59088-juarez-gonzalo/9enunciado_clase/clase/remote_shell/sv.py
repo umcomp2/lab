@@ -13,6 +13,7 @@ HOSTNAME = ""
 BACKLOGSIZE = 5
 
 MAXINPUTSIZE = 1024
+MSG_TERM = b"\r\n\r\n"
 
 tr_pool = [None]*NTHREADS
 conn_q = None
@@ -20,26 +21,18 @@ conn_q = None
 def send_msg(s, msg):
     acc = 0
     sent = 0
+    msg += MSG_TERM
     while sent := s.send(msg[acc:]):
         acc += sent
 
+import sys
 def recv_line(s):
-    line = b""
-    acc = 0
-
-    while line == b"":
-        recvd = s.recv(MAXINPUTSIZE)
-        for i in range(len(recvd)):
-            # recvd is a bytes object
-            # indexing a bytes object returns an int
-            # so recvd[idx] == b'\n' is always False since
-            # int != bytes in python3 (ascii '\n' == 0x0a)
-            # for encoding independency: int.from_bytes()
-            if recvd[acc+i] == int.from_bytes(b'\n', "little"):
-                line = recvd[:acc+i]
-        acc += len(recvd)
-
-    return line
+    line = bytearray()
+    while len(line) < len(MSG_TERM) or\
+            line[-len(MSG_TERM):] != MSG_TERM:
+        line += s.recv(MAXINPUTSIZE)
+    # bytearray not considered bytes object?? python3
+    return bytes(line[:-len(MSG_TERM)])
 
 #p = {
 #        returncode : int
@@ -52,6 +45,9 @@ def recv_line(s):
 # standard stream should be opened."
 def shell_loop(s):
     while cmd := recv_line(s):
+        if (cmd == b"exit"):
+            print("EXITING")
+            break
         p = sp.run(cmd, shell=True, stdout=sp.PIPE, stderr=sp.STDOUT)
         msg = bytearray()
         if p.returncode != 0:
@@ -61,8 +57,6 @@ def shell_loop(s):
         msg += b"\n\n" + p.stdout
         send_msg(s, msg)
 
-        if (cmd == b"exit"):
-            break
     s.close()
 
 def pool_loop():
