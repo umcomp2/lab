@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 import subprocess as sp
 import socket
 import threading as tr

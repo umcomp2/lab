@@ -1,0 +1,7 @@
+version: "3.9"
+services:
+  sv_remote_shell:
+    build: .
+    image: 59088_remote_shell
+    ports:
+      - "8080:8080"
