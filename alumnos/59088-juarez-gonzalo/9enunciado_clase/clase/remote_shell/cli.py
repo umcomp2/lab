@@ -83,6 +83,7 @@ def main():
     logger, close_logger = get_logger(filepath)
     s = set_cli()
     shell_loop(s, logger)
+    s.close()
     close_logger()
 
 if __name__ == "__main__":
