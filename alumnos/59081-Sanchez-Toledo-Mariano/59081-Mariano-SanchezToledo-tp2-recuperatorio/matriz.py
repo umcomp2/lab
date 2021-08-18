@@ -1,7 +1,6 @@
 from common import *
 
 
-global matrix
 matrix=[[['R','G','B'] for x in range(column)] for y in range(row)]
 
 def llenar_matriz_rojo(rq):
@@ -36,3 +35,8 @@ def llenar_matriz_azul(bq):
             byte = bq.get()
             matrix[y][x][2] = byte
             sem.release()
+
+def invertirMatriz():
+    for y in matrix:
+        y.reverse()
+    return matrix

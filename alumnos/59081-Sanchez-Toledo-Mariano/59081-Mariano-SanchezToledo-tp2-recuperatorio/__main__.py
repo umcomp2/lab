@@ -21,11 +21,14 @@ def main():
     th2.join()
     th3.join()
 
+    espejo = invertirMatriz()
+    #print(espejo)
+
     with open('espejo.ppm', 'wb', O_CREAT) as fd:
         fd.write(header)
-        for y in range(len(matrix)):
-            for x in range(len(matrix[y])):
-                for k in matrix[y][x]:
+        for y in range(len(espejo)):
+            for x in range(len(espejo[y])):
+                for k in espejo[y][x]:
                     fd.write(k)
 
 
