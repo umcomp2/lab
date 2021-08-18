@@ -14,3 +14,6 @@ Servidor:
 
 Razonamiento: Es simple, con la Queue que ofrece python aun mas simple
 y para los fines sirve bastante bien
+
+desde el cli se puede tirar el servidor :). por ejemplo:
+`kill -n 9 \`pgrep sv.py\``
