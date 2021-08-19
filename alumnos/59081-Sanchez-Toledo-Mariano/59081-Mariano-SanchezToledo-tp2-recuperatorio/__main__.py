@@ -25,15 +25,18 @@ def main():
     th1.join()
     th2.join()
     th3.join()
+    print('Threads Done!')
 
     espejo = invertirMatriz()
 
+    print('Reconstruyendo...')
     with open('espejo.ppm', 'wb', O_CREAT) as fd:
         fd.write(header)
         for y in range(len(espejo)):
             for x in range(len(espejo[y])):
                 for k in espejo[y][x]:
                     fd.write(k)
+    print('\nPrograma Finalizado con Exito\n')
 
 
 if __name__ == "__main__":
