@@ -148,16 +148,12 @@ def create_image_inverted(list_inverted,namefile):
 #calculate te rgb to make it into grayscale and put it into a list
 def grayscale(flat_list,namefile):
     black_white = []
-    r = 0
-    g = 1
-    b = 2
-    for elements in range (0,int((len(flat_list))/3)):
-        sum = int((flat_list[r])*0.3) + int((flat_list[g])*0.59) + int((flat_list[b])*0.11)
+    count = 0
+    for _ in range (0,int((len(flat_list))/3)):
+        sum = int((flat_list[count])*0.3) + int((flat_list[count +1])*0.59) + int((flat_list[count +2])*0.11)
         for rep in range (0,3):
             black_white.append(sum)
-        r += 3
-        g += 3
-        b += 3
+        count += 3
     namefile = namefile+'_greyscale'    
     create_image_inverted(black_white,namefile)    
 
