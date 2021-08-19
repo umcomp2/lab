@@ -6,31 +6,16 @@ import threading as tr
 # already synchronized queue (python3+)
 from queue import Queue
 
+from common import *
+
 NTHREADS = 64
 
 PORT = 8080
 HOSTNAME = ""
-BACKLOGSIZE = 5
-
-MAXINPUTSIZE = 1024
-MSG_TERM = b"\r\n\r\n"
+BACKLOGSIZE = NTHREADS
 
 tr_pool = [None]*NTHREADS
 conn_q = None
-
-def send_msg(s, msg):
-    acc = 0
-    msg += MSG_TERM
-    while (acc := acc + s.send(msg[acc:])) < len(msg):
-        continue
-
-def recv_line(s):
-    line = bytearray()
-    while len(line) < len(MSG_TERM) or\
-            line[-len(MSG_TERM):] != MSG_TERM:
-        line += s.recv(MAXINPUTSIZE)
-    # bytearray != bytes ?? python3
-    return bytes(line[:-len(MSG_TERM)])
 
 #p = {
 #        returncode : int
@@ -42,7 +27,7 @@ def recv_line(s):
 # or stderr argument to Popen and indicates that a pipe to the
 # standard stream should be opened."
 def shell_loop(s):
-    while cmd := recv_line(s):
+    while cmd := recv_msg(s):
         if (cmd == b"exit"):
             print("EXITING")
             break

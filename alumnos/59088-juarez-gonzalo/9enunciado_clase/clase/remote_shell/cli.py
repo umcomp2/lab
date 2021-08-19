@@ -5,30 +5,15 @@ import getopt
 from datetime import datetime
 import sys
 
+from common import *
+
 HOSTNAME = "localhost"
 PORT = 8080
-
-MAXINPUTSIZE = 1024
-MSG_TERM = b"\r\n\r\n"
 
 def set_cli():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((HOSTNAME, PORT))
     return s
-
-def recv_response(s):
-    msg = bytearray()
-    while len(msg) < len(MSG_TERM) or\
-        msg[-len(MSG_TERM):] != MSG_TERM:
-            msg += s.recv(MAXINPUTSIZE)
-    # bytearray != bytes ?? python3
-    return bytes(msg[:-len(MSG_TERM)])
-
-def send_cmd(s, cmd):
-    acc = 0
-    cmd += MSG_TERM
-    while (acc := acc + s.send(cmd[acc:])) < len(cmd):
-        continue
 
 def shell_loop(s, logger):
     print("STARTING CLI :) (EOF, empty command, or exit command to exit)\n")
@@ -37,13 +22,13 @@ def shell_loop(s, logger):
         while cmd := input("$ "):
             if cmd == "exit":
                 break
-            send_cmd(s, bytes(cmd, "utf8"))
-            res = recv_response(s).decode("utf8")
+            send_msg(s, bytes(cmd, "utf8"))
+            res = recv_msg(s).decode("utf8")
             logger(cmd, res)
             print(res)
     except EOFError:
         pass
-    send_cmd(s, bytes("exit", "utf8"))
+    send_msg(s, bytes("exit", "utf8"))
     print("\nEXITING CLI :(")
     s.close()
 
