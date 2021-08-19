@@ -15,5 +15,9 @@ las trata en shell_loop()
 Razonamiento: Es simple, con la Queue que ofrece python aun mas simple
 y para los fines sirve bastante bien
 
+Nota: Decidí aislar la conversión de string a byte y viceversa
+en las funciones para recibir y enviar mensajes para aislar
+un poco el resto del codigo de esos detalles.
+
 Desde el cli se puede tirar el servidor :). por ejemplo:
 `kill -n 9 $(pgrep sv.py)` (aunque eso no sirve en el container porque busybox no tiene esas opciones para los comandos)

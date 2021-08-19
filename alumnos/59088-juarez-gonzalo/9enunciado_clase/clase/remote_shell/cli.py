@@ -22,13 +22,13 @@ def shell_loop(s, logger):
         while cmd := input("$ "):
             if cmd == "exit":
                 break
-            send_msg(s, bytes(cmd, "utf8"))
-            res = recv_msg(s).decode("utf8")
+            send_msg(s, cmd)
+            res = recv_msg(s)
             logger(cmd, res)
             print(res)
     except EOFError:
         pass
-    send_msg(s, bytes("exit", "utf8"))
+    send_msg(s, "exit")
     print("\nEXITING CLI :(")
     s.close()
 

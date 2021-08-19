@@ -17,6 +17,14 @@ BACKLOGSIZE = NTHREADS
 tr_pool = [None]*NTHREADS
 conn_q = None
 
+def run_cmd(cmd):
+    return sp.run(
+            cmd,
+            shell=True,
+            stdout=sp.PIPE,
+            stderr=sp.STDOUT,
+            encoding="utf8")
+
 #p = {
 #        returncode : int
 #        stdout : bytes
@@ -28,16 +36,16 @@ conn_q = None
 # standard stream should be opened."
 def shell_loop(s):
     while cmd := recv_msg(s):
-        if (cmd == b"exit"):
+        if (cmd == "exit"):
             print("EXITING")
             break
-        p = sp.run(cmd, shell=True, stdout=sp.PIPE, stderr=sp.STDOUT)
-        msg = bytearray()
+        p = run_cmd(cmd)
+        msg = ""
         if p.returncode != 0:
-            msg += bytes("ERROR. RETCODE %d" % p.returncode, "utf8")
+            msg += "ERROR. RETCODE %d" % p.returncode
         else:
-            msg += bytes("OK. RETCODE: %d" % p.returncode, "utf8")
-        msg += b"\n\n" + p.stdout
+            msg += "OK. RETCODE: %d" % p.returncode
+        msg += "\n\n" + p.stdout
         send_msg(s, msg)
     s.close()
 
