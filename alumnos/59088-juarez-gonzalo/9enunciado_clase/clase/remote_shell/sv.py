@@ -20,10 +20,9 @@ conn_q = None
 
 def send_msg(s, msg):
     acc = 0
-    sent = 0
     msg += MSG_TERM
-    while sent := s.send(msg[acc:]):
-        acc += sent
+    while (acc := acc + s.send(msg[acc:])) < len(msg):
+        continue
 
 def recv_line(s):
     line = bytearray()

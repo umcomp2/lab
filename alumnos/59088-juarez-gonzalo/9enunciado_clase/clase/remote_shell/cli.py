@@ -26,10 +26,9 @@ def recv_response(s):
 
 def send_cmd(s, cmd):
     acc = 0
-    sent = 0
     cmd += MSG_TERM
-    while sent := s.send(cmd[acc:]):
-        acc += sent
+    while (acc := acc + s.send(cmd[acc:])) < len(cmd):
+        continue
 
 def shell_loop(s, logger):
     print("STARTING CLI :) (EOF, empty command, or exit command to exit)\n")
