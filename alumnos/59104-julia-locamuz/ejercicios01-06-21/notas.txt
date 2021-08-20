@@ -1,0 +1,35 @@
+class concurrent.futures.Executor
+Una clase abstracta que proporciona métodos para ejecutar llamadas de forma asincrónica. 
+No debe ser utilizada directamente, sino a través de sus subclases.
+
+1)  submit(fn, /, *args, **kwargs)
+
+    Programa la invocación de fn, que será ejecutada como fn(*args **kwargs) y 
+    retorna un objeto Future que representa la ejecución del invocable.
+
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(pow, 323, 1235)
+        print(future.result())
+
+2)  map(func, *iterables, timeout=None, chunksize=1)
+
+    Similar to map(func, *iterables) except:
+
+    -the iterables are collected immediately rather than lazily;
+
+    -func is executed asynchronously and several calls to func may be made concurrently.
+
+
+map(func, iterables)
+
+# Python program to demonstrate working
+# of map.
+  
+# Return double of n
+def addition(n):
+    return n + n
+  
+# We double all numbers using map()
+numbers = (1, 2, 3, 4)
+result = map(addition, numbers)
+print(list(result))
