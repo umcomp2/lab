@@ -38,9 +38,10 @@ while True:
     recv = s.recv(1024)
     print(recv.decode())
     if (len(sys.argv) > 1):
-        log = open(arg2, "a")
-        log.write(recv.decode())
-        log.close()
+        if (arg1 == "-l"):
+            log = open(arg2, "a")
+            log.write(recv.decode())
+            log.close()
 
 #print (msg.decode('ascii'))
 #print (msg.decode('utf-8'))

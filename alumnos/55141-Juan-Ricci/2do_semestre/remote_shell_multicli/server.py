@@ -1,17 +1,17 @@
 #!/usr/bin/python3
-import socket, sys, time
+import socket
 import subprocess as sp
 import _thread
 
 # create a socket object
-serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-host = socket.gethostname()                           
+host = socket.gethostname()
 port = 1234
 # count de los hilos para multiples clientes
 threadCount = 0
-serversocket.bind((host, port))                            
+serversocket.bind((host, port))
 serversocket.listen(2)
 
 def threaded_client(connection):
