@@ -143,7 +143,7 @@ def creatergb(ppmread,rgb):
                 ppmg[b] = 0
         print("Green processed")
 
-        #Mirror algorithm ==============================
+        #Mirror algorithm ===============================
         candle.acquire()
         pixelsrgb = width * height * 3
         pixelwidth = width * 3
