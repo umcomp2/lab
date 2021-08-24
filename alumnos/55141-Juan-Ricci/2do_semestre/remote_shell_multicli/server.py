@@ -11,7 +11,7 @@ host = socket.gethostname()
 port = 1234
 # count de los hilos para multiples clientes
 threadCount = 0
-serversocket.bind((host, port))                                  
+serversocket.bind((host, port))                            
 serversocket.listen(2)
 
 def threaded_client(connection):

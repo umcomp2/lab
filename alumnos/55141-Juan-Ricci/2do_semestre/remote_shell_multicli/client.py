@@ -7,8 +7,17 @@ import sys
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
 print(s)
 
+if (len(sys.argv) > 1):
+    arg1 = sys.argv[1]
+    arg2 = sys.argv[2]
+    if (arg1 == "-l"):
+        log = open(arg2, "w")
+        log.close()
+    else:
+        print("Usage: -l [file] to save log")
+
 # get local machine name
-host = socket.gethostname()                           
+host = socket.gethostname()                     
 # host = sys.argv[1]
 
 port = 1234 # int(sys.argv[2])
@@ -28,6 +37,10 @@ while True:
     print("Reciviendo datos del server")
     recv = s.recv(1024)
     print(recv.decode())
+    if (len(sys.argv) > 1):
+        log = open(arg2, "a")
+        log.write(recv.decode())
+        log.close()
 
 #print (msg.decode('ascii'))
 #print (msg.decode('utf-8'))
