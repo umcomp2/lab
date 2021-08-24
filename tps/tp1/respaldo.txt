@@ -1,0 +1,22 @@
+ while True:
+        imagen = queue_g.get()
+        largo = escrito + len(imagen)
+        archivo.write(imagen)
+        if len(raster) == largo:
+            break
+
+def hijo_rojo(extension, size, queue_r):
+    header = leer_encabezado(extension)
+    #Creo un archivo para guardar el contenido
+    archivo = open("Red_" + extension ,"wb")
+    for i in header:
+        archivo.write(i)
+        archivo.write(b"\n")
+    raster = leer_raster(extension, size, queue_r)
+    escrito = 0
+    while True:
+        imagen = queue_r.get()
+        largo = escrito + len(imagen)
+        archivo.write(imagen)
+        if len(raster) == largo:
+            break
