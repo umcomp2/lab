@@ -30,7 +30,6 @@ def leer_encabezado(archivo):
     return Numero_magico, Anchura, Altura, MaxVal
 
 def multifuncion(archivo, size):
-    global matriz
     #Comparamos el encabezado y leemos el cuerpo del raster
     Numero_magico, Anchura, Altura, MaxVal = leer_encabezado(archivo)
     with open(archivo, "rb") as header:
@@ -60,7 +59,6 @@ def multifuncion(archivo, size):
                 lista_r.append(pix[0])
                 lista_v.append(pix[1])
                 lista_a.append(pix[2])
-    matriz = [[["R","V","A"] for x in range(int(Anchura))]for y in range(int(Altura))]
     return lista_r, lista_v, lista_a, Anchura, Altura
                          
 def abrir_arch(archivo):
@@ -71,7 +69,7 @@ def abrir_arch(archivo):
         archivo.write(i+b"\n")   
 
 def hilo_rojo(archivo, tamaño):
-    global matriz
+    global lista_final
     r, v, a, Anchura, Altura = multifuncion(archivo, tamaño)
     roja = []
     for i in range(0, len(r), int(Anchura)):
@@ -79,13 +77,11 @@ def hilo_rojo(archivo, tamaño):
         roja.append(x)
     for i in roja:
         i.reverse()
-    for i in range(int(Altura)):
-        for j in range(int(Anchura)):
-            barrera.wait()
-            matriz[i][j][0] =  roja[i][j]
+    return roja
+
 
 def hilo_verde(archivo, tamaño):
-    global matriz
+    global lista_final
     r, v, a, Anchura, Altura = multifuncion(archivo, tamaño)
     verde = []
     for i in range(0, len(v), int(Anchura)):
@@ -93,13 +89,10 @@ def hilo_verde(archivo, tamaño):
         verde.append(y)
     for i in verde:
         i.reverse()
-    for i in range(int(Altura)):
-        for j in range(int(Anchura)):
-            barrera.wait()
-            matriz[i][j][1] =  verde[i][j]
+    return verde
 
 def hilo_azul(archivo, tamaño):
-    global matriz
+    global lista_final
     r, v, a, Anchura, Altura = multifuncion(archivo, tamaño)
     azul = []
     for i in range(0, len(a), int(Anchura)):
@@ -107,14 +100,20 @@ def hilo_azul(archivo, tamaño):
         azul.append(z)
     for i in azul:
         i.reverse()
+    return azul
+
+def funcion_final(archivo, tamaño):
+    abrir_arch(archivo)
+    r, v, a, Anchura, Altura = multifuncion(archivo, tamaño)
+    roja = hilo_rojo(archivo, tamaño)
+    verde = hilo_verde(archivo, tamaño)
+    azul = hilo_azul(archivo, tamaño)
+    matriz = [[["R","V","A"] for x in range(int(Anchura))]for y in range(int(Altura))]
     for i in range(int(Altura)):
         for j in range(int(Anchura)):
-            barrera.wait()
+            matriz[i][j][0] =  roja[i][j]
+            matriz[i][j][1] =  verde[i][j]
             matriz[i][j][2] =  azul[i][j]
-
-def funcion_final(archivo):
-    global matriz
-    abrir_arch(archivo)
     archivo_or = open("espejado_"+ archivo, "ab")
     for i in matriz:
         for j in i:
@@ -151,7 +150,7 @@ if __name__=="__main__":
     #Creacion de hijos
     hilo_r = th.Thread(target=hilo_rojo, args=(args.archivo, args.size, ))
     lista_hijos.append(hilo_r)
-    hilo_v = th.Thread(target=hilo_verde, args=(args.archivo, args.size, ))
+    hilo_v = th.Thread(target=hilo_azul, args=(args.archivo, args.size, ))
     lista_hijos.append(hilo_v)
     hilo_a = th.Thread(target=hilo_azul, args=(args.archivo, args.size, ))
     lista_hijos.append(hilo_a)
@@ -164,7 +163,7 @@ if __name__=="__main__":
     #Esperemos a los hijos
     for i in lista_hijos:
         i.join()
-    
-    funcion_final(args.archivo)
+
+    funcion_final(args.archivo, args.size)
 
     print("El padre finalizo...")
