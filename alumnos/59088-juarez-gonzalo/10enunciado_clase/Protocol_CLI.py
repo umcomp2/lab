@@ -25,7 +25,7 @@ class Protocol_CLI(Protocol):
     def __del__(self):
         pass
 
-class TCP_CLI:
+class TCP_CLI(Protocol_CLI):
     def __init__(self, sv_address, sv_port):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR | socket.SO_REUSEPORT, 1)
@@ -47,7 +47,7 @@ class TCP_CLI:
         self.sock.close()
         self.sock = None
 
-class UDP_CLI:
+class UDP_CLI(Protocol_CLI):
     def __init__(self, sv_address, sv_port):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR | socket.SO_REUSEPORT, 1)
