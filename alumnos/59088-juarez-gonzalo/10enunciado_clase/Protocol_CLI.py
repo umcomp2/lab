@@ -22,6 +22,9 @@ class Protocol_CLI(Protocol):
     def recv(self):
         pass
 
+    def __del__(self):
+        pass
+
 class TCP_CLI:
     def __init__(self, sv_address, sv_port):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

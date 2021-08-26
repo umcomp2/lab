@@ -22,6 +22,9 @@ class Protocol_SV(Protocol):
     def send(self, msg):
         pass
 
+    def __del__(self):
+        pass
+
 class UDP_SV(Protocol_SV):
     def __init__(self, port, host=""):
         self.client_addr = None

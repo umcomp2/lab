@@ -8,3 +8,6 @@ class Protocol:
 
     def recv(self):
         pass
+
+    def __del__(self):
+        pass
