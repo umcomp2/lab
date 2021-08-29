@@ -21,7 +21,7 @@ if args.l:
 while (command := input("> ")) != ".exit":
     client_socket.send(bytes(command, "utf-8"))
     answer = client_socket.recv(1000)
-    if file:
+    if args.l:
         file.write(str(answer, "utf-8") + str("\n"))
     print(str(answer, "utf-8"))
 

@@ -14,7 +14,7 @@ def execute(client_socket: socket.socket):
         client_socket.send(bytes(response, "UTF-8"))
     client_socket.shutdown(socket.SHUT_RDWR)
 
-process_pool = concurrent.futures.ProcessPoolExecutor(5)
+process_pool = concurrent.futures.ThreadPoolExecutor(5)
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.bind(("127.0.0.1", 51007))
 server_socket.listen(5)
