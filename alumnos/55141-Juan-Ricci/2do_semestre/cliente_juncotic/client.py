@@ -21,7 +21,10 @@ print("Handshake realizado con exito!")
 comandos = ['nombre', 'email', 'key', 'exit']
 
 for comando in comandos:
-    command = input(str("Ingrese su %s: " %comando))
+    if (comando != 'exit'):
+        command = input(str("Ingrese su %s: " %comando))
+    else:
+        command = input(str("Ingrese %s para salir: " %comando))
     if comando == 'nombre':
         command = 'hello|' + command
     elif comando == 'email':
@@ -30,12 +33,22 @@ for comando in comandos:
         command = 'key|' + command
     elif comando == 'exit':
         command == comando
-
     print("Enviando datos al server")
-    msg = s.send(command.encode('utf-8'))
+    msg = s.send(command.encode())
     print("Reciviendo datos del server")
     recv = s.recv(1024)
     print(recv.decode())
+
+
+'''while True:
+    command = input("Ingrese un comando: ")
+    print("Enviando datos al server")
+    msg = s.send(command.encode())
+    print("Reciviendo datos del server")
+    recv = s.recv(1024)
+    print(recv.decode())
+    if (command == 'exit'):
+        break'''
     
 
 #print (msg.decode('ascii'))
