@@ -4,7 +4,6 @@ import argparse
 from manager import open_file, header, rotate_header, write_in_ppm, plain_matrix
 from threading import Thread, Barrier
 
-
 barrier = Barrier(4)
 # j indica la posicion dentro del pixel
 def rotate(chunk, chunksz, j, sentido):
@@ -79,6 +78,7 @@ def rotate(chunk, chunksz, j, sentido):
             # condicion para que frene el loop
             # cuando no haya nada mas para leer
             if len(chunk[0]) < chunksz :
+                print(empty)
                 break
             barrier.wait()  
 
@@ -139,4 +139,4 @@ if __name__ == '__main__':
     # lo escribimos en la imagen nueva
     write_in_ppm(empty, rotated_content_header, fd, sentido)
     os.close(file)
-    print('se rotó correctamente la imagen')
+    print('\nse rotó correctamente la imagen')
