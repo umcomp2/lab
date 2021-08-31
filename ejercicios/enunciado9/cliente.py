@@ -31,5 +31,9 @@ while comando != b"exit":
 
     comando = bytes(input(), "utf-8") 
 
+    if comando == b"exit":
+        s.send(comando)
+        break
+
 s.close()
 print("Cerrando la conexion...")
