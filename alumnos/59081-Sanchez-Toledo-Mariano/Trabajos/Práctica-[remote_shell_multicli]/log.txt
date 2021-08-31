@@ -1,0 +1,42 @@
+
+31/08/21 19:49:49
+Comando:
+echo server
+Respuesta:
+server
+
+31/08/21 19:49:56
+Comando:
+echo hola
+Respuesta:
+hola
+
+31/08/21 19:50:08
+Comando:
+echo chau
+Respuesta:
+chau
+
+31/08/21 19:51:56
+Comando:
+echo hola cli2
+Respuesta:
+hola cli2
+
+31/08/21 19:52:11
+Comando:
+echo me vo
+Respuesta:
+me vo
+
+31/08/21 20:03:49
+Comando:
+echo hola
+Respuesta:
+hola
+
+31/08/21 20:03:53
+Comando:
+echo chau
+Respuesta:
+chau
