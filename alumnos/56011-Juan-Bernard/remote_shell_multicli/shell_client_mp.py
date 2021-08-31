@@ -3,9 +3,11 @@ from datetime import datetime
 import os
 import socket
 
-# Función argparse para definir puerto
+# Función argparse para definir host y puerto
 def argumentos():
-    parser = argparse.ArgumentParser(description='Shell Server - Comandos')
+    parser = argparse.ArgumentParser(description='Shell Cliente - Comandos')
+    parser.add_argument('-ht', '--host', type=str, default=socket.gethostname(),
+                        help='Host de conexión para el server')
     parser.add_argument('-p', '--port', type=int, default=1234,
                         help='Puerto de conexión para el server')
     parser.add_argument('-l', '--log', type=str, default='log.txt',
@@ -13,10 +15,9 @@ def argumentos():
     return parser.parse_args()
 
 sockt = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# Definir host (usar el local)
-host = socket.gethostname()
-# Definir puerto
+# Definir host y puerto
 args = argumentos()
+host = args.host
 port = args.port
 # Conectar al host a través del puerto señalado
 sockt.connect((host, port))
