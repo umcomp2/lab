@@ -1,10 +1,12 @@
 import socket
 import subprocess 
 import threading
+import os
 
 HEADER = 64
-PORT = 5086
+PORT = 5096
 SERVER = socket.gethostbyname(socket.gethostname())
+SERVER = "127.0.1.1"
 ADDR = (SERVER, PORT)
 FORMAT = 'utf-8'
 DISCONNECT_MESSAGE = "!DISCONNECT"
@@ -18,11 +20,14 @@ def handle_client(conn, addr):
 
     connected = True
     while connected:
+        pid_hilo = threading.get_ident()
+        pid = os.getpid()
         msg_length = conn.recv(HEADER).decode(FORMAT)
         if msg_length:
             msg_length = int(msg_length)
             msg = conn.recv(msg_length).decode(FORMAT)
             if msg == DISCONNECT_MESSAGE:
+                print(f"Proceso: {pid}, Hilo: {pid_hilo} ---> Disconnect")
                 break
             
             command = msg.split()
@@ -55,4 +60,3 @@ def start():
 
 print("[STARTING] server is starting...")
 start()
-

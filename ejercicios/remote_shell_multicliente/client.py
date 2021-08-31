@@ -1,7 +1,7 @@
 import socket
 
 HEADER = 64
-PORT = 5086
+PORT = 5096
 FORMAT = 'utf-8'
 DISCONNECT_MESSAGE = "!DISCONNECT"
 SERVER = "127.0.1.1"
@@ -22,9 +22,13 @@ def send(msg):
 
 while True:
     comando = input("Ingrese un comando o exit:")
-    send(comando)
-    if comando == "exit":
+    
+    if comando[:4] == "exit":
+        print("es exit")
         send(DISCONNECT_MESSAGE)
+        break
+    else:
+        send(comando)
 
 
 
