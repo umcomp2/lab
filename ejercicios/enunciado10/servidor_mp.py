@@ -40,8 +40,8 @@ port = args.puerto
 serversocket.bind((host, port))                                  
 serversocket.listen(5)
 
+signal.signal(signal.SIGCHLD, signal.SIG_IGN)
 while True:
-
     print("Esperando conexiones remotas (accept)")
     socket_cliente, addr = serversocket.accept()
 
