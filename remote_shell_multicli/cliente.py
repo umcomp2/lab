@@ -1,7 +1,7 @@
 import socket
 
-HEADER = 64
-PORT = 2030
+
+PORT = 2045
 CLIENT = socket.gethostbyname(socket.gethostname())
 ADDR = (CLIENT, PORT)
 FORMAT = 'utf-8'
@@ -12,24 +12,29 @@ clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 clientsocket.connect(ADDR)
 
 def send(msg):
-    mensaje = msg.encode(FORMAT)
-    print(mensaje)
-    tamaño_msg = len(mensaje)
-    send_length = str(tamaño_msg).encode(FORMAT)
-    send_length += b' ' * (HEADER - len(send_length))
-    clientsocket.send(send_length)
+    mensaje = msg
     clientsocket.send(mensaje)
     print(clientsocket.recv(2048).decode(FORMAT))
+    
 
-
-comando =input("Elegi un comando: ")
-while True:
-    if comando[:4] == 'exit' or comando[:4] == 'Exit':
-        print("\nADIOS!!")
+comando =bytes(input("Elegi un comando: "), FORMAT)
+while comando != b"exit" or comando != b"Exit":
+    send(comando)
+    data = str(clientsocket.recv(1024), FORMAT)
+    
+    comando = bytes(input("Elegi un comando: "),FORMAT)
+    if comando[:4] == b"exit" or comando[:4] == b"Exit":
         send(DISCONNECT_MESSAGE)
+        # send(comando)
         break
-    else:
-        send(comando)
-        comando = input("Elegi un comando: ")
+
+
+    # if comando[:4] == 'exit' or comando[:4] == 'Exit':
+    #     print("\nADIOS!!")
+    #     send(DISCONNECT_MESSAGE)
+    #     break
+    # else:
+    #     send(comando)
+    #     comando = bytes(input("Elegi un comando: "),FORMAT)
 # clientsocket.close()
 # print("\n--CONEXION TERMINADA--")

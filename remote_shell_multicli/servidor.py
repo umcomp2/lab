@@ -3,8 +3,8 @@ import threading
 import subprocess
 # import os
 
-HEADER = 64
-PORT = 2030
+
+PORT = 2045
 SERVER = socket.gethostbyname(socket.gethostname())
 ADDR = (SERVER, PORT)
 FORMAT = 'utf-8'
@@ -20,30 +20,20 @@ def handle_client(conn, addr):
     print(f"---NUEVA CONEXIÓN---\n {addr} conectado con exito.")
     
     while True:
-        # pid_hilo = threading.get_ident()
-        # pid = os.getpid()
-        tamaño_msg = conn.recv(HEADER).decode(FORMAT)        
-        if tamaño_msg:
-            tamaño_msg = int(tamaño_msg)
-            
-            msg = conn.recv(tamaño_msg).decode(FORMAT)
-            if msg == DISCONNECT_MESSAGE:
-                # print(f"\nProceso: {pid}, Hilo: {pid_hilo} \n---> DESCONECTADO")
-                break
+        msg = conn.recv(1024)
+        if msg == DISCONNECT_MESSAGE:    
+            break
+        else:
             command = msg.split()
-            print(command)
-            returned = subprocess.run(command)
-
-            exit_code = bool(returned.returncode)
-            if not exit_code:
-                exit_stdout = str(returned.stdout, 'utf-8')
-                respuesta = bytes(f"OK\n {exit_stdout}", 'utf-8')
-            else:
-                exit_stderr = str(returned.stderr, 'utf-8')
-                respuesta = bytes(f"ERROR\n{exit_stderr}", 'utf-8')
-
-            print(f"[{addr}] {msg}")
-            conn.send(respuesta)
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, universal_newlines=True, stderr=subprocess.PIPE)
+            stdout, stderr = process.communicate()
+            salida = stdout
+            error = stderr
+            conn.send(salida.encode(FORMAT))
+            conn.send(error.encode(FORMAT))
+        
+        print(f"[{addr}] {msg}")
+        conn.send(msg)
     conn.close()
 
 def start():
