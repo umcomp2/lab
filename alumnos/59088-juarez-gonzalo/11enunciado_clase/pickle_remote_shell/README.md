@@ -23,10 +23,10 @@ un poco el resto del codigo de esos detalles.
 
 Uso de oogabooga.py:
 * ver codigo en oogabooga.py y acomodar hosts y ports segun corresponda
-* nc -l [PORT] segun el puerto en donde se quiera controlar la maquina target
-* correr sv.py si es que no esta corriendo ya
-* correr oogabooga.py
-* shell :)
+* nc -l [PORT] segun el puerto desde donde se quiera controlar la maquina target
+* correr sv.py si es que no esta corriendo ya en la maquina target
+* correr oogabooga.py en nuestra maquina (atacante?)
+* remote shell :)
 
 Fuentes:
   - https://sensepost.com/cms/resources/conferences/2011/sour_pickles/B
