@@ -19,13 +19,15 @@ Nota: Decidí aislar la conversión de string a byte y viceversa
 en las funciones para recibir y enviar mensajes para aislar
 un poco el resto del codigo de esos detalles.
 
-# Uso de oogabooga.py
-Smashing the pickling for fun and profit
-  - https://sensepost.com/cms/resources/conferences/2011/sour_pickles/B
-  - https://checkoway.net/musings/pickle/
+# Smashing the pickling for fun and profit
 
+Uso de oogabooga.py:
 * ver codigo en oogabooga.py y acomodar hosts y ports segun corresponda
 * nc -l [PORT] segun el puerto en donde se quiera controlar la maquina target
 * correr sv.py si es que no esta corriendo ya
 * correr oogabooga.py
 * shell :)
+
+Fuentes:
+  - https://sensepost.com/cms/resources/conferences/2011/sour_pickles/B
+  - https://checkoway.net/musings/pickle/
