@@ -8,6 +8,23 @@ from common import recv_msg
 #   - https://sensepost.com/cms/resources/conferences/2011/sour_pickles/BH_US_11_Slaviero_Sour_Pickles.pdf
 #   - https://checkoway.net/musings/pickle/
 
+# Notas:
+# en el codigo de cpython en Lib/pickletools.py se explica
+# la instruccion de la pickle vm para serializar objetos "bytes"
+# cosa que no se explica en las fuentes porque usan python2
+#    I(name='BINBYTES',
+#    code='B',
+#    arg=bytes4,
+#    stack_before=[],
+#    stack_after=[pybytes],
+#    proto=3,
+#    doc="""Push a Python bytes object.
+#
+#    There are two arguments:  the first is a 4-byte little-endian unsigned int
+#    giving the number of bytes, and the second is that many bytes, which are
+#    taken literally as the bytes content.
+#    """),
+
 MSG_TERM = b"\r\n\r\n"
 
 pack_little = lambda x: x.to_bytes(4, byteorder="little")
