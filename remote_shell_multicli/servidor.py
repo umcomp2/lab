@@ -4,11 +4,11 @@ import subprocess
 # import os
 
 
-PORT = 2045
+PORT = 2052
 SERVER = socket.gethostbyname(socket.gethostname())
 ADDR = (SERVER, PORT)
 FORMAT = 'utf-8'
-DISCONNECT_MESSAGE = "\n---DESCONECTADO---"
+DISCONNECT_MESSAGE = b"\n---DESCONECTADO---"
 
 
 serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

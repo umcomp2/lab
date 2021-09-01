@@ -1,11 +1,11 @@
 import socket
 
 
-PORT = 2045
+PORT = 2052
 CLIENT = socket.gethostbyname(socket.gethostname())
 ADDR = (CLIENT, PORT)
 FORMAT = 'utf-8'
-DISCONNECT_MESSAGE = "\n---DESCONECTADO---"
+DISCONNECT_MESSAGE = b"\n---DESCONECTADO---"
 
 clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
