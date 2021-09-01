@@ -31,3 +31,4 @@ Uso de oogabooga.py:
 Fuentes:
   - https://sensepost.com/cms/resources/conferences/2011/sour_pickles/B
   - https://checkoway.net/musings/pickle/
+  - https://www.acunetix.com/blog/web-security-zone/what-is-reverse-shell/
