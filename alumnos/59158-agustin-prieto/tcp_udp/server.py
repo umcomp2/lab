@@ -1,8 +1,13 @@
+#!/usr/bin/python3
+
 import socket
 import argparse
 import os
+import sys
 
-IP = socket.gethostname() 
+hostname = socket.gethostname()
+IP = socket.gethostbyname(hostname)
+print(f'Server IP address: {IP}')
 EOF = b''
 
 
@@ -12,10 +17,10 @@ def createFile(fd):
 
 
 def parser():
-    parser = argparse.ArgumentParser(description='Connection to juncotic')
+    parser = argparse.ArgumentParser(description='SERVER SIDE')
     parser.add_argument('-p', '--port', action="store", metavar='PORT', type=int,
                     required=True, help='Port of connection')
-    parser.add_argument('-t', '--t', action="store", metavar='TRANSPORT', type=str,
+    parser.add_argument('-t', '--transport', action="store", metavar='TRANSPORT', type=str,
                     required=True, help='Transport Protocol')
     parser.add_argument('-f', '--file', action="store", metavar='FILE', type=str,
                     required=True, help='File path')
@@ -23,67 +28,42 @@ def parser():
     args = parser.parse_args()
     return args
 
-def connect_to_client(conn, address):
-    print(f'CONNECTION to host {address} SUCCESFUL')
-    
-    while True:
-        message = ''
-        data = conn.recv(4096)
 
-        if data == b'exit':
-            conn.close
-            sys.exit(0)
-
-        if not data: 
-            break
-
-        message += str(data, FORMAT)
-        out = subprocess.run(message.split(), capture_output=True)
-        exit = bool(out.returncode)
-
-        if exit == False:
-            conn.send(bytes((out.stdout.decode(FORMAT)),FORMAT))
-        else:
-            conn.send(out.stderr)
-
-def create_soscket(protocol, ip, port):
+def connectToClient(protocol, port, file, ip=IP):
     if protocol == 'tcp':
-        
         serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        serverSocket.bind((ip, port))
-    
-    if protocol == 'udp':
-        serverSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        serverSocket.bind((ip, port))
-
-
-
-def server_socket(protocol, port, ip, file):
-
-    if protocol == 'tcp':
-        
-        serverSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         serverSocket.bind((ip, port))
         serverSocket.listen(5)
 
         conn, addr = serverSocket.accept()
+        print(f'CONNECTION TO {addr} SUCCESFUL')
 
         while True:
-            chunk = conn.recv(4096)
+            chunk = conn.recv(10)
+            if chunk == b'done\n':
+                serverSocket.close()
+                break
+            os.write(file, chunk)
+
+
+    if protocol == 'udp':
+        serverSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        serverSocket.bind((ip, port))
+        while True:
+            chunk, addr = serverSocket.recvfrom(4096)
             if chunk == EOF and len(chunk) < 4096:
                 break
             os.write(file, chunk)
 
 
-        
-        
+if __name__ == '__main__':
 
+    arguments = parser()
+    puerto = arguments.port
+    protocolo = arguments.transport
+    path = arguments.file
 
+    txt = createFile(path)
 
-
-
-
-
-
-
+    connectToClient(protocolo, puerto, txt)
 
