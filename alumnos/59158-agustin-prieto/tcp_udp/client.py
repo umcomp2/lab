@@ -1,11 +1,7 @@
 #!/usr/bin/python3
 import socket
 import argparse
-import os
-import sys
 
-# Conectar al servidor en el puerto p y con la ip del host.
-# 
 
 
 IP = socket.gethostname()
