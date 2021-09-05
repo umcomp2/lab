@@ -1,11 +1,8 @@
 import argparse
 
-
 class Parser:
-    @staticmethod
     def parser():
         parser = argparse.ArgumentParser(description='Cliente-servidor')
-        parser.add_argument('-i', '--ip', help='Ingrese host')
-        parser.add_argument('-p', '--port', type=int, help='Ingrese puerto')
+        parser.add_argument('-l', '--log', help='Indique la ruta del archivo')
         args = parser.parse_args()
         return args

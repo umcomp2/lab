@@ -2,7 +2,6 @@ from socket import *
 from parseCli import Parser
 
 
-
 def processing(socket):
     while True:
         comando = input('Ingrese comando:\n')
@@ -12,7 +11,6 @@ def processing(socket):
             socket.close()
             exit(0)
         print('Respuesta:\n',respuesta)
-
 
 
 if __name__ == '__main__':
