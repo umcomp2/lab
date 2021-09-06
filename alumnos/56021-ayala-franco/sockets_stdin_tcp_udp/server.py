@@ -17,7 +17,7 @@ def salir():
 signal.signal(signal.SIGINT, salir)
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-p", dest="addr", help="Tupla ip:puerto donde escuchar.", default="0.0.0.0:50000")
+parser.add_argument("-p", dest="addr", type=str, help="Tupla ip:puerto donde escuchar.", default="0.0.0.0:50000")
 parser.add_argument("-t", dest="proto", type=str, help="Protocolo de transporte a usar.", choices=("TCP", "UDP"), default="TCP")
 parser.add_argument("-f", dest="archivo", type=str, help="Archivo a escribir los datos de los clientes.", default="archivo.txt")
 
@@ -25,8 +25,9 @@ args = parser.parse_args()
 
 pool = concurrent.futures.ThreadPoolExecutor(5)
 
+direccion = args.addr.split(":")
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM if args.proto == "TCP" else socket.SOCK_DGRAM)
-server_socket.bind(("127.0.0.1", args.puerto))
+server_socket.bind((direccion[0], int(direccion[1])))
 server_socket.listen(5)
 socket.setdefaulttimeout(10.0)
 
