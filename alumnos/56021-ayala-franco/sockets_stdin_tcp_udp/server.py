@@ -17,7 +17,7 @@ def salir():
 signal.signal(signal.SIGINT, salir)
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-p", dest="puerto", default=33333)
+parser.add_argument("-p", dest="addr", help="Tupla ip:puerto donde escuchar.", default="0.0.0.0:50000")
 parser.add_argument("-t", dest="proto", type=str, help="Protocolo de transporte a usar.", choices=("TCP", "UDP"), default="TCP")
 parser.add_argument("-f", dest="archivo", type=str, help="Archivo a escribir los datos de los clientes.", default="archivo.txt")
 
