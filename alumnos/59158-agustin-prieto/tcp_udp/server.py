@@ -3,10 +3,10 @@
 import socket
 import argparse
 import os
-import sys
+
 
 hostname = socket.gethostname()
-IP = socket.gethostbyname(hostname)
+IP = "0.0.0.0"
 print(f'Server IP address: {IP}')
 EOF = b''
 END_MSG = b'done'
@@ -31,6 +31,8 @@ def parser():
 
 
 def connectToClient(protocol, port, file, ip=IP):
+
+
     if protocol == 'tcp':
         serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         serverSocket.bind((ip, port))

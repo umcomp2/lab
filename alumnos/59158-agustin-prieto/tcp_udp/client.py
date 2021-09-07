@@ -34,11 +34,16 @@ def connectToServer(protocol, port, ip):
 
         while True:
             try:
-                chunk = input('Ingrese una cadena de texto: ')
+                chunk = input(f'{count}: ')
+
             except EOFError:
                 # clientSocket.send(b'done')
+                print('FINISHED')
+
                 clientSocket.close()
                 break
+            count += 1
+
             message = bytes(chunk, 'utf-8') +b'\n'
             clientSocket.send(message)
 
