@@ -9,6 +9,7 @@ hostname = socket.gethostname()
 IP = socket.gethostbyname(hostname)
 print(f'Server IP address: {IP}')
 EOF = b''
+END_MSG = b'done'
 
 
 def createFile(fd):
@@ -40,8 +41,9 @@ def connectToClient(protocol, port, file, ip=IP):
 
         while True:
             chunk = conn.recv(10)
-            if chunk == b'done\n':
+            if chunk == EOF:
                 serverSocket.close()
+                print('SERVER CLOSED')
                 break
             os.write(file, chunk)
 
@@ -51,7 +53,9 @@ def connectToClient(protocol, port, file, ip=IP):
         serverSocket.bind((ip, port))
         while True:
             chunk, addr = serverSocket.recvfrom(4096)
-            if chunk == EOF and len(chunk) < 4096:
+            if chunk == END_MSG:
+                serverSocket.close()
+                print('SERVER CLOSED')
                 break
             os.write(file, chunk)
 
@@ -66,4 +70,6 @@ if __name__ == '__main__':
     txt = createFile(path)
 
     connectToClient(protocolo, puerto, txt)
+
+    exit
 

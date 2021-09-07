@@ -3,9 +3,9 @@ import socket
 import argparse
 
 
-
 IP = socket.gethostname()
 EOF = b''
+END_MSG = b'done'
 
 
 def parser():
@@ -24,6 +24,8 @@ def parser():
 
 
 def connectToServer(protocol, port, ip):
+    count = 1
+
     if protocol == 'tcp':
         clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         clientSocket.connect((ip, port))
@@ -45,11 +47,14 @@ def connectToServer(protocol, port, ip):
         clientSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         while True:
             try:
-                chunk = input('Ingrese una cadena de texto: ')
+                chunk = input(f'{count}: ')
+                
             except EOFError:
-                # clientSocket.send(b'done')
+                clientSocket.sendto(END_MSG, (ip, port))
+                print('FINISHED')
                 clientSocket.close()
                 break
+            count += 1
             message = bytes(chunk, 'utf-8') +b'\n'
             clientSocket.sendto(message, (ip, port))
 
@@ -62,5 +67,4 @@ if __name__ == '__main__':
 
     connectToServer(protocolo, puerto, addr)
 
-
-
+    exit
