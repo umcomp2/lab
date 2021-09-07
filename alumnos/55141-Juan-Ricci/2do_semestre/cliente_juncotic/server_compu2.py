@@ -36,8 +36,8 @@ def th_server(sock_full):
                 resp = "400"
         elif msg[0:3] == "key":
             if stage==2:
-                key = msg[4:-1]
-                if key[:-1] != KEY:
+                key = msg[4:]
+                if key != KEY:
                     resp="404"
                 else:
                     resp = "200"
