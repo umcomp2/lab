@@ -34,7 +34,7 @@ elif args.tipo == "udp":
     
     for line in sys.stdin:
         s.sendto(line.encode("utf-8"), addr)
-    s.send("exit")
+    s.sendto("exit".encode("utf-8"), addr)
     s.close()
     print("Cerrando la conexion...")
 

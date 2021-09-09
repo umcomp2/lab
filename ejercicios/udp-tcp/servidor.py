@@ -48,17 +48,24 @@ elif args.tipo == "udp":
     port = args.puerto
 
     # bind to the port
-    serversocket.bind((host, port))     
+    serversocket.bind((host, port))
+
+    
 
     while True:
 
-        print("Esperando conexiones remotas (accept)")
-        data, addr = serversocket.recvfrom(1024)
-        print(f"Conexion desde {addr}")
+        # print("Esperando conexiones remotas (accept)")
+        data, addr = serversocket.recvfrom(4096)
+        # print(f"Conexion desde {addr}")
+        data = data.decode()
+
         file = open(args.archivo+".txt", "a+")
-        file.write(str(data))
-        if data == "exit":
-            break
+        if data != "exit":
+            file.write(data)
+
+        # Cierra el server si pongo esta condicion
+        # if data == "exit":
+        #     break
 
             
         
