@@ -14,7 +14,7 @@ args = parser.parse_args()
 protocolo = args.protocol
 
 
-SERVER = ""
+SERVER = "0.0.0.0"
 DISCONNECT_MESSAGE = "!DISCONNECT"
 FORMAT = "utf-8"
 
@@ -56,20 +56,21 @@ def handle_client(conn, addr):
 
 
 def handle_client_udp():
-    data, adress = server.recvfrom(1024)
-    print(f"[NEW CONNECTION] {adress}  connected.")
     connected = True
+    pid = os.getpid()
     while connected:
+        data, adress = server.recvfrom(4096)
+        print(f"Received")
         pid = os.getpid()
         if data != bytes(0):
             archivo = open(args.file + ".txt", "ab")
-            archivo.write(data + bytes("--->", FORMAT) +  bytes(f"From process: {pid}\n", FORMAT))
+            archivo.write(data + bytes("---> [FROM UDP CONNECTION]", FORMAT) +  bytes(f" Process: {pid}\n", FORMAT))
             archivo.close()
 
         elif data == bytes(0):
             print(f"Proceso: {pid} ---> Disconnect")
             sys.exit()
-            break
+        break
     
 
 
@@ -86,7 +87,6 @@ def start():
             thread.start()
         elif protocolo == "udp":
             handle_client_udp()
-        print(f"[ACTIVE CONNECTIONS] {threading.activeCount() - 1}")
 
 
 print("[STARTING] server is starting...")

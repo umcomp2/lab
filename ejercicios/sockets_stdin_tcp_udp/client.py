@@ -30,7 +30,7 @@ if protocolo == "udp":
     client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     client.connect(ADDR)
     for i in sys.stdin:
-        client.send(i.encode(FORMAT))
+        client.sendto(i.encode(FORMAT),ADDR)
         if i.strip() == DISCONNECT_MESSAGE:
             print("[DISCONNECT]")
             sys.exit()
