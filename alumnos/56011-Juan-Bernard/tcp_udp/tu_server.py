@@ -65,3 +65,5 @@ elif prot == 'udp':
             serversocket.sendto(resultado, addr)
     except socket.timeout:
         print('Finalizando conexión del servidor.')
+else:
+    print('\nError.\nProtocolo no reconocido.')
