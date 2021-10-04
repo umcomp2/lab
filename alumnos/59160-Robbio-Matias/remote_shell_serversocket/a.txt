@@ -1,0 +1,8 @@
+2021-10-04 16:12:01.349919'
+'ls -a'
+OK
+.
+..
+a.txt
+client.py
+server.py

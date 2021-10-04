@@ -26,11 +26,13 @@ def client_handler(conn, addr):
             if estado_cmd.returncode == 0:
                 correct_output = estado_cmd.stdout.decode("utf-8")
                 msg_back = str(f"OK\n{correct_output}")
-                conn.send(pickle.dumps(msg_back))
+                msg_back = pickle.dumps(msg_back)
+                conn.send(msg_back)
             else:
                 error_output = estado_cmd.stderr.decode("utf-8")
                 msg_back = str(f"ERROR\n{error_output}")
-                conn.send(pickle.dumps(msg_back))
+                msg_back = pickle.dumps(msg_back)
+                conn.send(msg_back)
             
 
 
