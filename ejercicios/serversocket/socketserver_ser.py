@@ -7,7 +7,7 @@ import argparse
 class RequestHandler(ss.BaseRequestHandler):
 
     def handle(self):
-        print(f"Nueva conexion establecida")
+        print("Conexion establecida")
         while True:
 
             data = self.request.recv(4096)
