@@ -1,0 +1,1 @@
+Command: ls     Output: b'client.py\nlog.txt\nserver.py\n'Command: pwd     Output: b'/Users/agustinprieto/universidad/lab/alumnos/59158-agustin-prieto/sockets/server_socket\n'
