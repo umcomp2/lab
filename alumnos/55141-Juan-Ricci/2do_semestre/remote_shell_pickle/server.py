@@ -23,8 +23,10 @@ def threaded_client(connection):
         stdout, stderr = process.communicate()
         out = pickle.dumps(stdout)
         err = pickle.dumps(stderr)
-        connection.send(out)
-        connection.send(err)
+        if out:
+            connection.send(out)
+        else:
+            connection.send(err)
     connection.close()
 
 while True:
