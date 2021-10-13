@@ -1,0 +1,24 @@
+Escriba un programa cliente-servidor con sockets que tenga el siguiente comportamiento.
+
+1.El usuario ejecutará el programa servidor pasándole tres argumentos:
+    1.-p: El puerto en el que va a atender el servicio (por defecto debe atender en todas las direcciones de red configuradas en el sistema operativo).
+    2.-t: Permitirá especificar el protocolo de transporte a utilizar. Las opciones válidas serán tcp o udp.
+    3.-f: Una ruta a un archivo de texto en blanco.
+2.El servidor creará el socket con los datos especificados, y creará, si no existe, el archivo de texto.
+3.El cliente recibirá tres argumentos por línea de comandos:
+    1.-a: La dirección IP del servidor
+    2.-p: El puerto en el que atiende el servidor
+    3.-t: El protocolo de transporte a usar. Por supuesto, para establecer la conexión correctamente ambos, cliente y servidor, deberán especificar el mismo protocolo de transporte.
+4.El cliente comenzará a leer desde STDIN texto hasta que el usuario presione Ctrl+d.
+5.El cliente enviará todo el contenido por el socket al servidor.
+6.El servidor leerá todo el contenido desde el socket hasta que encuentre un EOF.
+7.El servidor almacenará todo el contenido en el archivo de texto creado.
+
+NOTA: los parámetros serán pasados por argumento y parseados usando getopt o argparse.
+
+Ejemplo de carga del servidor:
+
+python3 servidor.py -p 1234 -t tcp -f /tmp/archivo.txt
+Ejemplo de carga del cliente:
+
+python3 cliente.py -a 192.168.0.23 -p 1234 -t tcp

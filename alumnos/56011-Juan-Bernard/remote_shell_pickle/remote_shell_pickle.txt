@@ -1,0 +1,3 @@
+Reescribir el ejercicio de remote_shell_multicli para que el envío de texto por el socket viaje en formato serializado de pickle.
+
+Además, si es el caso, evitar la generación de procesos zombies.
