@@ -1,0 +1,40 @@
+#!/usr/bin/python3
+import socket
+import subprocess as sp
+import _thread
+import pickle
+import ssl
+
+serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+host = ""
+port = 1234
+threadCount = 0
+serversocket.bind((host, port))
+serversocket.listen(2)
+
+context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+context.load_cert_chain('/tmp/ssl/certificado.pem', '/tmp/ssl/clave.pem')
+ssock = context.wrap_socket(serversocket, server_side=True)
+
+def threaded_client(connection):
+    while True:
+        data = connection.recv(2048)
+        received_command = pickle.loads(data)
+        if received_command == 'exit':
+            break
+        process = sp.Popen([received_command], shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
+        stdout, stderr = process.communicate()
+        out = pickle.dumps(stdout)
+        err = pickle.dumps(stderr)
+        connection.send(out)
+        connection.send(err)
+    connection.close()
+
+while True:
+    clientsocket, address = ssock.accept()
+    print("Got a connection from %s" % str(address))
+    _thread.start_new_thread(threaded_client, (clientsocket, ))
+    threadCount += 1
+    print('Thread Number: ' + str(threadCount))
