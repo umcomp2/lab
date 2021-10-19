@@ -1,0 +1,18 @@
+
+05/09/21 16:42:45
+Comando:
+echo hola
+Respuesta:
+hola
+
+05/09/21 16:41:57
+Comando:
+echo chau
+Respuesta:
+chau
+
+05/09/21 16:42:49
+Comando:
+echo xd
+Respuesta:
+xd

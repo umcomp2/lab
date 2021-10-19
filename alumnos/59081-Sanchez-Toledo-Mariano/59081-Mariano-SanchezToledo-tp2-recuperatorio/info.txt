@@ -1,0 +1,4 @@
+P6
+# Imagen ppm
+200 Son columnas, 298 son filas
+255
