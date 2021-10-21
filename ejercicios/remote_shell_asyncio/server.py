@@ -22,9 +22,7 @@ async def handle_client(reader, writer):
             break
         print("[RECEIVED]")
 
-        if data == DISCONNECT_MESSAGE:
-            writer.close()
-            break
+        
 
         data2 = data.split()
         returned = subprocess.run(data2, capture_output=True)
@@ -41,7 +39,9 @@ async def handle_client(reader, writer):
             writer.write(respuesta)
             await writer.drain()
 
-        
+        if data == DISCONNECT_MESSAGE:
+            writer.close()
+            break
 
 
 
