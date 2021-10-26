@@ -1,0 +1,1 @@
+Command: pwd     Output: b'/Users/agustinprieto/Desktop/compu2/lab/alumnos/59158-agustin-prieto/asyncio\n'Command: ls     Output: b'client.py\nlogs.txt\nserver.py\n'
