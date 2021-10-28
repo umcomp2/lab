@@ -34,7 +34,7 @@ def processing(socket):
 
 if __name__ == '__main__':
     miSocket = socket()
-    miSocket.connect(('localhost', 8001))
+    miSocket.connect(('localhost', 8000))
     args = Parser.parser()
     processing(miSocket)
     miSocket.close()
