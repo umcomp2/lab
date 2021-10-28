@@ -1,6 +1,6 @@
 import logging
-from os import close
-from parseServer import Parser
+from os import close, name
+#from parseServer import Parser
 from subprocess import getoutput
 import pickle
 import sys
@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s',)
 
 class RemoteRequestHandler(socketserver.BaseRequestHandler):
     def __init__(self, request, client_address, server):
-        self.logger = logging.getLogger('EchoRequestHandler')
+        self.logger = logging.getLogger('RequestHandler')
         self.logger.debug('__init__')
         socketserver.BaseRequestHandler.__init__(self, request, client_address, server)
         return
@@ -25,7 +25,7 @@ class RemoteRequestHandler(socketserver.BaseRequestHandler):
         comando = self.request.recv(1024)
         comando = pickle.loads(comando)
         self.logger.debug('recv()->"%s"', comando)
-        self.request.send(comando)
+        #self.request.send(comando)
         out = pickle.dumps(getoutput(comando))
         self.request.send(out)
         return
@@ -33,7 +33,7 @@ class RemoteRequestHandler(socketserver.BaseRequestHandler):
 
 class RemoteServer(socketserver.TCPServer):
     def __init__(self, server_address, handler_class=RemoteRequestHandler,):
-        self.logger = logging.getLogger('EchoServer')
+        self.logger = logging.getLogger('Server')
         self.logger.debug('__init__')
         socketserver.TCPServer.__init__(self, server_address, handler_class)
         return
@@ -81,11 +81,15 @@ class RemoteServer(socketserver.TCPServer):
 
 
 def main():
-    args = Parser().parser()
+    #args = Parser().parser()
     address = ('localhost', 8000)
     server = RemoteServer(address, RemoteRequestHandler)
     ip, port = server.server_address
-    if args.m:
+    server.serve_forever()
+    """if args.m:
         #iniciateWithFork()
-        pass
+        pass"""
     
+
+if __name__ == '__main__':
+    main()
