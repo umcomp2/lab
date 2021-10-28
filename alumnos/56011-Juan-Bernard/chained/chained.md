@@ -1,0 +1,12 @@
+### Explicación del código **chained.py**
+
+En este código, se utiliza **random.seed** para más adelante poder generar números aleatorios, luego se llama a la corrutina **async def main**, donde **asyncio.gather** (de alto nivel) se encarga de crear un loop de eventos y hace tres llamadas (tres tareas) a la corrutina **async def chain**.
+
+Las tres tareas de **async def chain** llaman, para ejecutar de forma asincrónica, a las funciones **async def primera** y **async def segunda**, ambas en un loop de eventos. La función **async def primera** es la que primero entra en el procesador para ejecutarse y recibe un número entero que representa la tarea.
+
+Cuando se llega al **await asyncio.sleep**, la función que lo tiene se duerme por un tiempo aleatorio entre 0 y 10 segundos, valor que se obtiene con **random.randint** y se muestra por pantalla como la espera de la primera función junto al número de la tarea, y el control retorna al loop de eventos que busca cual de las otras tareas está lista para ejecutarse. En el caso de que todas estén durmiendo, cuando alguna despierte, reanudará su ejecución. La función **async def segunda** recibe un argumento **prim**, que es el resultado de **async def primera**, por lo tanto podrá trabajar únicamente en el momento que obtenga dicho argumento. 
+
+Al terminar la ejecución de alguna de las **async def primera** ya se obtiene un resultado, que es el que ingresará como el argumento **prim** (junto al número entero que representa a la tarea) en **async def segunda**, permitiendo la ejecución de la misma. En un punto llegará a otro **await asyncio.sleep**, y se producirá el mismo comportamiento que en **async def primera**, mostrando por pantalla no solamente el valor de tiempo de espera y tarea correspondiente, sino que también el resultado de la primera función para mostrar este "encadenamiento" entre funciones.
+
+Cuando termina la ejecución de alguna de las **async def segunda**, devuelve a la tarea **async def chain** correspondiente un resultado, que usará para imprimir por pantalla los valores que se obtuvo a lo largo de la ejecución de la tarea (de las dos funciones). Además de lo anterior, también se muestra al usuario el tiempo que llevó la realización de la tarea, calculado con el uso de **time.perf_counter**. Del mismo modo, una vez que finalizan todas las tareas, en **if __name__ == "__main__"** se muestra el tiempo que tomó la ejecución del programa completo.
+

@@ -1,0 +1,5 @@
+Lea, ejecute e interprete el código chained.py del repositorio git de la cátedra.
+
+Escriba su interpretación de qué es lo que hace dicho código en un archivo llamado chained.md en su repositorio git. Detalle lo más posible el funcionamiento del código.
+
+Link código: https://gitlab.com/d1cor/UM_C2/-/blob/master/python/asyncio/chained.py
