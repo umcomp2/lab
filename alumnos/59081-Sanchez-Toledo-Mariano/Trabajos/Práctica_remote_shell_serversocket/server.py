@@ -1,44 +1,41 @@
-from socket import *
-from subprocess import *
-from threading import *
+import logging
+from os import close, name, waitpid
+from parseServer import Parser
+from subprocess import getoutput
 import pickle
+import sys
+import socketserver
+import socket
+import threading
 
 
-class Client(Thread):
-    def __init__(self, conn, addr):
-        Thread.__init__(self)
-        self.conn = conn
-        self.addr = addr
+logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s',)
 
-    def run(self):
-        try:
-            conexion = self.conn
-            while True:
-                if conexion == '':
-                    continue
-                comando = conexion.recv(1024)
-                comando = pickle.loads(comando)
-                if comando == 'stop':
-                    conexion.close()
-                    exit(0)
-                elif comando == None or comando == '':
-                    continue
-                print('Comando recibido:\n', comando)
-                out = getoutput(comando)
-                newout = pickle.dumps(out)
-                conexion.send(newout)
-        except:
-            pass
+class RemoteRequestHandler(socketserver.BaseRequestHandler):
+
+    def handle(self):
+        while True:
+            comando = self.request.recv(1024)
+            comando = pickle.loads(comando)
+            print('recv()->"%s"', comando)
+            out = pickle.dumps(getoutput(comando))
+            self.request.send(out)
+        
+
+
 
 def main():
-    miSocket = socket()
-    miSocket.bind(('localhost', 8001))
-    miSocket.listen(3)
-    while True:
-        conn, addr = miSocket.accept()
-        client = Client(conn, addr)
-        client.start()
-        print("%s:%d se ha conectado." % addr)
+    args = Parser.parser()
+    host, port = 'localhost', 8000
+
+    if args.mode == 't':
+        with socketserver.ThreadingTCPServer((host, port), RemoteRequestHandler) as server:
+            print('Serving at {}:{}'.format(host, port))
+            server.serve_forever()
+    elif args.mode == 'p':
+        with socketserver.ForkingTCPServer((host, port), RemoteRequestHandler) as server:
+            print('Serving at {}:{}'.format(host, port))
+            server.serve_forever()
 
 if __name__ == '__main__':
     main()

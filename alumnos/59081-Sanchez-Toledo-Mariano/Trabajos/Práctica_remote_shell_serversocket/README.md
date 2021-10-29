@@ -1,1 +1,0 @@
-Para lograr la simultaneidad se crea un hilo que opere por cada cliente conectado.
