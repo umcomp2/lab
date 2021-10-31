@@ -4,7 +4,7 @@ import threading, pickle, sys, os, time, subprocess, signal
 servidor = s.socket(s.AF_INET, s.SOCK_STREAM)
 servidor.getsockopt(s.SOL_SOCKET, s.SO_REUSEADDR, 1)
 
-HOST = '0.0.0.0'
+HOST = 'localhost'
 PORT = int(sys.argv[1])
 SEPARATOR = "sep"
 

@@ -11,8 +11,8 @@ port = int(sys.argv[2])
 sCliente.connect((host, port))
 
 pwd = sCliente.recv(1024)
-#msj = sCliente.recv(1024)
-#print("Hola cliente: {}".format(msj.decode()))
+msj = sCliente.recv(1024)
+print("Hola cliente: {}".format(msj.decode()))
 
 print("[+] Trabajando en el directorio: ", pwd.decode())
 

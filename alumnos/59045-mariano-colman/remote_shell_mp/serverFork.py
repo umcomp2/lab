@@ -1,5 +1,5 @@
 import socket as s
-import subprocess, os, sys, time
+import subprocess, os, sys, time, signal
 
 server = s.socket(s.AF_INET, s.SOCK_STREAM)
 server.setsockopt(s.SOL_SOCKET, s.SO_REUSEADDR, 1)
@@ -14,9 +14,10 @@ print("\nHost: {} - Puerto: {}".format(host, port))
 server.bind((host, port))
 server.listen()
 
+signal.signal(signal.SIGCHLD, signal.SIG_IGN)
 while True:
     socketCliente, addr = server.accept()
-    print("[+] CONEXION ACEPTADA DE {}:{}".format(addr[0], addr[1]))
+    print("[+]CONEXION ACEPTADA DE {}:{}".format(addr[0], addr[1]))
     directorio = os.getcwd()
     socketCliente.send(directorio.encode())
     cliente = os.fork()

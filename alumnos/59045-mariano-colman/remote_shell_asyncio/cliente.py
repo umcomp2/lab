@@ -1,5 +1,6 @@
+from os import PRIO_PGRP
 import socket as s
-import sys, os, subprocess
+import sys, pickle, time
 
 
 sCliente = s.socket(s.AF_INET, s.SOCK_STREAM)
@@ -9,11 +10,9 @@ host = sys.argv[1]
 port = int(sys.argv[2])
 
 sCliente.connect((host, port))
+print("[+]CLIENTE CONECTADO!")
 
 pwd = sCliente.recv(1024)
-#HABILITAR AMBOS SI SE UTILIZA SERVERFORK
-msj = sCliente.recv(1024)
-print("Hola cliente: {}".format(msj.decode()))
 
 print("[+] Trabajando en el directorio: ", pwd.decode())
 
@@ -23,10 +22,11 @@ while True:
         continue
     sCliente.send(coman2.encode())
     if coman2.lower() == "exit":
+        sCliente.close()
         break
 
     output = sCliente.recv(2048).decode()
 
-    resultado, directorio = output.split("<sep>")
+    resultado = output
 
     print(resultado)
