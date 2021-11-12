@@ -1,0 +1,1 @@
+Lo que ocurre es que se van llamando las funciones de manera asincrona, estas es quedan esperando un tiempo random y mientras esperan se van ejecutando otras funciones, luego al finalizar se van encadenando los resultados de dichas funciones.
