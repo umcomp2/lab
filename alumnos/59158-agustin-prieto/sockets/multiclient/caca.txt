@@ -1,0 +1,1 @@
+Command: b'pwd'     Output: b'/home/aprok/compu2/lab/alumnos/59158-agustin-prieto/sockets/multiclient\n'Command: b'ls'     Output: b'caca.txt\nclient.py\nserver.py\n'

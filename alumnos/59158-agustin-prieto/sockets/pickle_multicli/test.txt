@@ -1,0 +1,1 @@
+Command: ps     Output: b'    PID TTY          TIME CMD\n   3085 pts/0    00:00:00 bash\n  11326 pts/0    00:00:00 server.py\n  11369 pts/0    00:00:00 ps\n'Command: ls     Output: b'client.py\nserver.py\ntest.txt\ntry.py\n'Command: pwd     Output: b'/home/aprok/compu2/lab/alumnos/59158-agustin-prieto/sockets/pickle_multicli\n'
