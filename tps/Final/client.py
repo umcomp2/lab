@@ -27,7 +27,7 @@ socket.connect((args.ip, args.puerto))
 msg = [args.imagen, args.edicion, args.n1, args.n2, args.n3, args.n4]
 serializer = pickle.dumps(msg)
 socket.sendall(serializer)
-datos = socket.recv(10000)
+datos = socket.recv(4000)
 datos_final = pickle.loads(datos) #Ver como se envia el return de las task
 if args.edicion == "imagen_borrosa":
     cv2.imshow("borrosa_" + args.imagen, datos_final)

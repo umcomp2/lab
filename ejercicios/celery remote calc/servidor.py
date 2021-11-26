@@ -19,7 +19,6 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
             descerializado = pickle.loads(data)
             if descerializado[0] == 'suma':
                     resultado=suma.delay(descerializado[1],descerializado[2])
-
             elif descerializado[0] == 'resta':
                 resultado=resta.delay(descerializado[1],descerializado[2])
 
