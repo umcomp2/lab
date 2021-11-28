@@ -41,7 +41,7 @@ elif args.edicion == "enfocar":
 else:
     datos_final.show()
 
-print(">>>>>>>>>>Servidor desconectado<<<<<<<<<<")
+print(">>>>>>>>>> Servidor desconectado <<<<<<<<<<")
 
 socket.close()
 
