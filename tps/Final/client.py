@@ -2,7 +2,11 @@ import argparse
 import socket
 import pickle
 import cv2
-import PIL
+from PIL import Image
+import json
+import base64
+from io import BytesIO
+import numpy as np
 
 parserito = argparse.ArgumentParser(description="Procesamiento de imagenes")
 
@@ -27,19 +31,32 @@ socket.connect((args.ip, args.puerto))
 msg = [args.imagen, args.edicion, args.n1, args.n2, args.n3, args.n4]
 serializer = pickle.dumps(msg)
 socket.sendall(serializer)
-datos = socket.recv(4000)
-datos_final = pickle.loads(datos) #Ver como se envia el return de las task
+datos = socket.recv(10000)
+datos_final = pickle.loads(datos) 
 if args.edicion == "imagen_borrosa":
-    cv2.imshow("borrosa_" + args.imagen, datos_final)
+    original_jpg = base64.b64decode(datos_final)
+    jpg_as_np = np.frombuffer(original_jpg, dtype=np.uint8)
+    imagen = cv2.imdecode(jpg_as_np, flags=1)
+    cv2.imshow("borrosa_" + args.imagen, imagen)
     cv2.waitKeyEx(0)
 elif args.edicion == "bordes":
-    cv2.imshow("bordes_" + args.imagen, datos_final)
+    original_jpg = base64.b64decode(datos_final)
+    jpg_as_np = np.frombuffer(original_jpg, dtype=np.uint8)
+    imagen = cv2.imdecode(jpg_as_np, flags=1)
+    cv2.imshow("bordes_" + args.imagen, imagen)
     cv2.waitKeyEx(0)
 elif args.edicion == "enfocar":
-    cv2.imshow("enfocar" + args.imagen, datos_final)
+    original_jpg = base64.b64decode(datos_final)
+    jpg_as_np = np.frombuffer(original_jpg, dtype=np.uint8)
+    imagen = cv2.imdecode(jpg_as_np, flags=1)
+    cv2.imshow("enfocar_" + args.imagen, imagen)
     cv2.waitKeyEx(0)
 else:
-    datos_final.show()
+    img = json.dumps(datos_final)
+    img = base64.b64decode(img)
+    img = BytesIO(img)
+    img = Image.open(img)   
+    img.show()
 
 print(">>>>>>>>>> Servidor desconectado <<<<<<<<<<")
 
