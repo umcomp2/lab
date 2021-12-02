@@ -13,10 +13,26 @@ args = parserito.parse_args()
 class MyTCPHandler(socketserver.BaseRequestHandler):
     def handle(self):
         while True:
-            data = self.request.recv(4000)
+            data = self.request.recv(10000)
             if data == "exit":
                 break
             descerializado = pickle.loads(data)
+            if descerializado[1] == "resaltar_luces":
+                resultado = descerializado[1].delay(descerializado[0], descerializado[2])
+            elif descerializado[1] == "contraste":
+                resultado = descerializado[1].delay(descerializado[0], descerializado[2])
+            elif descerializado[1] == "nitidez":
+                resultado = descerializado[1].delay(descerializado[0], descerializado[2])
+            elif descerializado[1] == "tamaño":
+                resultado = descerializado[1].delay(descerializado[0], descerializado[2], descerializado[3])
+            elif descerializado[1] == "recortar":
+                resultado = descerializado[1].delay(descerializado[0], descerializado[2], descerializado[3], descerializado[4], descerializado[5])
+            elif descerializado[1] == "texto":
+                resultado = descerializado[1].delay(descerializado[0], descerializado[2])
+            else:
+                resultado = descerializado[1].delay(descerializado[0])
+        serializador = pickle.dumps(resultado.get())
+        self.request.sendall(serializador)
 
 
 
