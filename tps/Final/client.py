@@ -37,11 +37,14 @@ for i in lista:
         msg.append(i)
 serializador = pickle.dumps(msg)
 socket.sendall(serializador)
+datosf = "" 
 while True:
-    datos = str(socket.recv(100000), "utf-8")
-    if len(datos) == 0:
+    datos = str(socket.recv(25000), "utf-8")
+    if not datos:
         exit()
-    print(datos)
+
+    #No puedo unir la imagen pq llega fragmentada :(
+
     # if args.edicion == "imagen_borrosa":
     #     original_jpg = base64.b64decode(datos)
     #     jpg_as_np = np.frombuffer(original_jpg, dtype=np.uint8)
@@ -71,7 +74,7 @@ while True:
     #     img = base64.b64decode(img)
     #     img = BytesIO(img)
     #     img = Image.open(img)
-        # img.show()
-        # print(">>>>>>>>>> Servidor desconectado <<<<<<<<<<")
-        # socket.close()
+    #     img.show()
+    #     print(">>>>>>>>>> Servidor desconectado <<<<<<<<<<")
+    #     socket.close()
 
