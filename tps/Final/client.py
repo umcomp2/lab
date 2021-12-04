@@ -1,13 +1,10 @@
 import argparse
-from os import truncate
 import socket
 import pickle
-import cv2
 from PIL import Image
 import json
 import base64
 from io import BytesIO
-import numpy as np
 
 parserito = argparse.ArgumentParser(description="Procesamiento de imagenes")
 
