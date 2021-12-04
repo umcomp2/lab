@@ -1,5 +1,7 @@
 from celery import Celery
-from config import app
+
+
+app = Celery('task',broker = 'redis://localhost:6379', backend = 'redis://localhost:6379')
 
 @app.task
 def suma(n, m):
@@ -22,3 +24,6 @@ def div(n, m):
 @app.task
 def pot(n, m):
     return n**m
+
+if __name__ == '__main__':
+    app.start()
