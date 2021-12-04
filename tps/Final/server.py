@@ -70,10 +70,6 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 resultado = imagen_borrosa.delay(descerializado[0])
                 serializador = bytes(resultado.get(), "utf-8")
                 self.request.sendall(serializador)
-            elif descerializado[1] == "bordes":
-                resultado = bordes.delay(descerializado[0])
-                serializador = bytes(resultado.get(), "utf-8")
-                self.request.sendall(serializador)
             elif descerializado[1] == "enfocar":
                 resultado = enfocar.delay(descerializado[0])
                 serializador = bytes(resultado.get(), "utf-8")
@@ -81,8 +77,6 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
             else:
                 print('No existe esa edicion!')
                 exit()
-
-    
 
 
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):

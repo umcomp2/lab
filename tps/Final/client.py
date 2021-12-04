@@ -36,45 +36,15 @@ for i in lista:
     if i != None:
         msg.append(i)
 serializador = pickle.dumps(msg)
-socket.sendall(serializador)
-datosf = "" 
-while True:
-    datos = str(socket.recv(25000), "utf-8")
-    if not datos:
-        exit()
+socket.sendall(serializador) 
 
-    #No puedo unir la imagen pq llega fragmentada :(
+datos = str(socket.recv(500000), "utf-8")
 
-    # if args.edicion == "imagen_borrosa":
-    #     original_jpg = base64.b64decode(datos)
-    #     jpg_as_np = np.frombuffer(original_jpg, dtype=np.uint8)
-    #     imagen = cv2.imdecode(jpg_as_np, flags=1)
-    #     cv2.imshow("borrosa_" + args.imagen, imagen)
-    #     cv2.waitKeyEx(0)
-    #     print(">>>>>>>>>> Servidor desconectado <<<<<<<<<<")
-    #     socket.close()
-    # elif args.edicion == "bordes":
-    #     original_jpg = base64.b64decode(datos)
-    #     jpg_as_np = np.frombuffer(original_jpg, dtype=np.uint8)
-    #     imagen = cv2.imdecode(jpg_as_np, flags=1)
-    #     cv2.imshow("bordes_" + args.imagen, imagen)
-    #     cv2.waitKeyEx(0)
-    #     print(">>>>>>>>>> Servidor desconectado <<<<<<<<<<")
-    #     socket.close()
-    # elif args.edicion == "enfocar":
-    #     original_jpg = base64.b64decode(datos)
-    #     jpg_as_np = np.frombuffer(original_jpg, dtype=np.uint8)
-    #     imagen = cv2.imdecode(jpg_as_np, flags=1)
-    #     cv2.imshow("enfocar_" + args.imagen, imagen)
-    #     cv2.waitKeyEx(0)
-    #     print(">>>>>>>>>> Servidor desconectado <<<<<<<<<<")
-    #     socket.close()
-    # else:
-    #     img = json.dumps(datos)
-    #     img = base64.b64decode(img)
-    #     img = BytesIO(img)
-    #     img = Image.open(img)
-    #     img.show()
-    #     print(">>>>>>>>>> Servidor desconectado <<<<<<<<<<")
-    #     socket.close()
+img = json.dumps(datos)
+img = base64.b64decode(img)
+img = BytesIO(img)
+img = Image.open(img)
+img.show()
+print(">>>>>>>>>> Servidor desconectado <<<<<<<<<<")
+socket.close()
 
