@@ -21,5 +21,6 @@ def div(n, m):
     return n/m
 
 @app.task
+
 def pot(n, m):
     return n**m
