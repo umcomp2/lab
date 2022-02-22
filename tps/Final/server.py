@@ -2,6 +2,7 @@ import argparse
 import socketserver
 import pickle
 from tasks import *
+from pymongo import MongoClient
 
 parserito = argparse.ArgumentParser(description="Procesamiento de imagenes")
 
