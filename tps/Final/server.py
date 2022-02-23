@@ -14,6 +14,9 @@ args = parserito.parse_args()
 
 class MyTCPHandler(socketserver.BaseRequestHandler):
     def handle(self):
+        client = MongoClient('mongodb://localhost:27017/')
+        db = client["images"]
+        collection1 = db["edits"]
         while True:
             data = self.request.recv(4096)
             if not data:
@@ -23,6 +26,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 resultado = resaltar_luces.delay(descerializado[0], descerializado[2])
                 serializador = bytes(resultado.get(), "utf-8")
                 self.request.sendall(serializador)
+                image = {}
+                collection1.insert_one(image)
             elif descerializado[1] == "contraste":
                 resultado = contraste.delay(descerializado[0], descerializado[2])
                 serializador = bytes(resultado.get(), "utf-8")

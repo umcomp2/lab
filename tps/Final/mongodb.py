@@ -18,10 +18,10 @@ class Pymongo():
         # Obtenemos la informacion de la coleccion clientes
         # info2 = self.collection2.find()
 
-        # Obetenemos la informacion de la primera columna de cada fila
+        # Obetenemos los nombres de las fotos editadas
         keys = list(info.keys())
 
-        # Obetenemos la informacion de la segunda columna de cada fila
+        # Obetenemos los valores de las fotos
         values = list(info.values())
 
 
