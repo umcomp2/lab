@@ -3,6 +3,7 @@ import socketserver
 import pickle
 from tasks import *
 from pymongo import MongoClient
+import datetime
 
 parserito = argparse.ArgumentParser(description="Procesamiento de imagenes")
 
@@ -17,6 +18,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
         client = MongoClient('mongodb://localhost:27017/')
         db = client["images"]
         collection1 = db["edits"]
+        dt = datetime.date.today()
         while True:
             data = self.request.recv(4096)
             if not data:
@@ -26,7 +28,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 resultado = resaltar_luces.delay(descerializado[0], descerializado[2])
                 serializador = bytes(resultado.get(), "utf-8")
                 self.request.sendall(serializador)
-                image = {}
+                dato_guardado = str(serializador, "utf-8")
+                image = {f"resaltar_luces": dato_guardado, "fecha": f"{dt.day}/{dt.month}/{dt.year}"}
                 collection1.insert_one(image)
             elif descerializado[1] == "contraste":
                 resultado = contraste.delay(descerializado[0], descerializado[2])
