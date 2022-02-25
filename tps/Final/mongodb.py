@@ -1,29 +1,38 @@
 import pymongo
 from pymongo import MongoClient
-from csv import *
+import csv
 import pprint
+import json
+import base64
+from io import BytesIO
+from PIL import Image
 
 client = MongoClient('mongodb://localhost:27017/')
 db = client["images"]
 collection = db["edits"]
     
-def see_inf():
+def seeI_saveI():
     
     # Obtenemos la informacion de la coleccion ediciones
     info = collection.find()
 
-    # Obetenemos los nombres de las fotos editadas
-    for doc in info:
-        pprint.pprint(doc.keys())
+    with open("mongodbInf.csv", "w+", newline = "") as csvfile:
+        headers = ["_id", "edicion","imagen_edit","fecha","nombre"]
+        writer = csv.DictWriter(csvfile, fieldnames=headers)
+        writer.writeheader()
+        for doc in info:
+            writer.writerow(doc)
 
-    # Obetenemos los valores de las fotos
-    # values = list(info.values())
+    #Query
+    # info1 = collection.find_one({"nombre":"Pepe"})
+    # datos = info1["imagen_edit"]
+    # img = json.dumps(datos)
+    # img = base64.b64decode(img)
+    # img = BytesIO(img)
+    # img = Image.open(img)
+    # img.show()
 
-
-
-def save_inf(self):
-    pass
 
 if __name__=="__main__":
     
-    see_inf()
+    seeI_saveI()

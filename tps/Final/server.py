@@ -21,7 +21,6 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
         db = client["images"]
         collection = db["edits"]
         dt = datetime.date.today()
-        list_posts = []
         while True:
             data = self.request.recv(4096)
             if not data:
@@ -32,7 +31,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 serializador = bytes(resultado.get(), "utf-8")
                 self.request.sendall(serializador)
                 dato_guardado = str(serializador, "utf-8")
-                image = {f"resaltar_luces": dato_guardado, 
+                image = {f"edicion": "resaltar_luces",
+                            "imagen_edit":dato_guardado, 
                             "fecha": f"{dt.day}/{dt.month}/{dt.year}",
                             "nombre": descerializado[3]}
                 collection.insert_one(image)
@@ -41,7 +41,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 serializador = bytes(resultado.get(), "utf-8")
                 self.request.sendall(serializador)
                 dato_guardado = str(serializador, "utf-8")
-                image = {f"contraste": dato_guardado, 
+                image = {f"edicion": "contraste",
+                            "imagen_edit":dato_guardado, 
                             "fecha": f"{dt.day}/{dt.month}/{dt.year}",
                             "nombre": descerializado[3]}
                 collection.insert_one(image)
@@ -50,7 +51,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 serializador = bytes(resultado.get(), "utf-8")
                 self.request.sendall(serializador)
                 dato_guardado = str(serializador, "utf-8")
-                image = {f"nitidez": dato_guardado, 
+                image = {f"edicion": "nitidez",
+                            "imagen_edit":dato_guardado, 
                             "fecha": f"{dt.day}/{dt.month}/{dt.year}",
                             "nombre": descerializado[3]}
                 collection.insert_one(image)
@@ -59,7 +61,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 serializador = bytes(resultado.get(), "utf-8")
                 self.request.sendall(serializador)
                 dato_guardado = str(serializador, "utf-8")
-                image = {f"tamaño": dato_guardado, 
+                image = {f"edicion": "tamaño",
+                            "imagen_edit":dato_guardado, 
                             "fecha": f"{dt.day}/{dt.month}/{dt.year}",
                             "nombre": descerializado[4]}
                 collection.insert_one(image)
@@ -68,7 +71,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 serializador = bytes(resultado.get(), "utf-8")
                 self.request.sendall(serializador)
                 dato_guardado = str(serializador, "utf-8")
-                image = {f"recortar": dato_guardado, 
+                image = {f"edicion": "recortar",
+                            "imagen_edit":dato_guardado,  
                             "fecha": f"{dt.day}/{dt.month}/{dt.year}",
                             "nombre": descerializado[6]}
                 collection.insert_one(image)
@@ -77,7 +81,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 serializador = bytes(resultado.get(), "utf-8")
                 self.request.sendall(serializador)
                 dato_guardado = str(serializador, "utf-8")
-                image = {f"texto": dato_guardado, 
+                image = {f"edicion": "texto",
+                            "imagen_edit":dato_guardado, 
                             "fecha": f"{dt.day}/{dt.month}/{dt.year}",
                             "nombre": descerializado[3]}
                 collection.insert_one(image)
@@ -86,7 +91,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 serializador = bytes(resultado.get(), "utf-8")
                 self.request.sendall(serializador)
                 dato_guardado = str(serializador, "utf-8")
-                image = {f"escala_grises": dato_guardado, 
+                image = {f"edicion": "escala_grises",
+                            "imagen_edit":dato_guardado,  
                             "fecha": f"{dt.day}/{dt.month}/{dt.year}",
                             "nombre": descerializado[2]}
                 collection.insert_one(image)
@@ -95,7 +101,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 serializador = bytes(resultado.get(), "utf-8")
                 self.request.sendall(serializador)
                 dato_guardado = str(serializador, "utf-8")
-                image = {f"invertir_colores": dato_guardado, 
+                image = {f"edicion": "invertir_colores",
+                            "imagen_edit":dato_guardado, 
                             "fecha": f"{dt.day}/{dt.month}/{dt.year}",
                             "nombre": descerializado[2]}
                 collection.insert_one(image)
@@ -104,7 +111,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 serializador = bytes(resultado.get(), "utf-8")
                 self.request.sendall(serializador)
                 dato_guardado = str(serializador, "utf-8")
-                image = {f"espejado": dato_guardado, 
+                image = {f"edicion": "espejado",
+                            "imagen_edit":dato_guardado,  
                             "fecha": f"{dt.day}/{dt.month}/{dt.year}",
                             "nombre": descerializado[2]}
                 collection.insert_one(image)
@@ -113,7 +121,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 serializador = bytes(resultado.get(), "utf-8")
                 self.request.sendall(serializador)
                 dato_guardado = str(serializador, "utf-8")
-                image = {f"rotar_90": dato_guardado, 
+                image = {f"edicion": "rotar_90",
+                            "imagen_edit":dato_guardado, 
                             "fecha": f"{dt.day}/{dt.month}/{dt.year}",
                             "nombre": descerializado[2]}
                 collection.insert_one(image)
@@ -122,7 +131,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 serializador = bytes(resultado.get(), "utf-8")
                 self.request.sendall(serializador)
                 dato_guardado = str(serializador, "utf-8")
-                image = {f"rotar_270": dato_guardado, 
+                image = {f"edicion": "rotar_270",
+                            "imagen_edit":dato_guardado,
                             "fecha": f"{dt.day}/{dt.month}/{dt.year}",
                             "nombre": descerializado[2]}
                 collection.insert_one(image)
@@ -131,7 +141,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 serializador = bytes(resultado.get(), "utf-8")
                 self.request.sendall(serializador)
                 dato_guardado = str(serializador, "utf-8")
-                image = {f"rotar_180": dato_guardado, 
+                image = {f"edicion": "rotar_180",
+                            "imagen_edit":dato_guardado,
                             "fecha": f"{dt.day}/{dt.month}/{dt.year}",
                             "nombre": descerializado[2]}
                 collection.insert_one(image)
@@ -140,7 +151,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 serializador = bytes(resultado.get(), "utf-8")
                 self.request.sendall(serializador)
                 dato_guardado = str(serializador, "utf-8")
-                image = {f"imagen_borrosa": dato_guardado, 
+                image = {f"edicion": "imagen_borrosa",
+                            "imagen_edit":dato_guardado, 
                             "fecha": f"{dt.day}/{dt.month}/{dt.year}",
                             "nombre": descerializado[2]}
                 collection.insert_one(image)
@@ -149,7 +161,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 serializador = bytes(resultado.get(), "utf-8")
                 self.request.sendall(serializador)
                 dato_guardado = str(serializador, "utf-8")
-                image = {f"enfocar": dato_guardado, 
+                image = {f"edicion": "enfocar",
+                            "imagen_edit":dato_guardado,
                             "fecha": f"{dt.day}/{dt.month}/{dt.year}",
                             "nombre": descerializado[2]}
                 collection.insert_one(image)
