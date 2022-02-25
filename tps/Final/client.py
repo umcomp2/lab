@@ -15,6 +15,8 @@ parserito.add_argument("-im", "--imagen", dest="imagen",
                        help="Imagen a la que le quiere aplicar los cambios", type=str, required=True)
 parserito.add_argument("-e", "--edicio", dest="edicion",
                        help="Que edicion le quiere realizar a la imagen?", type=str, required=True)
+parserito.add_argument("-n", "--nombre", dest="nombre",
+                       help="nombre de la persona que realiza la edicion", type=str, required=True)                      
 parserito.add_argument("-n1", "--n1", dest="n1", help="numero 1", type=int)
 parserito.add_argument("-n2", "--n2", dest="n2", help="numero 2", type=int)
 parserito.add_argument("-n3", "--n3", dest="n3", help="numero 3", type=int)
@@ -27,7 +29,7 @@ socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 socket.connect((args.ip, args.puerto))
 
-lista = [args.imagen, args.edicion, args.n1, args.n2, args.n3, args.n4, args.texto] 
+lista = [args.imagen, args.edicion, args.n1, args.n2, args.n3, args.n4, args.texto, args.nombre] 
 msg = []
 for i in lista:
     if i != None:
