@@ -37,7 +37,7 @@ for i in lista:
 serializador = pickle.dumps(msg)
 socket.sendall(serializador) 
 
-datos = str(socket.recv(500000), "utf-8")
+datos = str(socket.recv(600000), "utf-8")
 
 img = json.dumps(datos)
 img = base64.b64decode(img)

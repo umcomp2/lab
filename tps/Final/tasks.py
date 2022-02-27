@@ -147,7 +147,8 @@ def imagen_borrosa(image):
     # Preciona Esc o alguna tecla para que cierre
     retval, buffer= cv2.imencode(".jpg", img_borrosa)
     jpg_as_text = base64.b64encode(buffer)
-    return jpg_as_text
+    img = str(jpg_as_text, "utf-8")
+    return img
 
 @app.task
 def enfocar(image):
@@ -155,7 +156,8 @@ def enfocar(image):
     resultado = cv2.fastNlMeansDenoisingColored(img, None, 15, 10, 7, 21)
     retval, buffer= cv2.imencode(".jpg", resultado)
     jpg_as_text = base64.b64encode(buffer)
-    return jpg_as_text
+    img = str(jpg_as_text, "utf-8")
+    return img
 
 @app.task
 def texto(image, texto):
@@ -171,3 +173,7 @@ def texto(image, texto):
     img_base64 = base64.b64encode(img_byte)
     img_str = img_base64.decode("utf-8")
     return img_str
+
+# if __name__=="__main__":
+#     a = imagen_borrosa("auto.jpg")
+#     print(a)
