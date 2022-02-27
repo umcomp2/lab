@@ -5,6 +5,7 @@ from PIL import Image
 import json
 import base64
 from io import BytesIO
+import os
 
 parserito = argparse.ArgumentParser(description="Procesamiento de imagenes")
 
@@ -37,13 +38,24 @@ for i in lista:
 serializador = pickle.dumps(msg)
 socket.sendall(serializador) 
 
-datos = str(socket.recv(600000), "utf-8")
+with open("inf.txt", "w+") as archivo1:
+    while True:
+        datos = str(socket.recv(4096), "utf-8")
+        archivo1.write(datos)
+        if len(datos) != 4096:
+            break
+    archivo1.close()
 
-img = json.dumps(datos)
-img = base64.b64decode(img)
-img = BytesIO(img)
-img = Image.open(img)
-img.show()
+with open("inf.txt", "r+") as archivo:
+    raster = archivo.read()
+    img = json.dumps(raster)
+    img = base64.b64decode(img)
+    img = BytesIO(img)
+    img = Image.open(img)
+    img.show()
+archivo.close()
+os.remove(os.getcwd()+"/inf.txt")
+
 print(">>>>>>>>>> Servidor desconectado <<<<<<<<<<")
 socket.close()
 
