@@ -23,8 +23,8 @@ def seeI_saveI():
         for doc in info:
             writer.writerow(doc)
 
-    #Query
-    # info1 = collection.find_one({"nombre":"Pepe"})
+    # Query
+    # info1 = collection.find_one({"nombre":"Nahuel"})
     # datos = info1["imagen_edit"]
     # img = json.dumps(datos)
     # img = base64.b64decode(img)
