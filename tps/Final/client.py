@@ -2,7 +2,6 @@ import argparse
 import socket
 import pickle
 from PIL import Image
-import json
 import base64
 from io import BytesIO
 import os
@@ -71,27 +70,32 @@ lista = [args.imagen, args.edicion, args.n1, args.n2,
          args.n3, args.n4, args.texto, args.nombre]
 msg = []
 for i in lista:
-    if i != None:
+    if i != None and i != "":
         msg.append(i)
+print(msg)
 serializador = pickle.dumps(msg)
 socket.sendall(serializador)
 
 with open("inf.txt", "w+") as archivo1:
     while True:
-        datos = str(socket.recv(4096), "utf-8")
+        datos = str(socket.recv(1024), "utf-8")
         archivo1.write(datos)
-        if len(datos) != 4096:
+        if len(datos) != 1024:
             break
     archivo1.close()
 
+
 with open("inf.txt", "r+") as archivo:
     raster = archivo.read()
-    img = json.dumps(raster)
-    img = base64.b64decode(img)
+    #Decodifica el objeto similar a bytes codificado en Base64 o cadena de caracteres ASCII
+    # y retorna bytes decodificados
+    img = base64.b64decode(raster)
+    #Guardamos como bytes en un buffer en memoria
     img = BytesIO(img)
     img = Image.open(img)
     img.save(args.edicion+"_"+args.imagen)
 archivo.close()
+
 os.remove(os.getcwd()+"/inf.txt")
 os.makedirs(args.directorio, exist_ok=True)
 shutil.move(args.edicion+"_"+args.imagen, args.directorio)

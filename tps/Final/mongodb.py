@@ -1,8 +1,6 @@
 import pymongo
 from pymongo import MongoClient
 import csv
-import pprint
-import json
 import base64
 from io import BytesIO
 from PIL import Image
@@ -26,8 +24,7 @@ def seeI_saveI():
     # Query
     # info1 = collection.find_one({"nombre":"Nahuel"})
     # datos = info1["imagen_edit"]
-    # img = json.dumps(datos)
-    # img = base64.b64decode(img)
+    # img = base64.b64decode(datos)
     # img = BytesIO(img)
     # img = Image.open(img)
     # img.show()

@@ -17,3 +17,14 @@ El cliente se comunica con el servidor enviandole el nombre de una imagen, la ed
 El servidor va a recibir estos parametros, en forma de lista y segun la tarea que recibe es la tarea que encola al redis. Luego el Celery la consume la tarea del redis y una vez que se ejecuta la tarea, se devuelve el resultado al redis y luego la obtiene el servido para enviarsela al cliente.
 
 Por ultimo el cliente, recibe la informacion del la transforma a imagen y la muestra.
+
+testear:
+- variables a funcion en servidor
+
+["escala_grises","invertir_colores", "espejado", "rotar_90", "rotar_270", "rotar_180", "imagen_borrosa", "enfocar"] 1
+
+["texto", "nitidez", "contraste", "resaltar_luces"] 2
+
+tamaño 3
+
+recortar 5
