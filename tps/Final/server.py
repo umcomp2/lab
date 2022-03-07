@@ -15,14 +15,13 @@ args = parserito.parse_args()
 
 
 class MyTCPHandler(socketserver.BaseRequestHandler):
+    # la funcion handle nos va a permitir que cuando se ejecute el servidor 
+    # quiero que la conexion con ese cliente se maneje de esta manera
     def handle(self):
         client = MongoClient('mongodb://localhost:27017/')
         db = client["images"]
         collection = db["edits"]
         dt = datetime.date.today()
-        # var1 = ["escala_grises", "invertir_colores", "espejado",
-        #         "rotar_90", "rotar_270", "rotar_180", "imagen_borrosa", "enfocar"]
-        # var2 = ["texto", "nitidez", "contraste", "resaltar_luces"]
         while True:
             data = self.request.recv(4096)
             if not data:
@@ -191,11 +190,17 @@ if __name__ == "__main__":
 
     with server:
         ip, puerto = server.server_address
+        #ejecuta handle en un bucle infinito
         server_thread = threading.Thread(target=server.serve_forever)
+        #Lo seteamos en forma de demonio, es decir, que el hilo deamon pueda seguir 
+        # ejecutandonse mientras el principal hace otra cosa
         server_thread.daemon = True
         server_thread.start()
         print(f"direccion ip {ip} y puerto {puerto}")
         try:
+            #Hacer que el proceso duerma hasta que se reciba una señal; 
+            #entonces se llamará al manejador apropiado. No devuelve nada.
             signal.pause()
         except:
+            #nos permite cerrar el server y liberar el puerto
             server.shutdown()
