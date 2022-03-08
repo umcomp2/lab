@@ -21,7 +21,7 @@ Por ultimo el cliente, recibe la informacion del la transforma a imagen y la mue
 testear:
 - variables a funcion en servidor
 
-["escala_grises","invertir_colores", "espejado", "rotar_90", "rotar_270", "rotar_180", "imagen_borrosa", "enfocar"] 1
+["escala_grises","invertir_colores", "espejado", "rotar_90", "rotar_270", "rotar_180", "imagen_borrosa", "enfocar","texto", "nitidez", "contraste", "resaltar_luces","tamaño","recortar"] 1
 
 ["texto", "nitidez", "contraste", "resaltar_luces"] 2
 

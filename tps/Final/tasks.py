@@ -1,21 +1,57 @@
 import cv2
 from PIL import Image, ImageChops, ImageEnhance, ImageOps, ImageDraw, ImageFont
 from celery import Celery
-import json, codecs
 import base64
 from io import BytesIO
-import numpy as np
+import pickle
 
-app = Celery('tasks', broker='redis://localhost', backend='redis://localhost:6379')
+app = Celery('tasks', broker='redis://localhost',
+             backend='redis://localhost:6379')
+
 
 @app.task
 def abrir_imagen(image):
     imagen = Image.open(image)
     return imagen
 
+
 @app.task
-def escala_grises(image):
-    imagen = abrir_imagen(image)
+def funcion_generica(lista_datos):
+    if lista_datos[1] == "resaltar_luces":
+        resultado = resaltar_luces(lista_datos)
+    elif lista_datos[1] == "contraste":
+        resultado = contraste(lista_datos)
+    elif lista_datos[1] == "nitidez":
+        resultado = nitidez(lista_datos)
+    elif lista_datos[1] == "tamaño":
+        resultado = tamaño(lista_datos)
+    elif lista_datos[1] == "recortar":
+        resultado = recortar(lista_datos)
+    elif lista_datos[1] == "texto":
+        resultado = texto(lista_datos)
+    elif lista_datos[1] == "escala_grises":
+        resultado = escala_grises(lista_datos)
+    elif lista_datos[1] == "invertir_colores":
+        resultado = invertir_colores(lista_datos)
+    elif lista_datos[1] == "espejado":
+        resultado = espejado(lista_datos)
+    elif lista_datos[1] == "rotar_90":
+        resultado = rotar_90(lista_datos)
+    elif lista_datos[1] == "rotar_270":
+        resultado = rotar_270(lista_datos)
+    elif lista_datos[1] == "rotar_180":
+        resultado = rotar_180(lista_datos)
+    elif lista_datos[1] == "imagen_borrosa":
+        resultado = imagen_borrosa(lista_datos)
+    elif lista_datos[1] == "enfocar":
+        resultado = enfocar(lista_datos)
+    else:
+        return "no existe esa tarea"
+    return resultado
+
+@app.task
+def escala_grises(lista_datos):
+    imagen = abrir_imagen(lista_datos[0])
     imagen_gris = ImageOps.grayscale(imagen)
     buffered = BytesIO()
     imagen_gris.save(buffered, format="JPEG")
@@ -26,9 +62,10 @@ def escala_grises(image):
     # imagen_gris.save("gris_"+ image)
     return img_str
 
+
 @app.task
-def invertir_colores(image):
-    imagen = abrir_imagen(image)
+def invertir_colores(lista_datos):
+    imagen = abrir_imagen(lista_datos[0])
     colores_inv = ImageChops.invert(imagen)
     buffered = BytesIO()
     colores_inv.save(buffered, format="JPEG")
@@ -37,11 +74,12 @@ def invertir_colores(image):
     img_str = img_base64.decode("utf-8")
     return img_str
 
+
 @app.task
-def resaltar_luces(image, nro):
-    imagen = abrir_imagen(image)
-    #Entre mas grande es el enhance mas resalta las luces
-    luces = ImageEnhance.Brightness(imagen).enhance(nro)
+def resaltar_luces(lista_datos):
+    imagen = abrir_imagen(lista_datos[0])
+    # Entre mas grande es el enhance mas resalta las luces
+    luces = ImageEnhance.Brightness(imagen).enhance(lista_datos[2])
     buffered = BytesIO()
     luces.save(buffered, format="JPEG")
     img_byte = buffered.getvalue()
@@ -49,11 +87,12 @@ def resaltar_luces(image, nro):
     img_str = img_base64.decode("utf-8")
     return img_str
 
+
 @app.task
-def contraste(image, nro):
-    imagen = abrir_imagen(image)
-    #Entre mas grande es el enhance mas contraste hace
-    contraste = ImageEnhance.Contrast(imagen).enhance(nro)
+def contraste(lista_datos):
+    imagen = abrir_imagen(lista_datos[0])
+    # Entre mas grande es el enhance mas contraste hace
+    contraste = ImageEnhance.Contrast(imagen).enhance(lista_datos[2])
     buffered = BytesIO()
     contraste.save(buffered, format="JPEG")
     img_byte = buffered.getvalue()
@@ -61,9 +100,10 @@ def contraste(image, nro):
     img_str = img_base64.decode("utf-8")
     return img_str
 
+
 @app.task
-def espejado(image):
-    imagen = abrir_imagen(image)
+def espejado(lista_datos):
+    imagen = abrir_imagen(lista_datos[0])
     espejada = ImageOps.mirror(imagen)
     buffered = BytesIO()
     espejada.save(buffered, format="JPEG")
@@ -72,10 +112,11 @@ def espejado(image):
     img_str = img_base64.decode("utf-8")
     return img_str
 
+
 @app.task
-def nitidez(image, nro):
-    imagen = abrir_imagen(image)
-    img_nit = ImageEnhance.Sharpness(imagen).enhance(nro)
+def nitidez(lista_datos):
+    imagen = abrir_imagen(lista_datos[0])
+    img_nit = ImageEnhance.Sharpness(imagen).enhance(lista_datos[2])
     buffered = BytesIO()
     img_nit.save(buffered, format="JPEG")
     img_byte = buffered.getvalue()
@@ -83,9 +124,10 @@ def nitidez(image, nro):
     img_str = img_base64.decode("utf-8")
     return img_str
 
+
 @app.task
-def rotar_90(image):
-    imagen = abrir_imagen(image)
+def rotar_90(lista_datos):
+    imagen = abrir_imagen(lista_datos[0])
     rotadaA90 = imagen.transpose(Image.ROTATE_90)
     buffered = BytesIO()
     rotadaA90.save(buffered, format="JPEG")
@@ -94,9 +136,10 @@ def rotar_90(image):
     img_str = img_base64.decode("utf-8")
     return img_str
 
+
 @app.task
-def rotar_270(image):
-    imagen = abrir_imagen(image)
+def rotar_270(lista_datos):
+    imagen = abrir_imagen(lista_datos[0])
     rotadaA270 = imagen.transpose(Image.ROTATE_270)
     buffered = BytesIO()
     rotadaA270.save(buffered, format="JPEG")
@@ -105,9 +148,10 @@ def rotar_270(image):
     img_str = img_base64.decode("utf-8")
     return img_str
 
+
 @app.task
-def rotar_180(image):
-    imagen = abrir_imagen(image)
+def rotar_180(lista_datos):
+    imagen = abrir_imagen(lista_datos[0])
     rotadaA180 = imagen.transpose(Image.ROTATE_180)
     buffered = BytesIO()
     rotadaA180.save(buffered, format="JPEG")
@@ -116,10 +160,11 @@ def rotar_180(image):
     img_str = img_base64.decode("utf-8")
     return img_str
 
+
 @app.task
-def tamaño(image, ancho, alto):
-    imagen = abrir_imagen(image)
-    ajuste = imagen.resize((ancho,alto))
+def tamaño(lista_datos):
+    imagen = abrir_imagen(lista_datos[0])
+    ajuste = imagen.resize((lista_datos[2], lista_datos[3]))
     buffered = BytesIO()
     ajuste.save(buffered, format="JPEG")
     img_byte = buffered.getvalue()
@@ -127,10 +172,12 @@ def tamaño(image, ancho, alto):
     img_str = img_base64.decode("utf-8")
     return img_str
 
+
 @app.task
-def recortar(image, izq, sup, der, inf):
-    imagen = abrir_imagen(image)
-    recorte = imagen.crop((izq,sup,der,inf))
+def recortar(lista_datos):
+    imagen = abrir_imagen(lista_datos[0])
+    recorte = imagen.crop(
+        (lista_datos[2], lista_datos[3], lista_datos[4], lista_datos[5]))
     buffered = BytesIO()
     recorte.save(buffered, format="JPEG")
     img_byte = buffered.getvalue()
@@ -138,35 +185,38 @@ def recortar(image, izq, sup, der, inf):
     img_str = img_base64.decode("utf-8")
     return img_str
 
+
 @app.task
-def imagen_borrosa(image):
-    img = cv2.imread(image)
-    #La altura y el ancho (tupla) del kernel deben ser un numero positivo e impar
-    img_borrosa = cv2.GaussianBlur(img, (11,11), 0)
+def imagen_borrosa(lista_datos):
+    img = cv2.imread(lista_datos[0])
+    # La altura y el ancho (tupla) del kernel deben ser un numero positivo e impar
+    img_borrosa = cv2.GaussianBlur(img, (11, 11), 0)
     # cv2.imshow("borrosa_" + image, img_borrosa)
     # Preciona Esc o alguna tecla para que cierre
-    retval, buffer= cv2.imencode(".jpg", img_borrosa)
+    retval, buffer = cv2.imencode(".jpg", img_borrosa)
     jpg_as_text = base64.b64encode(buffer)
     img = str(jpg_as_text, "utf-8")
     return img
 
+
 @app.task
-def enfocar(image):
-    img = cv2.imread(image)
+def enfocar(lista_datos):
+    img = cv2.imread(lista_datos[0])
     resultado = cv2.fastNlMeansDenoisingColored(img, None, 15, 10, 7, 21)
-    retval, buffer= cv2.imencode(".jpg", resultado)
+    retval, buffer = cv2.imencode(".jpg", resultado)
     jpg_as_text = base64.b64encode(buffer)
     img = str(jpg_as_text, "utf-8")
     return img
 
+
 @app.task
-def texto(image, texto):
-    imagen = abrir_imagen(image)
+def texto(lista_datos):
+    imagen = abrir_imagen(lista_datos[0])
     draw = ImageDraw.Draw(imagen)
     font = ImageFont.truetype("DejaVuSerif.ttf", 60)
-    #(ancho, alto) --> en el alto entre mas chico es mas arriba va
+    # (ancho, alto) --> en el alto entre mas chico es mas arriba va
     #              --> en el ancho entre mas grande es mas a la derecha va
-    draw.text((30,10), texto, font=font, fill="white")
+    draw.text((30, 10), lista_datos[2], font=font, fill="white")
     buffered = BytesIO()
     imagen.save(buffered, format="JPEG")
     img_byte = buffered.getvalue()

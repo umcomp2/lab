@@ -92,12 +92,12 @@ with open("inf.txt", "r+") as archivo:
     #Guardamos como bytes en un buffer en memoria
     img = BytesIO(img)
     img = Image.open(img)
-    img.save(args.edicion+"_"+args.imagen)
+    os.makedirs(args.directorio, exist_ok=True)
+    img.save(args.directorio+"/"+args.edicion+"_"+args.imagen)
 archivo.close()
 
 os.remove(os.getcwd()+"/inf.txt")
-os.makedirs(args.directorio, exist_ok=True)
-shutil.move(args.edicion+"_"+args.imagen, args.directorio)
+# shutil.move(args.edicion+"_"+args.imagen, args.directorio)
 
 
 print(">>>>>>>>>> Servidor desconectado <<<<<<<<<<")
