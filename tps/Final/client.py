@@ -72,7 +72,6 @@ msg = []
 for i in lista:
     if i != None and i != "":
         msg.append(i)
-print(msg)
 serializador = pickle.dumps(msg)
 socket.sendall(serializador)
 
