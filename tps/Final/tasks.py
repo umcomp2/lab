@@ -17,36 +17,8 @@ def abrir_imagen(image):
 
 @app.task
 def funcion_generica(lista_datos):
-    if lista_datos[1] == "resaltar_luces":
-        resultado = resaltar_luces(lista_datos)
-    elif lista_datos[1] == "contraste":
-        resultado = contraste(lista_datos)
-    elif lista_datos[1] == "nitidez":
-        resultado = nitidez(lista_datos)
-    elif lista_datos[1] == "tamaño":
-        resultado = tamaño(lista_datos)
-    elif lista_datos[1] == "recortar":
-        resultado = recortar(lista_datos)
-    elif lista_datos[1] == "texto":
-        resultado = texto(lista_datos)
-    elif lista_datos[1] == "escala_grises":
-        resultado = escala_grises(lista_datos)
-    elif lista_datos[1] == "invertir_colores":
-        resultado = invertir_colores(lista_datos)
-    elif lista_datos[1] == "espejado":
-        resultado = espejado(lista_datos)
-    elif lista_datos[1] == "rotar_90":
-        resultado = rotar_90(lista_datos)
-    elif lista_datos[1] == "rotar_270":
-        resultado = rotar_270(lista_datos)
-    elif lista_datos[1] == "rotar_180":
-        resultado = rotar_180(lista_datos)
-    elif lista_datos[1] == "imagen_borrosa":
-        resultado = imagen_borrosa(lista_datos)
-    elif lista_datos[1] == "enfocar":
-        resultado = enfocar(lista_datos)
-    else:
-        return "no existe esa tarea"
+    func = eval(lista_datos[1])
+    resultado = func(lista_datos)
     return resultado
 
 @app.task
