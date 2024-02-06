@@ -4,7 +4,7 @@ import pickle
 from task import *
 
 analizador = argparse.ArgumentParser()
-analizador.add_argument("-w", "--host", help="Host", type=str)
+analizador.add_argument("-h", "--host", help="Host", type=str)
 analizador.add_argument("-p", "--port", help="Port", type=int)
 argumento = analizador.parse_args()
 
