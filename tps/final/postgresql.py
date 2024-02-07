@@ -1,6 +1,6 @@
 import psycopg2
 
-def connect():
+def connect_tp_db():
     dbname = 'ticketsdb'
     user = 'postgres'
     password = 'admin'

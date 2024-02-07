@@ -1,15 +1,16 @@
 import socketserver
 import threading
 import signal
+import argparse
+
+pars = argparse.ArgumentParser()
+pars.add_argument("-i", "--ip", help="ip" , type=str)
+pars.add_argument("-p", "--puerto", help="puerto", type=int)
+args = pars.parse_args()
+
 
 class MyTCPHandler(socketserver.BaseRequestHandler):
-    """
-    The request handler class for our server.
 
-    It is instantiated once per connection to the server, and must
-    override the handle() method to implement communication to the
-    client.
-    """
 
     def handle(self):
         # self.request is the TCP socket connected to the client
@@ -24,17 +25,10 @@ class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     pass
 
 if __name__ == "__main__":
-    HOST, PORT = "localhost", 9999
     socketserver.TCPServer.allow_reuse_address = True
-    # Create the server, binding to localhost on port 9999
-    with ThreadedTCPServer((HOST, PORT), MyTCPHandler) as server:
-        # Activate the server; this will keep running until you
-        # interrupt the program with Ctrl-C
-
-#        server_thread = threading.Thread(target=server.serve_forever)
-
-#        server_thread.daemon = True
-#        server_thread.start()
+    # Creo el server y bindeo a la ip y el puerto pasado por argumento
+    server = ThreadedTCPServer((args.ip, args.perto), MyTCPHandler)
+    with server:
 
         server.serve_forever()
 

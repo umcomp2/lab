@@ -1,7 +1,7 @@
 import socketserver
 import argparse
 import pickle
-from task import *
+from celery_admin import *
 
 analizador = argparse.ArgumentParser()
 analizador.add_argument("-h", "--host", help="Host", type=str)
