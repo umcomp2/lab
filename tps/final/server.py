@@ -24,15 +24,17 @@ class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     pass
 
 if __name__ == "__main__":
+    import socket
+
     socketserver.TCPServer.allow_reuse_address = True
     # Creo el server y bindeo a la ip y el puerto pasado por argumento
-    server = ThreadedTCPServer((args.ip, args.perto), MyTCPHandler)
-    with server:
 
-        server.serve_forever()
+    server = ThreadedTCPServer((args.ip, args.puerto), MyTCPHandler)
 
-        # to wait connections
-        try:
-            signal.pause()
-        except:
-            server.shutdown()
+    t = threading.Thread(target=server.serve_forever)
+    # t.setDaemon(True)  # don't hang on exit
+    t.start()
+
+    # Connect to the server
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((args.ip, args.puerto))

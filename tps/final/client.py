@@ -2,27 +2,47 @@
   
 import argparse
 import socket
-import pickle
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--ip", help="ip", type=str)
 parser.add_argument("-p", "--puerto", help="puerto", type=int)
-parser.add_argument("-a", "--admin", help="Indica que el usuario es administrador", action="store_true")
-parser.add_argument("-c", "--comun", help="Indica que el usuario es común", action="store_true")
+parser.add_argument("-u", "--admin", help="Indica que el tipo de usuario", action="store_true", required=False)
 
 argumento = parser.parse_args()
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-sock.connect(argumento.ip, argumento.puerto)
+# sock.connect((argumento.ip, argumento.puerto))
 
-message = [argumento.operation, argumento.number1, argumento.number2]
-pickleMessage = pickle.dumps(message)
-sock.sendall(pickleMessage)
-data = sock.recv(1024)
-pickleReceive=pickle.loads(data)
-print('result: '+str(pickleReceive))
+# mensaje = ""
+# if argumento.rol:
+#     mensaje = "administrador"
+# else:
+#     mensaje = "usuario_comun"
 
+mensaje = input("Ingrese un mensaje")
 
-print('closing socket')
-sock.close()
+# Crear el socket TCP
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+try:
+    # Conectar al servidor
+    sock.connect((argumento.ip, argumento.puerto))
+
+    # Enviar el mensaje al servidor
+    sock.sendall(mensaje.encode())
+
+    # Esperar la respuesta del servidor
+    data = sock.recv(1024)
+    print("Respuesta del servidor:", data.decode())
+
+    # Esperar la entrada del usuario antes de cerrar la conexión
+    input("Presiona Enter para cerrar la conexión...")
+
+except Exception as e:
+    print("Error:", e)
+
+finally:
+    # Cerrar el socket
+    print('Cerrando el socket')
+    sock.close()
