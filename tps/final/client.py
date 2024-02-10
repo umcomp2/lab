@@ -3,6 +3,7 @@
 import argparse
 import socket
 import time
+import sys
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--ip", help="ip", type=str)
@@ -17,15 +18,14 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 try:
     # Conectar al servidor
     sock.connect((argumento.ip, argumento.puerto))
-
-    while True:
+    if argumento.rol:
         msg_rol = argumento.rol.lower()
-        sock.sendall(msg_rol.encode)
+        sock.sendall(msg_rol.encode())
+    
+    while True:
+        entrada_usuario = input("Ingrese un mensaje: ")
+        sock.sendall(entrada_usuario.encode())
 
-        msg = input("Ingrese mensaje (o 'q' para salir): ")
-        if msg.lower() == 'q':
-            break
-        sock.sendall(msg.encode())
         data = sock.recv(1024)
         print("Respuesta del servidor:", data.decode())
 except Exception as e:

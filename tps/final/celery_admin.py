@@ -1,11 +1,11 @@
 from celery import Celery
 from celery_config import app
-from postgresql import connect_tp_db;
+from postgresql import connect_to_db;
 import psycopg2
 
 @app.task
 def agregar_evento(nombre_evento, sectores):
-    connection_db = connect_tp_db()
+    connection_db = connect_to_db()
     if connection_db:
         try:
             # Obtengo un cursor para ejecutar consultas SQL
