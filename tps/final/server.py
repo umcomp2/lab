@@ -2,6 +2,7 @@ import socketserver
 from postgresql import connect_to_db;
 import argparse
 import threading
+from celery_admin import *
 
 class MyTCPHandler(socketserver.BaseRequestHandler):
     def handle(self):
@@ -10,6 +11,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
         tipo_usuario = self.request.recv(1024).strip()
         if tipo_usuario:
             print(f"Nuevo cliente conectado como {tipo_usuario}" + "Th: " + str(cur_th) )
+            self.agregar_evento()
         else:
             print("Nuevo cliente conectado")
 
@@ -20,16 +22,28 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 break
 
             print(f"Mensaje recibido de hilo {cur_th}: {data}")
-            # respuesta = self.procesar_mensaje(tipo_usuario, data)
-            self.request.sendall(data.upper())
+            
+    def agregar_evento(self):
+        # Aquí haces las preguntas necesarias para agregar un evento
+        self.request.sendall(b"Ingrese el nombre del evento: ")
+        nombre_evento = self.request.recv(1024).strip()
 
-            # self.request.sendall(respuesta.encode())
+        self.request.sendall(bytes("Ingrese el número de sectores: ", 'utf-8'))
+        num_sectores = int(self.request.recv(1024).strip())
 
-    def procesar_mensaje(self, tipo_usuario, mensaje):
-        if tipo_usuario.lower() == "admin":
-            return f"Acción de administrador: {mensaje.upper()}"
-        else:
-            return f"Acción de usuario: {mensaje.lower()}"
+        sectores = []
+        for i in range(num_sectores):
+            self.request.sendall(f"Ingrese el nombre del sector {i + 1}: ".encode())
+            nombre_sector = self.request.recv(1024).strip().decode()
+            self.request.sendall(f"Ingrese la capacidad del sector {i + 1}: ".encode())
+            
+            # Esperar la respuesta del cliente antes de enviar la siguiente pregunta
+            capacidad_sector = self.request.recv(1024).strip()
+            sectores.append({"nombre": nombre_sector, "capacidad": capacidad_sector})
+
+        # Llama a la tarea de Celery para agregar el evento
+        new_event.delay(nombre_evento, sectores)
+            
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

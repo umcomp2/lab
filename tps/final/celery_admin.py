@@ -4,33 +4,35 @@ from postgresql import connect_to_db;
 import psycopg2
 
 @app.task
-def agregar_evento(nombre_evento, sectores):
+def new_event(nombre_evento, sectores):
     connection_db = connect_to_db()
-    if connection_db:
-        try:
-            # Obtengo un cursor para ejecutar consultas SQL
-            cursor = connection_db.cursor()
+    cursor = connection_db.cursor()
 
-            # Inserto el evento en la tabla de eventos
-            cursor.execute("INSERT INTO eventos (nombre_evento) VALUES (%s) RETURNING id", (nombre_evento,))
-            evento_id = cursor.fetchone()[0]
+    try:
+        # Insertar el evento en la tabla de eventos
+        cursor.execute("INSERT INTO eventos (nombre) VALUES (%s)", (nombre_evento,))
+        connection_db.commit()
 
-            # Inserto los sectores del evento en la tabla de sectores
-            for sector, capacidad in sectores.items():
-                cursor.execute("INSERT INTO sectores (evento_id, nombre_sector, capacidad) VALUES (%s, %s, %s)",
-                               (evento_id, sector, capacidad))
+        # Obtener el ID del evento recién insertado
+        cursor.execute("SELECT lastval()")
+        evento_id = cursor.fetchone()[0]
 
-            # Confirmo los cambios en la base de datos
-            connection_db.commit()
-            print("Evento agregado exitosamente.")
+        # Insertar los sectores del evento en la tabla de sectores
+        for sector in sectores:
+            cursor.execute("INSERT INTO sectores (evento_id, nombre, capacidad) VALUES (%s, %s, %s)",
+                           (evento_id, sector['nombre'], sector['capacidad']))
+        connection_db.commit()
 
-        except psycopg2.Error as e:
-            print("Error al agregar evento a la base de datos:", e)
+        print("Evento agregado con éxito")
 
-        finally:
-            if connection_db:
-                cursor.close()
-                connection_db.close()
+    except Exception as e:
+        print("Error al agregar el evento:", e)
+        connection_db.rollback()
+
+    finally:
+        # Cerrar la conexión con la base de datos
+        cursor.close()
+        connection_db.close()
 
 
 @app.task

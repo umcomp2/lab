@@ -22,12 +22,21 @@ try:
         msg_rol = argumento.rol.lower()
         sock.sendall(msg_rol.encode())
     
-    while True:
-        entrada_usuario = input("Ingrese un mensaje: ")
-        sock.sendall(entrada_usuario.encode())
+    if argumento.rol.lower() == 'admin':
+        # Si el usuario es un administrador, esperar a que el servidor haga preguntas
+        while True:
+            pregunta_servidor = sock.recv(1024).decode()
+            if pregunta_servidor.startswith("Ingrese el"):
+                respuesta_usuario = input(pregunta_servidor)
+                sock.sendall(respuesta_usuario.encode())
+            else:
+                break
 
+    # Esperar respuestas del servidor y mostrarlas en la terminal
+    while True:
         data = sock.recv(1024)
         print("Respuesta del servidor:", data.decode())
+
 except Exception as e:
     print("Error:", e)
 finally:
