@@ -28,7 +28,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
         self.request.sendall(b"Ingrese el nombre del evento: ")
         nombre_evento = self.request.recv(1024).strip()
 
-        self.request.sendall(bytes("Ingrese el número de sectores: ", 'utf-8'))
+        self.request.sendall(b"Ingrese el numero de sectores: ")
+
         num_sectores = int(self.request.recv(1024).strip())
 
         sectores = []

@@ -22,15 +22,16 @@ try:
         msg_rol = argumento.rol.lower()
         sock.sendall(msg_rol.encode())
     
-    if argumento.rol.lower() == 'admin':
+    if msg_rol == "admin":
         # Si el usuario es un administrador, esperar a que el servidor haga preguntas
         while True:
             pregunta_servidor = sock.recv(1024).decode()
-            if pregunta_servidor.startswith("Ingrese el"):
+            if pregunta_servidor.startswith("Ingrese "):
                 respuesta_usuario = input(pregunta_servidor)
                 sock.sendall(respuesta_usuario.encode())
             else:
                 break
+
 
     # Esperar respuestas del servidor y mostrarlas en la terminal
     while True:
