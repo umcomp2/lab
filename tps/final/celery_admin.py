@@ -1,12 +1,13 @@
 from celery import Celery
 from celery_config import app
-from postgresql import connect_to_db;
+from postgresql_config import *
 import psycopg2
 
 @app.task
 def new_event(nombre_evento, sectores):
     connection_db = connect_to_db()
     cursor = connection_db.cursor()
+    create_eventos_table(connection_db)
 
     try:
         # Insertar el evento en la tabla de eventos

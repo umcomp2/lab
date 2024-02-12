@@ -1,5 +1,5 @@
 import socketserver
-from postgresql import connect_to_db;
+from postgresql_config import connect_to_db;
 import argparse
 import threading
 from celery_admin import *
@@ -26,7 +26,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
     def agregar_evento(self):
         # Aquí haces las preguntas necesarias para agregar un evento
         self.request.sendall(b"Ingrese el nombre del evento: ")
-        nombre_evento = self.request.recv(1024).strip()
+        nombre_evento = self.request.recv(1024).strip().decode("utf-8")
 
         self.request.sendall(b"Ingrese el numero de sectores: ")
 
@@ -39,7 +39,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
             self.request.sendall(f"Ingrese la capacidad del sector {i + 1}: ".encode())
             
             # Esperar la respuesta del cliente antes de enviar la siguiente pregunta
-            capacidad_sector = self.request.recv(1024).strip()
+            capacidad_sector = int(self.request.recv(1024).strip())
             sectores.append({"nombre": nombre_sector, "capacidad": capacidad_sector})
 
         # Llama a la tarea de Celery para agregar el evento
