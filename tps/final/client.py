@@ -12,7 +12,7 @@ parser.add_argument("-r", "--rol", help="Indica que el tipo de usuario", type=st
 
 argumento = parser.parse_args()
 
-# Crear el socket TCP
+#Creo el socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 try:
@@ -23,20 +23,21 @@ try:
         sock.sendall(msg_rol.encode())
     
     if msg_rol == "admin":
-        # Si el usuario es un administrador, esperar a que el servidor haga preguntas
-        while True:
-            pregunta_servidor = sock.recv(1024).decode()
-            if pregunta_servidor.startswith("Ingrese "):
-                respuesta_usuario = input(pregunta_servidor)
-                sock.sendall(respuesta_usuario.encode())
-            else:
-                break
+        respuesta_si_no = int(input("Desea agregar un evento? 1(SI) 2(NO): "))
+        if respuesta_si_no == 1:
+            while True:
+                pregunta_servidor = sock.recv(1024).decode()
+                if pregunta_servidor.startswith("Ingrese "):
+                    respuesta_usuario = input(pregunta_servidor)
+                    sock.sendall(respuesta_usuario.encode())
+                else:
+                    break
+    
 
-
-    # Esperar respuestas del servidor y mostrarlas en la terminal
+    #Espero respuesta del serv. para mostrar por terminal
     while True:
         data = sock.recv(1024)
-        print("Respuesta del servidor:", data.decode())
+        print("Respuesta del servidor \n", data.decode())
 
 except Exception as e:
     print("Error:", e)
