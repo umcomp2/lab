@@ -21,7 +21,14 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
             eventos = self.obtener_eventos()
             print("---Buscando eventos---")
             time.sleep(3)
+            print("---Eventos encontrados---")
             self.enviar_eventos(eventos)
+            self.request.sendall(b"Ingrese el nro del evento que desee ver las entradas disponibles: ")
+            rta = self.request.recv(1024).strip().decode()
+            print("---Buscando entradas disponibles---")
+            sectores = self.obtener_sectores(rta)
+            self.enviar_sectores(sectores)
+            print("---Entradas disponibles encontradas---")
 
         while True:
             data = self.request.recv(1024).strip()
@@ -50,18 +57,24 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
             capacidad_sector = int(self.request.recv(1024).strip())
             sectores.append({"nombre": nombre_sector, "capacidad": capacidad_sector})
 
-        # Llama a la tarea de Celery para agregar el evento
         new_event.delay(nombre_evento, sectores)
            
     def obtener_eventos(self):
-        # Llamar a la tarea Celery para obtener eventos
         eventos = get_events.delay().get()
         return eventos
 
     def enviar_eventos(self, eventos):
         # Enviar eventos al cliente
-        eventos_str = "\n".join([f"{evento['id']}: {evento['nombre']}" for evento in eventos])
+        eventos_str = "\n".join([f"{evento['id']}: {evento['nombre']}\n" for evento in eventos])
         self.request.sendall(eventos_str.encode())
+
+    def obtener_sectores(self, evento_id):
+        sectores = get_sectores.delay(evento_id).get()
+        return sectores
+
+    def enviar_sectores(self, sectores):
+        sectores_str = "\n".join([f"{sector['nombre']}: Entradas disponibles:  {sector['capacidad']} " for sector in sectores])
+        self.request.sendall(sectores_str.encode())
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
