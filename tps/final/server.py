@@ -10,14 +10,15 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
     def handle(self):
         
         cur_th = threading.get_native_id()
-        tipo_usuario = self.request.recv(1024).strip()
+        tipo_usuario = self.request.recv(1024).strip().decode()
+        print(f"Nuevo cliente conectado como {tipo_usuario}" + " Th: " + str(cur_th) )
+
         if tipo_usuario == 'admin':
-            print(f"Nuevo cliente conectado como {tipo_usuario}" + "Th: " + str(cur_th) )
-            print("----Agregando evento----")
-            time.sleep(3)
-            self.agregar_evento()
+                print("----Agregando evento----")
+                time.sleep(3)
+                self.agregar_evento()
+            
         else:
-            print(f"Nuevo cliente conectado como {tipo_usuario}" + "Th: " + str(cur_th) )
             eventos = self.obtener_eventos()
             print("---Buscando eventos---")
             time.sleep(3)
@@ -34,8 +35,9 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
             nombre_sector = self.request.recv(1024).strip().decode().lower()
             self.request.sendall(b"Ingrese la cantidad de entradas que desea comprar: ")
             cantidad_entradas = int(self.request.recv(1024).strip().decode())
-
-            mensaje_respuesta = self.comprar_entradas(id_evento, nombre_sector, cantidad_entradas)
+            self.request.sendall(b"Ingrese su numero de documento")
+            numero_dni = int(self.request.recv(1024).strip().decode())
+            mensaje_respuesta = self.comprar_entradas(id_evento, nombre_sector, cantidad_entradas, numero_dni)
             self.request.sendall(mensaje_respuesta.encode())
 
         while True:
@@ -84,8 +86,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
         sectores_str = "\n".join([f"{sector['nombre']}: Entradas disponibles:  {sector['capacidad']} " for sector in sectores])
         self.request.sendall(sectores_str.encode())
 
-    def comprar_entradas(self, evento_id, nombre_sector, cantidad_entradas):
-        mensaje_respuesta = comprar_entradas.delay(evento_id, nombre_sector, cantidad_entradas, dni_comprador="12345678").get()
+    def comprar_entradas(self, evento_id, nombre_sector, cantidad_entradas, dni):
+        mensaje_respuesta = comprar_entradas.delay(evento_id, nombre_sector, cantidad_entradas, dni).get()
         return mensaje_respuesta
 
 if __name__ == "__main__":
