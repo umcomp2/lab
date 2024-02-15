@@ -82,6 +82,49 @@ def get_sectores(evento_id):
         print(f"Error al recuperar los sectores del evento {evento_id}:", e)
 
     finally:
-        # Cerrar la conexión con la base de datos
+        cursor.close()
+        connection_db.close()
+
+@app.task
+def comprar_entradas(evento_id, sector_nombre, cantidad_entradas, dni_comprador):
+    connection_db = connect_to_db()
+    cursor = connection_db.cursor()
+    create_compra_table(connection_db)
+
+    try:
+        cursor.execute("SELECT nombre FROM eventos WHERE id = %s", (evento_id))
+        evento_nombre = cursor.fetchone()[0]
+
+         # Traigo el id del sector
+        cursor.execute("SELECT id FROM sectores WHERE evento_id = %s AND nombre = %s", (evento_id, sector_nombre))
+        sector_id = cursor.fetchone()[0]
+
+        # Query para hacer la compra
+        cursor.execute("INSERT INTO Compra (dni_comprador, evento_id, sector_id, cantidad_entradas) VALUES (%s, %s, %s, %s)",
+                       (dni_comprador, evento_id, sector_id, cantidad_entradas))
+        connection_db.commit()
+
+        # Verificar disponibilidad
+        cursor.execute("SELECT capacidad FROM sectores WHERE evento_id = %s AND nombre = %s", (evento_id, sector_nombre))
+        capacidad_sector = cursor.fetchone()[0]
+        
+        if cantidad_entradas > capacidad_sector:
+            print("No hay suficientes entradas disponibles en este sector.")
+            return "No hay suficientes entradas disponibles en este sector."
+
+        # Actualizo cantidad
+        cursor.execute("UPDATE sectores SET capacidad = capacidad - %s WHERE evento_id = %s AND nombre = %s",
+                       (cantidad_entradas, evento_id, sector_nombre))
+        connection_db.commit()
+
+        print(f"{cantidad_entradas} entradas compradas con éxito en el sector {sector_nombre} del evento {evento_nombre}.")
+        return f"{cantidad_entradas} entradas compradas con éxito en el sector {sector_nombre} del evento {evento_nombre}."
+
+    except Exception as e:
+        print("Error al comprar entradas:", e)
+        connection_db.rollback()
+        return "Error al comprar entradas. Por favor, inténtelo de nuevo."
+
+    finally:
         cursor.close()
         connection_db.close()

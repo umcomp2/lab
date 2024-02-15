@@ -24,11 +24,19 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
             print("---Eventos encontrados---")
             self.enviar_eventos(eventos)
             self.request.sendall(b"Ingrese el nro del evento que desee ver las entradas disponibles: ")
-            rta = self.request.recv(1024).strip().decode()
+            id_evento = self.request.recv(1024).strip().decode()
             print("---Buscando entradas disponibles---")
-            sectores = self.obtener_sectores(rta)
+            sectores = self.obtener_sectores(id_evento)
             self.enviar_sectores(sectores)
-            print("---Entradas disponibles encontradas---")
+            print("---Entradas disponibles encontradas---\n")
+
+            self.request.sendall(b"\nIngrese el nombre del sector que desea comprar: ")
+            nombre_sector = self.request.recv(1024).strip().decode().lower()
+            self.request.sendall(b"Ingrese la cantidad de entradas que desea comprar: ")
+            cantidad_entradas = int(self.request.recv(1024).strip().decode())
+
+            mensaje_respuesta = self.comprar_entradas(id_evento, nombre_sector, cantidad_entradas)
+            self.request.sendall(mensaje_respuesta.encode())
 
         while True:
             data = self.request.recv(1024).strip()
@@ -75,6 +83,10 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
     def enviar_sectores(self, sectores):
         sectores_str = "\n".join([f"{sector['nombre']}: Entradas disponibles:  {sector['capacidad']} " for sector in sectores])
         self.request.sendall(sectores_str.encode())
+
+    def comprar_entradas(self, evento_id, nombre_sector, cantidad_entradas):
+        mensaje_respuesta = comprar_entradas.delay(evento_id, nombre_sector, cantidad_entradas, dni_comprador="12345678").get()
+        return mensaje_respuesta
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

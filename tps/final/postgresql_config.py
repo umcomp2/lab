@@ -44,5 +44,30 @@ def create_eventos_table(connection):
     except psycopg2.Error as e:
         print("Error al crear la tabla 'eventos' o 'sectores':", e)
 
+def create_compra_table(connection):
+    cursor = connection.cursor()
+    try:
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS Compra (
+                id SERIAL PRIMARY KEY,
+                dni_comprador VARCHAR(20),
+                evento_id INT,
+                sector_id INT,
+                cantidad_entradas INT,
+                FOREIGN KEY (evento_id) REFERENCES eventos(id),
+                FOREIGN KEY (sector_id) REFERENCES sectores(id)
+            )
+            """
+        )
+        connection.commit()
+        print("Tabla Compra creada exitosamente.")
+    except psycopg2.Error as e:
+        print("Error al crear la tabla Compra:", e)
+        connection.rollback()
+    finally:
+        cursor.close()
+
+
 # if __name__ == "__main__":
 #     connect_to_db()
