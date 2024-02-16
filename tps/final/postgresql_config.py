@@ -51,7 +51,7 @@ def create_compra_table(connection):
             """
             CREATE TABLE IF NOT EXISTS Compra (
                 id SERIAL PRIMARY KEY,
-                dni_comprador VARCHAR(20),
+                dni_comprador INT,
                 evento_id INT,
                 sector_id INT,
                 cantidad_entradas INT,

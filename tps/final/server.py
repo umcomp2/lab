@@ -31,13 +31,14 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
             self.enviar_sectores(sectores)
             print("---Entradas disponibles encontradas---\n")
 
-            self.request.sendall(b"\nIngrese el nombre del sector que desea comprar: ")
-            nombre_sector = self.request.recv(1024).strip().decode().lower()
+            self.request.sendall(b"\nIngrese el nombre del correctamente del sector que desea comprar: ")
+            nombre_sector = self.request.recv(1024).strip().decode()
             self.request.sendall(b"Ingrese la cantidad de entradas que desea comprar: ")
             cantidad_entradas = int(self.request.recv(1024).strip().decode())
             self.request.sendall(b"Ingrese su numero de documento")
             numero_dni = int(self.request.recv(1024).strip().decode())
             mensaje_respuesta = self.comprar_entradas(id_evento, nombre_sector, cantidad_entradas, numero_dni)
+            print(numero_dni)
             self.request.sendall(mensaje_respuesta.encode())
 
         while True:
@@ -87,6 +88,11 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
         self.request.sendall(sectores_str.encode())
 
     def comprar_entradas(self, evento_id, nombre_sector, cantidad_entradas, dni):
+        print("--------")
+        print(dni)
+        print(evento_id)
+        print(nombre_sector)
+        print(cantidad_entradas)
         mensaje_respuesta = comprar_entradas.delay(evento_id, nombre_sector, cantidad_entradas, dni).get()
         return mensaje_respuesta
 

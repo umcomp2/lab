@@ -94,10 +94,12 @@ def comprar_entradas(evento_id, sector_nombre, cantidad_entradas, dni_comprador)
     try:
         cursor.execute("SELECT nombre FROM eventos WHERE id = %s", (evento_id))
         evento_nombre = cursor.fetchone()[0]
-
          # Traigo el id del sector
         cursor.execute("SELECT id FROM sectores WHERE evento_id = %s AND nombre = %s", (evento_id, sector_nombre))
         sector_id = cursor.fetchone()[0]
+        if sector_id is None:
+            print("El sector especificado no existe.")
+            return "El sector especificado no existe."
 
         # Query para hacer la compra
         cursor.execute("INSERT INTO Compra (dni_comprador, evento_id, sector_id, cantidad_entradas) VALUES (%s, %s, %s, %s)",
@@ -107,6 +109,9 @@ def comprar_entradas(evento_id, sector_nombre, cantidad_entradas, dni_comprador)
         # Verificar disponibilidad
         cursor.execute("SELECT capacidad FROM sectores WHERE evento_id = %s AND nombre = %s", (evento_id, sector_nombre))
         capacidad_sector = cursor.fetchone()[0]
+        if capacidad_sector is None:
+                print("No se encontró información sobre la capacidad de este sector.")
+                return "No se encontró información sobre la capacidad de este sector."
         
         if cantidad_entradas > capacidad_sector:
             print("No hay suficientes entradas disponibles en este sector.")
