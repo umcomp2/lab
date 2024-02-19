@@ -1,6 +1,7 @@
 import argparse
 import socket
 import threading
+from postgres import *
 
 
 def handleClient(client_socket):
@@ -9,6 +10,7 @@ def handleClient(client_socket):
     selected_time = client_socket.recv(1024).decode().strip()
     # Aquí iría la lógica para manejar la reserva del turno
     # Por ahora, solo confirmaremos la reserva y enviaremos un mensaje al cliente
+    print(f"Reserva: \n-Horario: {selected_time} \n-Usuario: {client_address}")
     message = f"Reserva confirmada para {selected_time} el {client_address}"
     client_socket.send(message.encode())
     client_socket.close()
@@ -25,6 +27,8 @@ def start_server(host, port):
         client_handler = threading.Thread(target=handleClient, args=(client_socket,))
         client_handler.start()
 
+#def reservarTurno(self):
+
 
 
 
@@ -35,6 +39,7 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--ip", help="ip", type=str)
     parser.add_argument("-p", "--port", help="port", type=int)
     args = parser.parse_args()
+    conexDB = conexionDB()
     start_server(args.ip, args.port)
 
    
