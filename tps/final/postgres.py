@@ -3,9 +3,9 @@
 import psycopg2
 
 def conexionDB():
-    dbname= 'pilatesDB'
-    user = 'postgres'
-    password = 'admin'
+    dbname= 'pilatesdb'
+    user = 'milicomputacion'
+    password = '1234'
     host = 'localhost' 
     port = '5432' #puerto predeterminado
 
