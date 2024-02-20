@@ -135,36 +135,30 @@ def comprar_entradas(evento_id, sector_nombre, cantidad_entradas, dni_comprador)
         connection_db.close()
 
 @app.task
-def buscar_compras_por_dni(dni_comprador,eventos):
+def buscar_compras_por_dni(dni):
     connection_db = connect_to_db()
     cursor = connection_db.cursor()
 
     try:
-        compras_por_dni = {}
+        # Consulta para buscar las compras por DNI en la base de datos
+        cursor.execute("SELECT eventos.nombre, sectores.nombre, compra.cantidad_entradas "
+                       "FROM compra "
+                       "JOIN eventos ON compra.evento_id = eventos.id "
+                       "JOIN sectores ON compra.sector_id = sectores.id "
+                       "WHERE compra.dni_comprador = %s", (dni,))
+        compras = cursor.fetchall()
 
-        for evento in eventos:
-            evento_id = evento['id']
-            evento_nombre = evento['nombre']
-
-            # Consultar las compras realizadas por el comprador en el evento actual
-            cursor.execute("SELECT * FROM Compra WHERE dni_comprador = %s AND evento_id = %s", (dni_comprador, evento_id))
-            compras = cursor.fetchall()
-
-            if compras:
-                compras_por_dni[evento_nombre] = compras
-
-        if compras_por_dni:
-            print(f"Compras encontradas para el DNI {dni_comprador}:")
-            return compras_por_dni
+        if compras:
+            return compras
         else:
-            print(f"No se encontraron compras para el DNI {dni_comprador}.")
-            return f"No se encontraron compras para el DNI {dni_comprador}."
+            return f"No se encontraron compras para el DNI {dni}."
 
     except Exception as e:
         print("Error al buscar compras por DNI:", e)
-        return None
+        return f"Error al buscar compras por DNI. Por favor, inténtelo de nuevo."
 
     finally:
         cursor.close()
         connection_db.close()
+
 

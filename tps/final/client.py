@@ -8,7 +8,7 @@ import sys
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--ip", help="ip", type=str)
 parser.add_argument("-p", "--puerto", help="puerto", type=int)
-parser.add_argument("-r", "--rol", help="Indica que el tipo de usuario", type=str)
+parser.add_argument("-r", "--rol", help="Indica que el tipo de usuario", type=str, default="user")
 
 argumento = parser.parse_args()
 

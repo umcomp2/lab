@@ -5,6 +5,10 @@ import threading
 from celery_admin import *
 import time
 
+parser = argparse.ArgumentParser()
+parser.add_argument("-i", "--ip", help="Dirección IP del servidor", type=str, default='localhost')
+parser.add_argument("-p", "--puerto", help="Puerto del servidor", type=int, default=9999)
+args = parser.parse_args()
 
 class MyTCPHandler(socketserver.BaseRequestHandler):
     def handle(self):
@@ -17,9 +21,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 print("----Agregando evento----")
                 time.sleep(3)
                 self.agregar_evento()
-            
         else:
-            self.request.sendall(b"Presione 1 para ver eventos \n - Presione 2 para ver compras")
+            self.request.sendall(b"- Presione 1 para ver eventos disponibles \n - Presione 2 para ver sus compras")
             respuesta = self.request.recv(1024).strip().decode()
             if respuesta == "1":
                 while True:
@@ -48,12 +51,27 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                     self.request.sendall(b"Desea realizar otra compra? (si/no): ")
                     respuesta = self.request.recv(1024).strip().decode()
                     if respuesta.lower() != 'si':
-                        break  # Salir del ciclo de compras
+                        break 
+                    
             else:
+                # self.request.sendall(b"Ingrese su numero de DNI: ")
+                # respuesta_dni = self.request.recv(1024).strip().decode()
+                # compras = self.obtener_compras(respuesta_dni)
+                # self.enviar_compras(compras)
                 self.request.sendall(b"Ingrese su numero de DNI: ")
-                respuesta_dni = self.request.recv(1024).strip().decode()
-                compras = self.obtener_compras(respuesta_dni)
-                self.enviar_compras(compras)
+                dni = self.request.recv(1024).strip().decode()
+                print(f"----- Buscando compras para DNI: {dni} -----")
+                compras = buscar_compras_por_dni.delay(dni).get()
+                try:
+                    if compras:
+                        for compra in compras:
+                            print(compras)
+                            evento_nombre, sector_nombre, cantidad_entradas = compra
+                            mensaje_respuesta = f"Evento: {evento_nombre}, Sector: {sector_nombre}, Cantidad de entradas: {cantidad_entradas} \n"
+                            self.request.sendall(mensaje_respuesta.encode())
+                            
+                except:
+                    self.request.sendall(b"No se encontraron compras para el DNI proporcionado.")
 
         while True:
             data = self.request.recv(1024).strip()
@@ -105,19 +123,19 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
         mensaje_respuesta = comprar_entradas.delay(evento_id, nombre_sector, cantidad_entradas, dni).get()
         return mensaje_respuesta
     
-    def obtener_compras(self, dni):
-        eventos = get_events.delay().get()
-        compras = buscar_compras_por_dni.delay(dni, eventos)
-        return compras
+    # def obtener_compras(self, dni):
+    #     eventos = get_events.delay().get()
+    #     compras = buscar_compras_por_dni.delay(dni, eventos)
+    #     return compras
     
-    def enviar_compras(self, compras):
-        for evento, detalles_compras in compras:
-            mensaje_evento = f"Eventos: {evento}\n"
-            self.request.sendall(mensaje_evento.encode())
+    # def enviar_compras(self, compras):
+    #     for evento, detalles_compras in compras:
+    #         mensaje_evento = f"Eventos: {evento}\n"
+    #         self.request.sendall(mensaje_evento.encode())
 
-            for detalle_compra in detalles_compras:
-                mensaje_compra = f"Detalles de la compra: {detalle_compra}\n"
-                self.request.sendall(mensaje_compra.encode())
+    #         for detalle_compra in detalles_compras:
+    #             mensaje_compra = f"Detalles de la compra: {detalle_compra}\n"
+    #             self.request.sendall(mensaje_compra.encode())
 
         # # Una vez que se han enviado todos los datos, puedes enviar una señal de finalización
         # mensaje_fin = "FIN\n"
@@ -126,13 +144,10 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--ip", help="Dirección IP del servidor", type=str, default='localhost')
-    parser.add_argument("-p", "--puerto", help="Puerto del servidor", type=int, default=9999)
-    args = parser.parse_args()
 
     conexion_db = connect_to_db();
 
     server = socketserver.ThreadingTCPServer((args.ip, args.puerto), MyTCPHandler)
     print("Servidor iniciado. Esperando conexiones...")
     server.serve_forever()
+    
