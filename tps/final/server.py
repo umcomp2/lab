@@ -68,8 +68,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                             print(compras)
                             evento_nombre, sector_nombre, cantidad_entradas = compra
                             mensaje_respuesta = f"Evento: {evento_nombre}, Sector: {sector_nombre}, Cantidad de entradas: {cantidad_entradas} \n"
-                            self.request.sendall(mensaje_respuesta.encode())
-                            
+                            self.request.sendall(mensaje_respuesta.encode())   
                 except:
                     self.request.sendall(b"No se encontraron compras para el DNI proporcionado.")
 
@@ -123,25 +122,6 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
         mensaje_respuesta = comprar_entradas.delay(evento_id, nombre_sector, cantidad_entradas, dni).get()
         return mensaje_respuesta
     
-    # def obtener_compras(self, dni):
-    #     eventos = get_events.delay().get()
-    #     compras = buscar_compras_por_dni.delay(dni, eventos)
-    #     return compras
-    
-    # def enviar_compras(self, compras):
-    #     for evento, detalles_compras in compras:
-    #         mensaje_evento = f"Eventos: {evento}\n"
-    #         self.request.sendall(mensaje_evento.encode())
-
-    #         for detalle_compra in detalles_compras:
-    #             mensaje_compra = f"Detalles de la compra: {detalle_compra}\n"
-    #             self.request.sendall(mensaje_compra.encode())
-
-        # # Una vez que se han enviado todos los datos, puedes enviar una señal de finalización
-        # mensaje_fin = "FIN\n"
-        # cliente_socket.sendall(mensaje_fin.encode())
-
-
 
 if __name__ == "__main__":
 

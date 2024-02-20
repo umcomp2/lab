@@ -32,12 +32,6 @@ try:
                     sock.sendall(respuesta_usuario.encode())
                 else:
                     break
-    # else:
-    #     # Aquí se maneja la interacción para el caso de usuario, si es necesario enviar una respuesta al servidor
-    #     # Por ejemplo, si el servidor pregunta por el número del evento, aquí podrías enviar la respuesta.
-    #     respuesta_evento = input("Ingrese el número del evento que desea ver: ")
-    #     sock.sendall(respuesta_evento.encode())
-        
 
     #Espero respuesta del serv. para mostrar por terminal
     while True:
