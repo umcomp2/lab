@@ -128,7 +128,7 @@ def comprar_entradas(evento_id, sector_nombre, cantidad_entradas, dni_comprador)
     except Exception as e:
         print("Error al comprar entradas:", e)
         connection_db.rollback()
-        return "Error al comprar entradas. Por favor, inténtelo de nuevo."
+        return "Error al comprar entradas. Por favor, inténtelo de nuevo. Verifique que está ingresando los datos correctamente \n"
 
     finally:
         cursor.close()

@@ -4,6 +4,7 @@ import argparse
 import socket
 import time
 import sys
+import pickle
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--ip", help="ip", type=str)
@@ -36,9 +37,32 @@ try:
     #Espero respuesta del serv. para mostrar por terminal
     while True:
         data = sock.recv(1024)
-        print("---Respuesta del servidor----\n", data.decode())
-        rta = input("").encode()
-        sock.sendall(rta)
+
+        if data.startswith(b"INFO"):
+            print(data.decode())
+    
+        else:
+            print("---Respuesta del servidor----\n", data.decode())
+            rta = input("").encode()
+            serializado = pickle.dumps(rta)
+            sock.sendall(serializado)
+            print(serializado)
+
+
+                
+    # while True:
+    #     data = sock.recv(1024)
+    #     if data.startswith(b"RESP:"):
+    #         print(data[len(b"RESP:"):].decode())
+    #         rta = input("").encode()
+    #         sock.sendall(rta)
+    #     elif data.startswith(b"INFO:"):
+    #         print(data[len(b"INFO:"):].decode())
+        
+    #     else:
+    #         print("----Respuesta del servidor---")
+    #         print(data.decode())
+        
         
 
 
