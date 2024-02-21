@@ -20,15 +20,52 @@ def client():
 
         client_socket.connect((args.ip, args.port))
         print(f"[INFO] Conexión establecida con el servidor en {args.ip}:{args.port}")
+        #string de datos de dias disponibles
+        dias_disponibles = client_socket.recv(1024).decode()
+        listaDias= eval(dias_disponibles)
+        for index, dia in enumerate(listaDias):
+            print(str(index+1) + "-" + str(dia[1]))
+        validate = True
 
+        while validate:
+            try: 
+                selected_dias = int(input("Seleccione el indice del dia: "))-1
+                listaDias[(selected_dias)]
+                validate = False
+            except:
+                print("Indice incorrecto") 
+                
+        client_socket.send(str(selected_dias).encode())
+
+        #string de horarios de dias disponibles
         horarios_disponibles = client_socket.recv(1024).decode()
-        print(horarios_disponibles)
+        listaHorarios = eval(horarios_disponibles)
+        for index, hora in enumerate(listaHorarios):
+            print(str(index+1) + "-" + str(hora[1]))
+        validate = True
 
-        selected_time = input("Selecciona un horario para reservar: ")
-        client_socket.send(selected_time.encode())
+        while validate:
+            try: 
+                selected_hora = int(input("Seleccione el indice del horario: "))-1
+                listaDias[(selected_hora)]
+                validate = False
+            except:
+                print("Indice incorrecto")
 
-        reserva_confirmada = client_socket.recv(1024).decode()
-        print(reserva_confirmada)
+        client_socket.send(str(selected_hora).encode())
+
+        #traigo disponibilidad
+        disp = client_socket.recv(1024).decode()
+        listaDisp = eval(disp)
+        print("disponibilidad para ese dia y horario: " + str(listaDisp[0]))
+        #client_socket.send(str(selected_hora).encode())
+
+        # for index, lugar in enumerate(listaDisp):
+        #     print(str(index+1) + "-" + str(lugar[1]))
+
+
+        # reserva_confirmada = client_socket.recv(1024).decode()
+        # print(reserva_confirmada)
 
     except ConnectionRefusedError:
         print("[ERROR] No se pudo conectar al servidor. Asegúrate de que el servidor esté en ejecución.")

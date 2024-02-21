@@ -3,7 +3,7 @@
 import psycopg2
 
 def conexionDB():
-    dbname= 'pilatesdb'
+    dbname= 'pilatesdb2'
     user = 'milicomputacion'
     password = '1234'
     host = 'localhost' 
@@ -18,8 +18,9 @@ def conexionDB():
         return None
     
 def crear_tablas(dbConnection):
+    cursor = dbConnection.cursor()
+
     try:
-        cursor = dbConnection.cursor()
 
         # Crear tabla Horarios
         cursor.execute("""
@@ -28,9 +29,12 @@ def crear_tablas(dbConnection):
                 horario VARCHAR(10) UNIQUE
             )
         """)
-        cursor.execute("INSERT INTO horario (horario) VALUES ('9:00'), ('10:00'), ('15:00'), ('16:00'), ('19:00')")
+        dbConnection.commit()
+        print("¡Tabla horarios creada exitosamente!")
 
+        cursor.execute("INSERT INTO horarios (horario) VALUES ('9:00'), ('10:00'), ('15:00'), ('16:00'), ('19:00')")
 
+        
         # Crear tabla Semana
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS semana (
@@ -40,6 +44,8 @@ def crear_tablas(dbConnection):
         """)
         cursor.execute("INSERT INTO semana (dia_semana) VALUES ('lunes'), ('martes'), ('miércoles'), ('jueves'), ('viernes')")
 
+        dbConnection.commit()
+        print("¡Tabla Semana creada exitosamente!")
 
         # Crear tabla Cantidad
         cursor.execute("""
@@ -53,9 +59,10 @@ def crear_tablas(dbConnection):
         # Insertar datos en tabla cantidad
         for horario_id in range(1, 6):
             for semana_id in range(1, 6):
-                cursor.execute("INSERT INTO cantidad (id_horario, id_semana, cantidad) VALUES (%s, %s, 0)", (horario_id, semana_id))
+                cursor.execute("INSERT INTO cantidad (id_horario, id_dia_semana, cantidad) VALUES (%s, %s, 0)", (horario_id, semana_id))
 
-
+        dbConnection.commit()
+        print("¡Tabla cantidad creada exitosamente!")
         # Crear tabla Reservas
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS reservas (
@@ -68,28 +75,85 @@ def crear_tablas(dbConnection):
         """)
 
         dbConnection.commit()
-        print("¡Tablas creadas exitosamente!")
+        print("¡Tabla reservas creada exitosamente!")
     except psycopg2.Error as e:
         print("Error al crear tablas:", e)
         dbConnection.rollback() 
 
-def crear_reserva(dbConnection, id_horario, id_dia_semana, dni, nombre):
+def getDias(dbConnection):
+    cursor = dbConnection.cursor()
     try:
-        cursor = dbConnection.cursor()
-        
-        # Verificar si la cantidad de reservas excede el límite de 15 personas
-        cursor.execute("SELECT cantidad FROM cantidad WHERE id_horario = %s AND id_dia_semana = %s", (id_horario, id_dia_semana))
-        cantidad_actual = cursor.fetchone()[0]
-        if cantidad_actual >= 15:
-            print("No se puede hacer la reserva. Se ha alcanzado el límite de 15 personas.")
-            return
+        cursor.execute("SELECT id, dia_semana FROM semana")
+        diaSemana = cursor.fetchall()
+        return diaSemana
+    except:
+        pass
 
-        # Insertar reserva
-        cursor.execute("INSERT INTO reservas (id_horario, id_dia_semana, dni, nombre) VALUES (%s, %s, %s, %s)", (id_horario, id_dia_semana, dni, nombre))
-        dbConnection.commit()
-        print("Reserva creada exitosamente!")
-    except psycopg2.Error as e:
-        print("Error al crear reserva:", e)
-        dbConnection.rollback()
-    finally: 
-        cursor.close()
+def getHorarios(dbConnection):
+    cursor = dbConnection.cursor()
+    try:
+        cursor.execute("SELECT id, horario FROM horarios")
+        horario = cursor.fetchall()
+        return horario
+    except:
+        pass
+
+def getDisponibilidad(dbConnection, idDia, idHora):
+    cursor = dbConnection.cursor()
+    try:  
+        cursor.execute("SELECT cantidad FROM cantidad WHERE id_horario = %s AND id_dia_semana= %s", (idHora, idDia))
+        disponibilidad = cursor.fetchall()
+        if disponibilidad:
+            return disponibilidad[0]
+        else:
+            return None
+    except Exception as e:
+        print("Error al obtener la disponibilidad:", e)
+        pass
+
+def addCantidad(dbConnection, idDia, idHora):
+    cursor = dbConnection.cursor()
+    try:  
+        cursor.execute("SELECT cantidad FROM cantidad WHERE id_horario = %s AND id_dia_semana= %s", (idHora, idDia))
+        disponibilidad = cursor.fetchall()
+
+        for i in enumerate(disponibilidad[0]):
+            cantidad = int(i[1])
+            nuevaCantidad = cantidad + 1
+            cursor.execute("UPDATE cantidad SET cantidad = %s WHERE id_horario = %s AND id_dia_semana = %s", (nuevaCantidad, idHora, idDia))
+            dbConnection.commit()
+            return nuevaCantidad
+        #if disponibilidad:
+        # cantidad = disponibilidad[0] 
+        # nueva_cantidad = cantidad + 1
+        # cursor.execute("UPDATE cantidad SET cantidad = %s WHERE id_horario = %s AND id_dia_semana = %s", (nueva_cantidad, idHora, idDia))
+        # dbConnection.commit()  # Guardar los cambios en la base de datos
+        # return nueva_cantidad
+# Valor de cantidad
+
+        
+                 # 
+    except Exception as e:
+        print("Error al obtener la disponibilidad:", e)
+        pass
+
+# def crear_reserva(dbConnection, id_horario, id_dia_semana, dni, nombre):
+#     try:
+#         cursor = dbConnection.cursor()
+        
+#         # Verificar si la cantidad de reservas excede el límite de 15 personas
+#         cursor.execute("SELECT cantidad FROM cantidad WHERE id_horario = %s AND id_dia_semana = %s", (id_horario, id_dia_semana))
+#         cantidad_actual = cursor.fetchone()[0]
+#         if cantidad_actual >= 15:
+#             print("No se puede hacer la reserva. Se ha alcanzado el límite de 15 personas.")
+#             return
+
+#         # Insertar reserva
+#         cursor.execute("INSERT INTO reservas (id_horario, id_dia_semana, dni, nombre) VALUES (%s, %s, %s, %s)", (id_horario, id_dia_semana, dni, nombre))
+#         dbConnection.commit()
+#         print("Reserva creada exitosamente!")
+#     except psycopg2.Error as e:
+#         print("Error al crear reserva:", e)
+#         dbConnection.rollback()
+#     finally: 
+#         cursor.close()

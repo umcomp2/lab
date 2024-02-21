@@ -2,21 +2,51 @@ import argparse
 import socket
 import threading
 from postgres import *
+from celeryApp import *
+import socketserver
 
 
 def handleClient(client_socket):
+    #le doy una conexion a cada cliente para que no se interfiera con otra conexion
+    conexDB = conexionDB()
     client_address = client_socket.getpeername()
-    client_socket.send(b"Horarios disponibles: 9:00, 10:00, 16:00, 19:00\n")
-    selected_time = client_socket.recv(1024).decode().strip()
-    # Aquí iría la lógica para manejar la reserva del turno
-    # Por ahora, solo confirmaremos la reserva y enviaremos un mensaje al cliente
-    print(f"Reserva: \n-Horario: {selected_time} \n-Usuario: {client_address}")
-    message = f"Reserva confirmada para {selected_time} el {client_address}"
-    client_socket.send(message.encode())
+    #traigo los dias de la semana
+    dias = getDias(conexDB)
+    client_socket.send(str(dias).encode())
+    dataDia = client_socket.recv(1024).decode().strip()
+    selected_dia = dias[int(dataDia)]
+    indiceDia_db = selected_dia[0]
+    print("Dia elegido: \n", "-Id Dia: "+str(indiceDia_db), "\n-Dia Semana: " + str(selected_dia[1]))
+    
+    #traigo horarios
+    horario = getHorarios(conexDB)
+    client_socket.send(str(horario).encode())
+    dataHorario= client_socket.recv(1024).decode().strip()
+    selected_hora = horario[int(dataHorario)]
+    indiceHorario_db = selected_hora[0]
+    print("Horario elegido: \n", "-Id Hora: "+str(indiceHorario_db), "\n-Dia Semana: " + str(selected_hora[1]))
+   
+   #veo disponibilidad en ese dia y horario
+
+    disp = getDisponibilidad(conexDB, indiceDia_db, indiceHorario_db)
+    client_socket.send(str(disp).encode())
+    lugares = int(disp[0])
+    if lugares < 15:
+        print("hay lugares")
+        nuevo_valor = addCantidad(conexDB,indiceDia_db, indiceHorario_db)
+        print("nuevo valor: " + str(nuevo_valor))
+   
+    #dataDisp = client_socket.recv(1024).decode().strip()
+    # selected_disp = disp[int(dataDisp)]
+    # print("Cantidad de lugares disponibles: " + str(selected_disp))
+
+
+
     client_socket.close()
 
 def start_server(host, port):
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    #vincula el host con el puerto
     server.bind((host, port))
     server.listen(5)
     print(f"[INFO] Servidor escuchando en {host}:{port}...")
@@ -26,8 +56,18 @@ def start_server(host, port):
         print(f"[INFO] Conexión establecida desde {client_socket.getpeername()[0]}:{client_socket.getpeername()[1]}")
         client_handler = threading.Thread(target=handleClient, args=(client_socket,))
         client_handler.start()
+        
 
-#def reservarTurno(self):
+
+
+
+# def getDias():
+#     dias = getDiasSemana.delay().get()
+#     return dias
+
+# def enviarDias(self, dias):
+#     diasSemana = "\n".join([f"{dia['id']}: {dia['dia_semana']}\n" for d in dias])
+#     self.request.sendall(diasSemana.encode())
 
 
 
@@ -40,6 +80,20 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--port", help="port", type=int)
     args = parser.parse_args()
     conexDB = conexionDB()
+    # if conexDB:
+    #     crear_tablas(conexDB)
+    #     conexDB.close()
     start_server(args.ip, args.port)
 
    
+
+# def enviarDias(self, dias):
+#     dia_str = "\n".join([f"{diaS['id']}: {evento['nombre']}\n" for evento in eventos])
+#     self.request.sendall()
+
+# def reservarTurno(self):
+    
+    # self.request.sendall(b"Ingrese su nombre: ")
+    # nombreCliente = self.request.recv(1024).strip().decode("utf-8")
+    # self.request.sendall(b"Ingrese su dni: ")
+    # dniCliente = int(self.request.recv(1024).strip())
