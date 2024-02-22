@@ -4,12 +4,15 @@ import threading
 from postgres import *
 from celeryApp import *
 import socketserver
+import time
+import pickle
 
 
 def handleClient(client_socket):
     #le doy una conexion a cada cliente para que no se interfiera con otra conexion
     conexDB = conexionDB()
     client_address = client_socket.getpeername()
+    reserva=[]
     #traigo los dias de la semana
     dias = getDias(conexDB)
     client_socket.send(str(dias).encode())
@@ -25,25 +28,50 @@ def handleClient(client_socket):
         dataHorario= client_socket.recv(1024).decode().strip()
         selected_hora = horario[int(dataHorario)]
         indiceHorario_db = selected_hora[0]
-        print("Horario elegido: \n", "-Id Hora: "+str(indiceHorario_db), "\n-Dia Semana: " + str(selected_hora[1]))
+        print("Horario elegido: \n", "-Id Hora: "+str(indiceHorario_db), "\n-Horario " + str(selected_hora[1]))
     
     #veo disponibilidad en ese dia y horario
 
         disp = getDisponibilidad(conexDB, indiceDia_db, indiceHorario_db)
         # client_socket.send(str(disp).encode())
         lugares = int(disp[0])
+        
         if lugares < 15:
             nuevo_valor = addCantidad(conexDB,indiceDia_db, indiceHorario_db)
             message = f"Si hay lugares disponibles\n"
             client_socket.sendall(message.encode())
+            time.sleep(3)
+            #client_socket.send(b"\nAhora le pediremos algunos datos personales para terminar con la reserva\n")
+            nombre, dni = agregarReserva(client_socket, indiceHorario_db, indiceDia_db)
+            reserva.append({"Nombre":nombre, "Dni": dni, "Dia":selected_dia[1], "Horario":selected_hora[1]})
+            #Recibo nombre
+            # nombreCliente = client_socket.recv(1024).decode().strip()
+            # print("Nombre cliente: " + nombreCliente)
+            # dniCliente = client_socket.recv(1024).decode().strip()
+            # print("Dni cliente: " + dniCliente)
+            #print("Lugares Ocupados: " + str(nuevo_valor))
 
-            print("Lugares Ocupados: " + str(nuevo_valor))
             break
             #pedir nombre
         else:  
             client_socket.sendall(b"No hay lugares disponibles, elija otro!\n")  
-    
+    if reserva:
+        serializedReserva = pickle.dumps(reserva)
+        client_socket.sendall(serializedReserva)
+  
     client_socket.close()
+
+def agregarReserva(client_socket, idHora, idDia):
+    client_socket.sendall(b"Ingrese su nombre: ")
+    nombreCliente = client_socket.recv(1024).decode().strip()
+    print("Nombre del cliente: "+nombreCliente)
+    client_socket.sendall(b"Ingrese su dni: ")
+    dniCliente = client_socket.recv(1024).decode().strip()
+    print("Nombre del cliente: " + dniCliente)
+    nuevaReserva.delay(idHora, idDia, dniCliente, nombreCliente)
+    return nombreCliente, dniCliente
+
+       
 
 def start_server(host, port):
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -62,13 +90,6 @@ def start_server(host, port):
 
 
 
-# def getDias():
-#     dias = getDiasSemana.delay().get()
-#     return dias
-
-# def enviarDias(self, dias):
-#     diasSemana = "\n".join([f"{dia['id']}: {dia['dia_semana']}\n" for d in dias])
-#     self.request.sendall(diasSemana.encode())
 
 
 
@@ -88,13 +109,4 @@ if __name__ == "__main__":
 
    
 
-# def enviarDias(self, dias):
-#     dia_str = "\n".join([f"{diaS['id']}: {evento['nombre']}\n" for evento in eventos])
-#     self.request.sendall()
 
-# def reservarTurno(self):
-    
-    # self.request.sendall(b"Ingrese su nombre: ")
-    # nombreCliente = self.request.recv(1024).strip().decode("utf-8")
-    # self.request.sendall(b"Ingrese su dni: ")
-    # dniCliente = int(self.request.recv(1024).strip())

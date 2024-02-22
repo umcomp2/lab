@@ -1,7 +1,7 @@
 import argparse
 import socket
-import time
-import sys
+import pickle
+
 
 def client():
 
@@ -9,7 +9,6 @@ def client():
     #declaro los args para la conexion
     parser.add_argument("-i", "--ip", help="ip", type=str)
     parser.add_argument("-p", "--port", help="port", type=int)
-    parser.add_argument("-n", "--name", help="name", type=str)
 
     args = parser.parse_args()
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -50,7 +49,7 @@ def client():
             while validate:
                 try: 
                     selected_hora = int(input("Seleccione el indice del horario: "))-1
-                    listaDias[(selected_hora)]
+                    listaHorarios[(selected_hora)]
                     validate = False
                 except:
                     print("Indice incorrecto")
@@ -64,18 +63,20 @@ def client():
                 print(mensajeDisponibilidad)
                 break
             print(mensajeDisponibilidad)
-           
-           
-            # listaDisp = eval(disp)
-            # print("disponibilidad para ese dia y horario: " + str(listaDisp[0]))
-        #client_socket.send(str(selected_hora).encode())
 
-        # for index, lugar in enumerate(listaDisp):
-        #     print(str(index+1) + "-" + str(lugar[1]))
+        #Pedimos datos personales para completar la reserva    
+        preguntaNombre = client_socket.recv(1024).decode()
+        respuestaNombre = input(preguntaNombre)
+        client_socket.send(str(respuestaNombre).encode())
 
+        preguntaDni = client_socket.recv(1024).decode()
+        respuestaDni = input(preguntaDni)
+        client_socket.send(str(respuestaDni).encode())
 
-        # reserva_confirmada = client_socket.recv(1024).decode()
-        # print(reserva_confirmada)
+        listaReserva = client_socket.recv(4096)
+        receivedList = pickle.loads(listaReserva)
+        print("\nMI RESERVA: \n" + str(receivedList))
+
 
     except ConnectionRefusedError:
         print("[ERROR] No se pudo conectar al servidor. Asegúrate de que el servidor esté en ejecución.")

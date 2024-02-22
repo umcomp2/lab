@@ -128,6 +128,9 @@ def addCantidad(dbConnection, idDia, idHora):
         print("Error al obtener la disponibilidad:", e)
         pass
 
+
+
+
 # def crear_reserva(dbConnection, id_horario, id_dia_semana, dni, nombre):
 #     try:
 #         cursor = dbConnection.cursor()
