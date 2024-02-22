@@ -133,12 +133,13 @@ def getReservasDni (dbConnection, dni):
     try:    
         cursor = dbConnection.cursor()
         cursor.execute("""
-                SELECT reservas.id, horarios.horario AS nombre_horario, semana.dia_semana AS nombre_dia_semana, reservas.dni, reservas.nombre
+                SELECT reservas.id, horarios.horario AS nombre_horario, semana.nombre AS nombre_dia_semana, reservas.dni, reservas.nombre
                 FROM reservas
                 INNER JOIN horarios ON reservas.id_horario = horarios.id
                 INNER JOIN semana ON reservas.id_dia_semana = semana.id
                 WHERE reservas.dni = %s
             """, (dni,))
+        cursor.execute("SELECT id, id_horario,id_dia_semana FROM reservas WHERE dni = %s", (dni,))
         turno = cursor.fetchall()
         for i in turno:
             reservas.append(i)

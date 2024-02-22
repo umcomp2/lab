@@ -73,11 +73,13 @@ def client():
                 preguntaNombre = client_socket.recv(1024).decode()
                 respuestaNombre = input(preguntaNombre)
                 client_socket.send(str(respuestaNombre).encode())
-
+               
                 preguntaDni = client_socket.recv(1024).decode()
                 respuestaDni = input(preguntaDni)
-                client_socket.send(str(respuestaDni).encode())
-
+                dniSinPuntos = respuestaDni.replace('.', '')
+                client_socket.send(str(dniSinPuntos).encode())
+               
+                    
                 listaReserva = client_socket.recv(4096)
                 receivedList = pickle.loads((listaReserva))
                 print("\nRESERVA CONFIRMADA: ")
@@ -91,8 +93,11 @@ def client():
             if opcion == 2:
                 #pido y mando dni
                 print("\nUSTED HA ELEIGO LA OPCION CANCELAR TURNO\n")
-                dni = int(input("Porfavor ingrese su dni: "))
-                client_socket.send(str(dni).encode())
+                
+                dni = str(input("Porfavor ingrese su dni: "))
+                dniSinPuntos = dni.replace('.', '')
+                client_socket.send(str(dniSinPuntos).encode())
+   
                 #recibo las reseervas
                 turno = client_socket.recv(1024).decode()
                 listaTurnos = eval(turno)
