@@ -18,9 +18,9 @@ def client():
         #creacion el socket
 
         client_socket.connect((args.ip, args.port))
-        print(f"[INFO] Conexión establecida con el servidor en {args.ip}:{args.port}")
+        print(f"[INFO] Conexión establecida con el servidor PILATES UMA en {args.ip}:{args.port}")
         #string de datos de dias disponibles
-        print("\n!BIENVENIDO AL SISTEMA DE RESERVA DE TURNOS DE PILATES UMA!")
+        print("\n---!BIENVENIDO A NUESTRO SISTEMA DE RESERVA DE TURNOS!---")
         print("\nDIAS DE LA SEMANA DISPONIBLES:")
         dias_disponibles = client_socket.recv(1024).decode()
         listaDias= eval(dias_disponibles)
@@ -74,8 +74,15 @@ def client():
         client_socket.send(str(respuestaDni).encode())
 
         listaReserva = client_socket.recv(4096)
-        receivedList = pickle.loads(listaReserva)
-        print("\nMI RESERVA: \n" + str(receivedList))
+        receivedList = pickle.loads((listaReserva))
+        print("\nRESERVA CONFIRMADA: ")
+        for reserva in receivedList:
+            print("Nombre:", reserva['Nombre'])
+            print("DNI:", reserva['Dni'])
+            print("Día:", reserva['Dia'])
+            print("Horario:", reserva['Horario'])
+            print()  
+        
 
 
     except ConnectionRefusedError:

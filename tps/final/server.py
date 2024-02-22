@@ -12,6 +12,7 @@ def handleClient(client_socket):
     #le doy una conexion a cada cliente para que no se interfiera con otra conexion
     conexDB = conexionDB()
     client_address = client_socket.getpeername()
+    
     reserva=[]
     #traigo los dias de la semana
     dias = getDias(conexDB)
@@ -44,18 +45,12 @@ def handleClient(client_socket):
             #client_socket.send(b"\nAhora le pediremos algunos datos personales para terminar con la reserva\n")
             nombre, dni = agregarReserva(client_socket, indiceHorario_db, indiceDia_db)
             reserva.append({"Nombre":nombre, "Dni": dni, "Dia":selected_dia[1], "Horario":selected_hora[1]})
-            #Recibo nombre
-            # nombreCliente = client_socket.recv(1024).decode().strip()
-            # print("Nombre cliente: " + nombreCliente)
-            # dniCliente = client_socket.recv(1024).decode().strip()
-            # print("Dni cliente: " + dniCliente)
-            #print("Lugares Ocupados: " + str(nuevo_valor))
-
             break
-            #pedir nombre
+            
         else:  
             client_socket.sendall(b"No hay lugares disponibles, elija otro!\n")  
     if reserva:
+        #uso pickle para serializar mi lista
         serializedReserva = pickle.dumps(reserva)
         client_socket.sendall(serializedReserva)
   
@@ -64,7 +59,7 @@ def handleClient(client_socket):
 def agregarReserva(client_socket, idHora, idDia):
     client_socket.sendall(b"Ingrese su nombre: ")
     nombreCliente = client_socket.recv(1024).decode().strip()
-    print("Nombre del cliente: "+nombreCliente)
+    print("Nombre del cliente: "+ nombreCliente)
     client_socket.sendall(b"Ingrese su dni: ")
     dniCliente = client_socket.recv(1024).decode().strip()
     print("Nombre del cliente: " + dniCliente)
