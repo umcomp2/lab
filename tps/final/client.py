@@ -21,6 +21,8 @@ def client():
         client_socket.connect((args.ip, args.port))
         print(f"[INFO] Conexión establecida con el servidor en {args.ip}:{args.port}")
         #string de datos de dias disponibles
+        print("\n!BIENVENIDO AL SISTEMA DE RESERVA DE TURNOS DE PILATES UMA!")
+        print("\nDIAS DE LA SEMANA DISPONIBLES:")
         dias_disponibles = client_socket.recv(1024).decode()
         listaDias= eval(dias_disponibles)
         for index, dia in enumerate(listaDias):
@@ -36,28 +38,36 @@ def client():
                 print("Indice incorrecto") 
                 
         client_socket.send(str(selected_dias).encode())
-
+        while True:
         #string de horarios de dias disponibles
-        horarios_disponibles = client_socket.recv(1024).decode()
-        listaHorarios = eval(horarios_disponibles)
-        for index, hora in enumerate(listaHorarios):
-            print(str(index+1) + "-" + str(hora[1]))
-        validate = True
+            print("\nHORARIOS DE LA SEMANA DISPONIBLES: ")
+            horarios_disponibles = client_socket.recv(1024).decode()
+            listaHorarios = eval(horarios_disponibles)
+            for index, hora in enumerate(listaHorarios):
+                print(str(index+1) + "-" + str(hora[1]))
+            validate = True
 
-        while validate:
-            try: 
-                selected_hora = int(input("Seleccione el indice del horario: "))-1
-                listaDias[(selected_hora)]
-                validate = False
-            except:
-                print("Indice incorrecto")
+            while validate:
+                try: 
+                    selected_hora = int(input("Seleccione el indice del horario: "))-1
+                    listaDias[(selected_hora)]
+                    validate = False
+                except:
+                    print("Indice incorrecto")
 
-        client_socket.send(str(selected_hora).encode())
+            client_socket.send(str(selected_hora).encode())
+            
 
-        #traigo disponibilidad
-        disp = client_socket.recv(1024).decode()
-        listaDisp = eval(disp)
-        print("disponibilidad para ese dia y horario: " + str(listaDisp[0]))
+            #veo disponibilidad
+            mensajeDisponibilidad = client_socket.recv(1024).decode()
+            if mensajeDisponibilidad.startswith("Si hay"):
+                print(mensajeDisponibilidad)
+                break
+            print(mensajeDisponibilidad)
+           
+           
+            # listaDisp = eval(disp)
+            # print("disponibilidad para ese dia y horario: " + str(listaDisp[0]))
         #client_socket.send(str(selected_hora).encode())
 
         # for index, lugar in enumerate(listaDisp):

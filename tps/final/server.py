@@ -19,29 +19,30 @@ def handleClient(client_socket):
     print("Dia elegido: \n", "-Id Dia: "+str(indiceDia_db), "\n-Dia Semana: " + str(selected_dia[1]))
     
     #traigo horarios
-    horario = getHorarios(conexDB)
-    client_socket.send(str(horario).encode())
-    dataHorario= client_socket.recv(1024).decode().strip()
-    selected_hora = horario[int(dataHorario)]
-    indiceHorario_db = selected_hora[0]
-    print("Horario elegido: \n", "-Id Hora: "+str(indiceHorario_db), "\n-Dia Semana: " + str(selected_hora[1]))
-   
-   #veo disponibilidad en ese dia y horario
+    while True:
+        horario = getHorarios(conexDB)
+        client_socket.send(str(horario).encode())
+        dataHorario= client_socket.recv(1024).decode().strip()
+        selected_hora = horario[int(dataHorario)]
+        indiceHorario_db = selected_hora[0]
+        print("Horario elegido: \n", "-Id Hora: "+str(indiceHorario_db), "\n-Dia Semana: " + str(selected_hora[1]))
+    
+    #veo disponibilidad en ese dia y horario
 
-    disp = getDisponibilidad(conexDB, indiceDia_db, indiceHorario_db)
-    client_socket.send(str(disp).encode())
-    lugares = int(disp[0])
-    if lugares < 15:
-        print("hay lugares")
-        nuevo_valor = addCantidad(conexDB,indiceDia_db, indiceHorario_db)
-        print("nuevo valor: " + str(nuevo_valor))
-   
-    #dataDisp = client_socket.recv(1024).decode().strip()
-    # selected_disp = disp[int(dataDisp)]
-    # print("Cantidad de lugares disponibles: " + str(selected_disp))
+        disp = getDisponibilidad(conexDB, indiceDia_db, indiceHorario_db)
+        # client_socket.send(str(disp).encode())
+        lugares = int(disp[0])
+        if lugares < 15:
+            nuevo_valor = addCantidad(conexDB,indiceDia_db, indiceHorario_db)
+            message = f"Si hay lugares disponibles\n"
+            client_socket.sendall(message.encode())
 
-
-
+            print("Lugares Ocupados: " + str(nuevo_valor))
+            break
+            #pedir nombre
+        else:  
+            client_socket.sendall(b"No hay lugares disponibles, elija otro!\n")  
+    
     client_socket.close()
 
 def start_server(host, port):

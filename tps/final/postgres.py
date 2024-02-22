@@ -123,16 +123,7 @@ def addCantidad(dbConnection, idDia, idHora):
             cursor.execute("UPDATE cantidad SET cantidad = %s WHERE id_horario = %s AND id_dia_semana = %s", (nuevaCantidad, idHora, idDia))
             dbConnection.commit()
             return nuevaCantidad
-        #if disponibilidad:
-        # cantidad = disponibilidad[0] 
-        # nueva_cantidad = cantidad + 1
-        # cursor.execute("UPDATE cantidad SET cantidad = %s WHERE id_horario = %s AND id_dia_semana = %s", (nueva_cantidad, idHora, idDia))
-        # dbConnection.commit()  # Guardar los cambios en la base de datos
-        # return nueva_cantidad
-# Valor de cantidad
-
-        
-                 # 
+ 
     except Exception as e:
         print("Error al obtener la disponibilidad:", e)
         pass
