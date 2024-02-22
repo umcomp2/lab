@@ -25,6 +25,23 @@ def nuevaReserva(id_horario, id_dia_semana, dni, nombre):
     finally:
         cursor.close()
         dbConnection.close()
+
+@app.task
+def cancelarTurno(id_reserva):
+    dbConnection = conexionDB()
+    cursor = dbConnection.cursor()
+    try:
+        
+        cursor.execute("DELETE FROM reservas WHERE id=%s",( id_reserva,))
+        dbConnection.commit()
+        
+        
+    except Exception as e:
+        print("Error al hacer la cancelar el turno: ", str(e))
+    finally:
+        cursor.close()
+        dbConnection.close()
+
    
 
 

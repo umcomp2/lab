@@ -21,69 +21,103 @@ def client():
         print(f"[INFO] Conexión establecida con el servidor PILATES UMA en {args.ip}:{args.port}")
         #string de datos de dias disponibles
         print("\n---!BIENVENIDO A NUESTRO SISTEMA DE RESERVA DE TURNOS!---")
-        print("\nDIAS DE LA SEMANA DISPONIBLES:")
-        dias_disponibles = client_socket.recv(1024).decode()
-        listaDias= eval(dias_disponibles)
-        for index, dia in enumerate(listaDias):
-            print(str(index+1) + "-" + str(dia[1]))
-        validate = True
+        print("\n1.SACAR TURNO\n2.CANCELAR TURNO")
+        opcion = int(input("\nElegir 1 o 2: "))
+        client_socket.send(str(opcion).encode())
+        while True: 
+            if opcion == 1:
+                print("\nDIAS DE LA SEMANA DISPONIBLES:")
+                dias_disponibles = client_socket.recv(1024).decode()
+                listaDias= eval(dias_disponibles)
+                for index, dia in enumerate(listaDias):
+                    print(str(index+1) + "-" + str(dia[1]))
+                validate = True
 
-        while validate:
-            try: 
-                selected_dias = int(input("Seleccione el indice del dia: "))-1
-                listaDias[(selected_dias)]
-                validate = False
-            except:
-                print("Indice incorrecto") 
-                
-        client_socket.send(str(selected_dias).encode())
-        while True:
-        #string de horarios de dias disponibles
-            print("\nHORARIOS DE LA SEMANA DISPONIBLES: ")
-            horarios_disponibles = client_socket.recv(1024).decode()
-            listaHorarios = eval(horarios_disponibles)
-            for index, hora in enumerate(listaHorarios):
-                print(str(index+1) + "-" + str(hora[1]))
-            validate = True
+                while validate:
+                    try: 
+                        selected_dias = int(input("Seleccione el indice del dia: "))-1
+                        listaDias[(selected_dias)]
+                        validate = False
+                    except:
+                        print("Indice incorrecto") 
+                        
+                client_socket.send(str(selected_dias).encode())
+                while True:
+                #string de horarios de dias disponibles
+                    print("\nHORARIOS DE LA SEMANA DISPONIBLES: ")
+                    horarios_disponibles = client_socket.recv(1024).decode()
+                    listaHorarios = eval(horarios_disponibles)
+                    for index, hora in enumerate(listaHorarios):
+                        print(str(index+1) + "-" + str(hora[1]))
+                    validate = True
 
-            while validate:
-                try: 
-                    selected_hora = int(input("Seleccione el indice del horario: "))-1
-                    listaHorarios[(selected_hora)]
-                    validate = False
-                except:
-                    print("Indice incorrecto")
+                    while validate:
+                        try: 
+                            selected_hora = int(input("Seleccione el indice del horario: "))-1
+                            listaHorarios[(selected_hora)]
+                            validate = False
+                        except:
+                            print("Indice incorrecto")
 
-            client_socket.send(str(selected_hora).encode())
-            
+                    client_socket.send(str(selected_hora).encode())
+                    
 
-            #veo disponibilidad
-            mensajeDisponibilidad = client_socket.recv(1024).decode()
-            if mensajeDisponibilidad.startswith("Si hay"):
-                print(mensajeDisponibilidad)
+                    #veo disponibilidad
+                    mensajeDisponibilidad = client_socket.recv(1024).decode()
+                    if mensajeDisponibilidad.startswith("Si hay"):
+                        print(mensajeDisponibilidad)
+                        break
+                    print(mensajeDisponibilidad)
+
+                #Pedimos datos personales para completar la reserva    
+                preguntaNombre = client_socket.recv(1024).decode()
+                respuestaNombre = input(preguntaNombre)
+                client_socket.send(str(respuestaNombre).encode())
+
+                preguntaDni = client_socket.recv(1024).decode()
+                respuestaDni = input(preguntaDni)
+                client_socket.send(str(respuestaDni).encode())
+
+                listaReserva = client_socket.recv(4096)
+                receivedList = pickle.loads((listaReserva))
+                print("\nRESERVA CONFIRMADA: ")
+                for reserva in receivedList:
+                    print("Nombre:", reserva['Nombre'])
+                    print("DNI:", reserva['Dni'])
+                    print("Día:", reserva['Dia'])
+                    print("Horario:", reserva['Horario'])
+                    print()  
                 break
-            print(mensajeDisponibilidad)
+            if opcion == 2:
+                #pido y mando dni
+                print("\nUSTED HA ELEIGO LA OPCION CANCELAR TURNO\n")
+                dni = int(input("Porfavor ingrese su dni: "))
+                client_socket.send(str(dni).encode())
+                #recibo las reseervas
+                turno = client_socket.recv(1024).decode()
+                listaTurnos = eval(turno)
+                print(str(listaTurnos[0][4]).upper()+" ESTOS SON TUS TURNOS:")
+                for index, t in enumerate(listaTurnos):
+                        print(str(index+1) + "-" +"Dia: " +str(t[2])+ "-" +"Hora: " +str(t[1]))
 
-        #Pedimos datos personales para completar la reserva    
-        preguntaNombre = client_socket.recv(1024).decode()
-        respuestaNombre = input(preguntaNombre)
-        client_socket.send(str(respuestaNombre).encode())
+                validate = True
 
-        preguntaDni = client_socket.recv(1024).decode()
-        respuestaDni = input(preguntaDni)
-        client_socket.send(str(respuestaDni).encode())
+                while validate:
+                    try: 
+                        selected_turno = int(input("Seleccione el indice del turno que quiera eliminar: "))
+                        idReserva = listaTurnos[selected_turno-1][0]
+                        listaTurnos[(selected_turno)]
+                        validate = False
+                    except:
+                        print("Indice incorrecto. Elija otro")
 
-        listaReserva = client_socket.recv(4096)
-        receivedList = pickle.loads((listaReserva))
-        print("\nRESERVA CONFIRMADA: ")
-        for reserva in receivedList:
-            print("Nombre:", reserva['Nombre'])
-            print("DNI:", reserva['Dni'])
-            print("Día:", reserva['Dia'])
-            print("Horario:", reserva['Horario'])
-            print()  
-        
-
+                client_socket.send(str(idReserva).encode())
+                respuestaCancelacion = client_socket.recv(1024).decode()
+                print(respuestaCancelacion)
+                break
+                
+            else:
+                print("Esa no es una opcion, elija otra")
 
     except ConnectionRefusedError:
         print("[ERROR] No se pudo conectar al servidor. Asegúrate de que el servidor esté en ejecución.")

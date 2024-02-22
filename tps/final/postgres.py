@@ -128,26 +128,36 @@ def addCantidad(dbConnection, idDia, idHora):
         print("Error al obtener la disponibilidad:", e)
         pass
 
-
-
-
-# def crear_reserva(dbConnection, id_horario, id_dia_semana, dni, nombre):
-#     try:
-#         cursor = dbConnection.cursor()
+def getReservasDni (dbConnection, dni):
+    reservas = []
+    try:    
+        cursor = dbConnection.cursor()
+        cursor.execute("""
+                SELECT reservas.id, horarios.horario AS nombre_horario, semana.dia_semana AS nombre_dia_semana, reservas.dni, reservas.nombre
+                FROM reservas
+                INNER JOIN horarios ON reservas.id_horario = horarios.id
+                INNER JOIN semana ON reservas.id_dia_semana = semana.id
+                WHERE reservas.dni = %s
+            """, (dni,))
+        turno = cursor.fetchall()
+        for i in turno:
+            reservas.append(i)
         
-#         # Verificar si la cantidad de reservas excede el límite de 15 personas
-#         cursor.execute("SELECT cantidad FROM cantidad WHERE id_horario = %s AND id_dia_semana = %s", (id_horario, id_dia_semana))
-#         cantidad_actual = cursor.fetchone()[0]
-#         if cantidad_actual >= 15:
-#             print("No se puede hacer la reserva. Se ha alcanzado el límite de 15 personas.")
-#             return
+        return reservas
+        
+        # for i in enumerate(turno[0]):
+        #     idReserva = i[0]
+        #     hora = i[1]
+        #     dia = i[2]
+        # cursor.execute("SELECT nombre FROM semana WHERE id = %s", (dia,))
+        # diaReserva = cursor.fetchall()
+        # cursor.execute("SELECT horario FROM horarios WHERE id = %s", (hora,))
+        # horaReserva = cursor.fetchall()
+        # return turno, diaReserva, horaReserva
+    
+    except Exception as e:
+        print("Error al obtener la disponibilidad:", e)
+        pass
 
-#         # Insertar reserva
-#         cursor.execute("INSERT INTO reservas (id_horario, id_dia_semana, dni, nombre) VALUES (%s, %s, %s, %s)", (id_horario, id_dia_semana, dni, nombre))
-#         dbConnection.commit()
-#         print("Reserva creada exitosamente!")
-#     except psycopg2.Error as e:
-#         print("Error al crear reserva:", e)
-#         dbConnection.rollback()
-#     finally: 
-#         cursor.close()
+
+
