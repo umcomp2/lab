@@ -25,10 +25,12 @@ def new_event(nombre_evento, sectores):
         connection_db.commit()
 
         print("Evento agregado con éxito")
+        return f"Evento {nombre_evento} agregado con éxito"
 
     except Exception as e:
         print("Error al agregar el evento:", e)
         connection_db.rollback()
+        return "Error al agregar evento"
 
     finally:
         cursor.close()

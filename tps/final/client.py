@@ -28,10 +28,13 @@ try:
         if respuesta_si_no == 1:
             while True:
                 pregunta_servidor = sock.recv(1024).decode()
+                
                 if pregunta_servidor.startswith("Ingrese "):
                     respuesta_usuario = input(pregunta_servidor)
-                    sock.sendall(respuesta_usuario.encode())
+                    sock.sendall(respuesta_usuario.encode())    
                 else:
+                    print("\n" + pregunta_servidor)
+                    exit(0)
                     break
 
     #Espero respuesta del serv. para mostrar por terminal
@@ -50,7 +53,10 @@ try:
             rta = input("").encode()
             sock.sendall(rta)
            
-
+except Exception as e:
+    print("Error:", e)
+finally:
+    sock.close()
 
                 
     # while True:
@@ -69,7 +75,3 @@ try:
         
 
 
-except Exception as e:
-    print("Error:", e)
-finally:
-    sock.close()

@@ -21,7 +21,9 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
         if tipo_usuario == 'admin':
                 time.sleep(1)
                 print("----Agregando evento----")
-                self.agregar_evento()
+                msg = self.agregar_evento()
+                print("----"+ msg +"----")
+                self.request.sendall(msg.encode())
         else:
             self.request.sendall(b"- Presione 1 para ver eventos disponibles \n - Presione 2 para ver sus compras")
             respuesta = self.request.recv(1024).strip().decode()
@@ -88,6 +90,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
             print(f"Mensaje recibido de hilo {cur_th}: {data}")
             
     def agregar_evento(self):
+        
         self.request.sendall(b"Ingrese el nombre del evento: ")
         nombre_evento = self.request.recv(1024).strip().decode("utf-8")
 
@@ -104,8 +107,11 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
             # Esperar la respuesta del cliente antes de enviar la siguiente pregunta
             capacidad_sector = int(self.request.recv(1024).strip())
             sectores.append({"nombre": nombre_sector, "capacidad": capacidad_sector})
+        
+        evento = new_event.delay(nombre_evento, sectores).get()
+        return evento
+        
 
-        new_event.delay(nombre_evento, sectores)
            
     def obtener_eventos(self):
         eventos = get_events.delay().get()
