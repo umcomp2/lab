@@ -97,10 +97,10 @@ def client():
                 dni = str(input("Porfavor ingrese su dni: "))
                 dniSinPuntos = dni.replace('.', '')
                 client_socket.send(str(dniSinPuntos).encode())
-   
                 #recibo las reseervas
                 turno = client_socket.recv(1024).decode()
                 listaTurnos = eval(turno)
+                print(listaTurnos)
                 print(str(listaTurnos[0][4]).upper()+" ESTOS SON TUS TURNOS:")
                 for index, t in enumerate(listaTurnos):
                         print(str(index+1) + "-" +"Dia: " +str(t[2])+ "-" +"Hora: " +str(t[1]))

@@ -128,36 +128,51 @@ def addCantidad(dbConnection, idDia, idHora):
         print("Error al obtener la disponibilidad:", e)
         pass
 
+def dniExiste(dbConnection, dni):
+    validate=True
+    try:    
+        cursor = dbConnection.cursor()
+        cursor.execute("SELECT * FROM reservas WHERE dni = %s", (dni,))
+        reservas = cursor.fetchall()
+        if len(reservas) > 0:
+            print("Se encontraron reservas con el DNI especificado.")
+            for reserva in reservas:
+                print(reserva) 
+            return validate     
+                 # Puedes personalizar cómo quieres mostrar los datos de la reserva
+        else:
+            print("No se encontraron reservas con el DNI especificado.")
+            validate = False
+            return validate
+        
+    except Exception as error:
+        print("Error al conectar a la base de datos PostgreSQL:", error)
+
+
+
+
 def getReservasDni (dbConnection, dni):
     reservas = []
     try:    
         cursor = dbConnection.cursor()
         cursor.execute("""
-                SELECT reservas.id, horarios.horario AS nombre_horario, semana.nombre AS nombre_dia_semana, reservas.dni, reservas.nombre
-                FROM reservas
-                INNER JOIN horarios ON reservas.id_horario = horarios.id
-                INNER JOIN semana ON reservas.id_dia_semana = semana.id
-                WHERE reservas.dni = %s
-            """, (dni,))
-        cursor.execute("SELECT id, id_horario,id_dia_semana FROM reservas WHERE dni = %s", (dni,))
+                SELECT reservas.id,
+                (SELECT horario FROM horarios WHERE id = reservas.id_horario) AS nombre_horario,
+                (SELECT dia_semana FROM semana WHERE id = reservas.id_dia_semana) AS nombre_dia_semana,
+                reservas.dni,
+                reservas.nombre
+            FROM reservas
+            WHERE reservas.dni = %s
+        """, (dni,))
         turno = cursor.fetchall()
         for i in turno:
             reservas.append(i)
         
         return reservas
-        
-        # for i in enumerate(turno[0]):
-        #     idReserva = i[0]
-        #     hora = i[1]
-        #     dia = i[2]
-        # cursor.execute("SELECT nombre FROM semana WHERE id = %s", (dia,))
-        # diaReserva = cursor.fetchall()
-        # cursor.execute("SELECT horario FROM horarios WHERE id = %s", (hora,))
-        # horaReserva = cursor.fetchall()
-        # return turno, diaReserva, horaReserva
+
     
     except Exception as e:
-        print("Error al obtener la disponibilidad:", e)
+        print("Error al obtener las reservas:", e)
         pass
 
 
