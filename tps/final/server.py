@@ -19,16 +19,14 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
         print(f"Nuevo cliente conectado como {tipo_usuario}" + " Th: " + str(cur_th) )
 
         if tipo_usuario == 'admin':
+                time.sleep(1)
                 print("----Agregando evento----")
-                # time.sleep(1)s
                 self.agregar_evento()
         else:
             self.request.sendall(b"- Presione 1 para ver eventos disponibles \n - Presione 2 para ver sus compras")
-            respuesta = self.request.recv(1024).strip()
-            respuesta_descerializada = pickle.loads(respuesta)
-            print("asd")
-            print(respuesta_descerializada)
-            if respuesta_descerializada == b"1":
+            respuesta = self.request.recv(1024).strip().decode()
+           
+            if respuesta == "1":
                 while True:
                     eventos = self.obtener_eventos()
                     print("---Buscando eventos---")
@@ -36,10 +34,9 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                     print("---Eventos encontrados---")
                     self.enviar_eventos(eventos)
                     self.request.sendall(b"Ingrese el nro del evento que desee ver las entradas disponibles: ")
-                    id_evento = self.request.recv(1024).strip()
-                    id_evento_descerializado = pickle.loads(id_evento)
+                    id_evento = self.request.recv(1024).strip().decode()
                     print("---Buscando entradas disponibles---")
-                    sectores = self.obtener_sectores(id_evento_descerializado.decode())
+                    sectores = self.obtener_sectores(id_evento)
                     self.enviar_sectores(sectores)
                     print("---Entradas disponibles encontradas---\n")
 
@@ -56,6 +53,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                     self.request.sendall(b"Desea realizar otra compra? (si/no): ")
                     respuesta = self.request.recv(1024).strip().decode()
                     if respuesta.lower() != 'si':
+                        self.request.sendall(b"Gracias por su compra!")
                         break 
                     
             else:
@@ -71,12 +69,12 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                     if compras:
                         mensajes = []
                         for compra in compras:
-                            print(compras)
                             evento_nombre, sector_nombre, cantidad_entradas = compra
                             mensaje_respuesta = f"Evento: {evento_nombre.upper()} - Sector: {sector_nombre} - Entradas compradas {cantidad_entradas} \n"  
                             mensajes.append(mensaje_respuesta)
                         mensajes_concatenados = ''.join(mensajes) 
                         self.request.sendall(mensajes_concatenados.encode())
+                        self.request.sendall(b"Gracias por su compra!")
                         # self.request.close()
                 except:
                     self.request.sendall(b"No se encontraron compras para el DNI proporcionado.")

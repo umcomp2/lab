@@ -40,13 +40,16 @@ try:
 
         if data.startswith(b"INFO"):
             print(data.decode())
+
+        elif data.startswith(b"Gracias por su compra"):
+            print(data)
+            exit(0)
     
         else:
             print("---Respuesta del servidor----\n", data.decode())
             rta = input("").encode()
-            serializado = pickle.dumps(rta)
-            sock.sendall(serializado)
-            print(serializado)
+            sock.sendall(rta)
+           
 
 
                 
