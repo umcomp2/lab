@@ -61,20 +61,32 @@ def handleClient(client_socket):
 
     #opcion: CANCELAR TURNO
     if selectedOpcion == 2:
-        #traigo dni
-        dniCliente = client_socket.recv(1024).decode().strip()
-        #llamo funcion para obtener reservas del cliente y lo mando
-        turno = getReservasDni(conexDB, dniCliente)
-        client_socket.send(str(turno).encode())
-        dataTurno = client_socket.recv(1024).decode().strip()
-        print("opcion "+ dataTurno)
-        cancelarReserva(client_socket, dataTurno)
-        client_socket.send(b"Turno cancelado!")
-        print("Turno eliminado correctamente")
+        validate = True
+        while validate:
+            #1. recibo dni del servidor
+            dniCliente = client_socket.recv(1024).decode().strip()
+            #2. me fijo que exista el dni
+            existeDni = dniExiste(conexDB, dniCliente)
+            client_socket.send(str(existeDni).encode())
+            #2.1 existe dni?
+            if existeDni == True:
+                #3. llamo funcion para obtener reservas del cliente
+                turno = getReservasDni(conexDB, dniCliente)
+                #3.1 mando las reservas al cliente
+                client_socket.send(str(turno).encode())
+                #4. cliente manda el id de la reserva para eliminar
+                dataTurno = client_socket.recv(1024).decode().strip()
+                print("opcion "+ dataTurno)
+                cancelarReserva(client_socket, dataTurno)
+                client_socket.send(b"Turno cancelado!")
+                print("Turno eliminado correctamente")
+                validate = False
+            else:
+                print("dni no existe")
+            
 
-
-        #cancelarReserva(client_socket)
-        
+            #cancelarReserva(client_socket)
+            
 
 def agregarReserva(client_socket, idHora, idDia):
     client_socket.sendall(b"Ingrese su nombre: ")

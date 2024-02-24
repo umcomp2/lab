@@ -91,38 +91,48 @@ def client():
                     print()  
                 break
             if opcion == 2:
-                #pido y mando dni
+                
                 print("\nUSTED HA ELEIGO LA OPCION CANCELAR TURNO\n")
-                
-                dni = str(input("Porfavor ingrese su dni: "))
-                dniSinPuntos = dni.replace('.', '')
-                client_socket.send(str(dniSinPuntos).encode())
-                #recibo las reseervas
-                turno = client_socket.recv(1024).decode()
-                listaTurnos = eval(turno)
-                print(listaTurnos)
-                print(str(listaTurnos[0][4]).upper()+" ESTOS SON TUS TURNOS:")
-                for index, t in enumerate(listaTurnos):
-                        print(str(index+1) + "-" +"Dia: " +str(t[2])+ "-" +"Hora: " +str(t[1]))
+                n = True
+                while n:
+                #1. pido y mando dni
+                    dni = str(input("Porfavor ingrese su dni para ver sus turnos: "))
+                    dniSinPuntos = dni.replace('.', '')
+                    client_socket.send(str(dniSinPuntos).encode())
+                    #2. Recibo si existe o no el dni
+                    existe = client_socket.recv(1024).decode()
+                    print("existe?: " + existe)
+                     #2.1 existe dni?
+                    if existe == "True": 
+                        #3.1 recibo las reseervas del servidor
+                        turno = client_socket.recv(1024).decode()
+                        listaTurnos = eval(turno)
+                        print(listaTurnos)
+                        print(str(listaTurnos[0][4]).upper()+" ESTOS SON TUS TURNOS:")
+                        for index, t in enumerate(listaTurnos):
+                                print(str(index+1) + "-" +"Dia: " +str(t[2])+ " -" +"Hora: " +str(t[1]))
 
-                validate = True
+                        validate = True
+                        #El cliente elige el turno para eliminar
+                        while validate:
+                            try: 
+                                selected_turno = int(input("Seleccione el indice del turno que quiera eliminar: "))-1
+                                idReserva = listaTurnos[selected_turno][0]
+                                listaTurnos[(selected_turno)]
+                                validate = False
+                            except:
+                                print("Indice incorrecto. Elija otro")
+                        #4. cliente manda el indie de reserva
+                        client_socket.send(str(idReserva).encode())
+                        respuestaCancelacion = client_socket.recv(1024).decode()
+                        print(respuestaCancelacion)
+                        n=False
 
-                while validate:
-                    try: 
-                        selected_turno = int(input("Seleccione el indice del turno que quiera eliminar: "))
-                        idReserva = listaTurnos[selected_turno-1][0]
-                        listaTurnos[(selected_turno)]
-                        validate = False
-                    except:
-                        print("Indice incorrecto. Elija otro")
-
-                client_socket.send(str(idReserva).encode())
-                respuestaCancelacion = client_socket.recv(1024).decode()
-                print(respuestaCancelacion)
-                break
-                
+                    else: 
+                        print("Dni invalido. Seleccione otro!")
+                break       
             else:
-                print("Esa no es una opcion, elija otra")
+                print("Esa no es una opcion!, Elegir otra..")
 
     except ConnectionRefusedError:
         print("[ERROR] No se pudo conectar al servidor. Asegúrate de que el servidor esté en ejecución.")
