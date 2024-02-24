@@ -125,9 +125,29 @@ def addCantidad(dbConnection, idDia, idHora):
             return nuevaCantidad
  
     except Exception as e:
-        print("Error al obtener la disponibilidad:", e)
+        print("Error al disminuir la disponibilidad:", e)
         pass
 
+def eliminarCantidad(dbConnection, idReserva):
+    cursor = dbConnection.cursor()
+    try:  
+        cursor.execute("SELECT id_horario, id_dia_semana FROM reservas WHERE id = %s", (idReserva,))
+        reservaId= cursor.fetchone()
+        idHora, idDia = reservaId
+        cursor.execute("SELECT cantidad FROM cantidad WHERE id_horario = %s AND id_dia_semana= %s", (idHora, idDia))
+        disponibilidad = cursor.fetchall()
+
+        for i in enumerate(disponibilidad[0]):
+            cantidad = int(i[1])
+            nuevaCantidad = cantidad - 1
+            cursor.execute("UPDATE cantidad SET cantidad = %s WHERE id_horario = %s AND id_dia_semana = %s", (nuevaCantidad, idHora, idDia))
+            dbConnection.commit()
+            print("aumento de disponibilidad")
+            return nuevaCantidad
+ 
+    except Exception as e:
+        print("Error al aumentar la disponibilidad:", e)
+        pass
 def dniExiste(dbConnection, dni):
     validate=True
     try:    
@@ -166,6 +186,7 @@ def getReservasDni (dbConnection, dni):
         """, (dni,))
         turno = cursor.fetchall()
         for i in turno:
+
             reservas.append(i)
         
         return reservas

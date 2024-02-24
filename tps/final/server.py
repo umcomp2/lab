@@ -79,10 +79,11 @@ def handleClient(client_socket):
                 client_socket.send(str(turno).encode())
                 #4. cliente manda el id de la reserva para eliminar
                 dataTurno = client_socket.recv(1024).decode().strip()
-                print("opcion "+ dataTurno)
+                print("Id reserva ha eliminar "+ dataTurno)
                 cancelarReserva(client_socket, dataTurno)
                 client_socket.send(b"Turno cancelado!")
                 print("Turno eliminado correctamente")
+                eliminarCantidad(conexDB, dataTurno)
                 validate = False
             else:
                 print("dni no existe")
