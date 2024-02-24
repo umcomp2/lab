@@ -19,11 +19,15 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
         print(f"Nuevo cliente conectado como {tipo_usuario}" + " Th: " + str(cur_th) )
 
         if tipo_usuario == 'admin':
+            respuesta_si_no_serilizada = self.request.recv(1024)
+            respuesta_si_no_descerializada = pickle.loads(respuesta_si_no_serilizada)
+            if respuesta_si_no_descerializada == 1:
                 time.sleep(1)
                 print("----Agregando evento----")
                 msg = self.agregar_evento()
                 print("----"+ msg +"----")
                 self.request.sendall(msg.encode())
+
         else:
             self.request.sendall(b"- Presione 1 para ver eventos disponibles \n - Presione 2 para ver sus compras")
             respuesta = self.request.recv(1024).strip().decode()
@@ -63,23 +67,27 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 # respuesta_dni = self.request.recv(1024).strip().decode()
                 # compras = self.obtener_compras(respuesta_dni)
                 # self.enviar_compras(compras)
-                self.request.sendall(b"Ingrese su numero de DNI: ")
-                dni = self.request.recv(1024).strip().decode()
-                print(f"----- Buscando compras para DNI: {dni} -----")
-                compras = buscar_compras_por_dni.delay(dni).get()
-                try:
-                    if compras:
-                        mensajes = []
-                        for compra in compras:
-                            evento_nombre, sector_nombre, cantidad_entradas = compra
-                            mensaje_respuesta = f"Evento: {evento_nombre.upper()} - Sector: {sector_nombre} - Entradas compradas {cantidad_entradas} \n"  
-                            mensajes.append(mensaje_respuesta)
-                        mensajes_concatenados = ''.join(mensajes) 
-                        self.request.sendall(mensajes_concatenados.encode())
-                        self.request.sendall(b"Gracias por su compra!")
-                        # self.request.close()
-                except:
-                    self.request.sendall(b"No se encontraron compras para el DNI proporcionado.")
+                contador = 0
+                while contador == 0:
+                    self.request.sendall(b"Ingrese su numero de DNI: ")
+                    dni = self.request.recv(1024).strip().decode()
+                    print(f"----- Buscando compras para DNI: {dni} -----")
+               
+                    compras = buscar_compras_por_dni.delay(dni).get()
+                    try:
+                        if compras:
+                            mensajes = []
+                            for compra in compras:
+                                evento_nombre, sector_nombre, cantidad_entradas = compra
+                                mensaje_respuesta = f"Evento: {evento_nombre.upper()} - Sector: {sector_nombre} - Entradas compradas {cantidad_entradas} \n"  
+                                mensajes.append(mensaje_respuesta)
+                            mensajes_concatenados = ''.join(mensajes) 
+                            self.request.sendall(mensajes_concatenados.encode())
+                            self.request.sendall(b"Gracias por su compra!")
+                            contador = 1
+                            # self.request.close()
+                    except:
+                        self.request.sendall(b"No se encontraron compras para el DNI proporcionado.")
 
         while True:
             data = self.request.recv(1024).strip()

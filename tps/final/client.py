@@ -25,6 +25,8 @@ try:
     
     if msg_rol == "admin":
         respuesta_si_no = int(input("Desea agregar un evento? 1(SI) 2(NO): "))
+        respuesta_si_no_serializada = pickle.dumps(respuesta_si_no)
+        sock.sendall(respuesta_si_no_serializada)
         if respuesta_si_no == 1:
             while True:
                 pregunta_servidor = sock.recv(1024).decode()
@@ -35,7 +37,13 @@ try:
                 else:
                     print("\n" + pregunta_servidor)
                     exit(0)
-                    break
+        else:
+            exit(0)
+            # while True:
+            #     data = sock.recv(1024)
+            #     print("---Respuesta del servidor----\n", data.decode())
+            #     rta = input("").encode()
+            #     sock.sendall(rta)
 
     #Espero respuesta del serv. para mostrar por terminal
     while True:
