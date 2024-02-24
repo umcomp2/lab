@@ -4,7 +4,6 @@ import pickle
 
 
 def client():
-
     parser = argparse.ArgumentParser()
     #declaro los args para la conexion
     parser.add_argument("-i", "--ip", help="ip", type=str)
@@ -26,23 +25,25 @@ def client():
         client_socket.send(str(opcion).encode())
         while True: 
             if opcion == 1:
-                print("\nDIAS DE LA SEMANA DISPONIBLES:")
-                dias_disponibles = client_socket.recv(1024).decode()
-                listaDias= eval(dias_disponibles)
-                for index, dia in enumerate(listaDias):
-                    print(str(index+1) + "-" + str(dia[1]))
-                validate = True
+                validateOpcion1 = True
+                while validateOpcion1:
+                    print("\nDIAS DE LA SEMANA DISPONIBLES:")
+                    dias_disponibles = client_socket.recv(1024).decode()
+                    listaDias= eval(dias_disponibles)
+                    for index, dia in enumerate(listaDias):
+                        print(str(index+1) + "-" + str(dia[1]))
+                    validate = True
 
-                while validate:
-                    try: 
-                        selected_dias = int(input("Seleccione el indice del dia: "))-1
-                        listaDias[(selected_dias)]
-                        validate = False
-                    except:
-                        print("Indice incorrecto") 
-                        
-                client_socket.send(str(selected_dias).encode())
-                while True:
+                    while validate:
+                        try: 
+                            selected_dias = int(input("Seleccione el indice del dia: "))-1
+                            listaDias[(selected_dias)]
+                            validate = False
+                        except:
+                            print("Indice incorrecto") 
+                            
+                    client_socket.send(str(selected_dias).encode())
+                
                 #string de horarios de dias disponibles
                     print("\nHORARIOS DE LA SEMANA DISPONIBLES: ")
                     horarios_disponibles = client_socket.recv(1024).decode()
@@ -66,7 +67,7 @@ def client():
                     mensajeDisponibilidad = client_socket.recv(1024).decode()
                     if mensajeDisponibilidad.startswith("Si hay"):
                         print(mensajeDisponibilidad)
-                        break
+                        validateOpcion1 = False
                     print(mensajeDisponibilidad)
 
                 #Pedimos datos personales para completar la reserva    
@@ -140,7 +141,6 @@ def client():
         print("[ERROR] La conexión con el servidor se cerró inesperadamente.")
     finally:
         client_socket.close()
-
 
 if __name__ == "__main__":
     client()

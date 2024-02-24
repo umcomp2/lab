@@ -10,6 +10,7 @@ import pickle
 
 def handleClient(client_socket):
     #le doy una conexion a cada cliente para que no se interfiera con otra conexion
+        #le doy una conexion a cada cliente para que no se interfiera con otra conexion
     conexDB = conexionDB()
     client_address = client_socket.getpeername()
     opcion = client_socket.recv(1024).decode().strip()
@@ -18,15 +19,17 @@ def handleClient(client_socket):
     if selectedOpcion == 1:
         reserva=[]
         #traigo los dias de la semana
-        dias = getDias(conexDB)
-        client_socket.send(str(dias).encode())
-        dataDia = client_socket.recv(1024).decode().strip()
-        selected_dia = dias[int(dataDia)]
-        indiceDia_db = selected_dia[0]
-        print("Dia elegido: \n", "-Id Dia: "+str(indiceDia_db), "\n-Dia Semana: " + str(selected_dia[1]))
+        validateOpcion1 = True
+        while validateOpcion1:
+            dias = getDias(conexDB)
+            client_socket.send(str(dias).encode())
+            dataDia = client_socket.recv(1024).decode().strip()
+            selected_dia = dias[int(dataDia)]
+            indiceDia_db = selected_dia[0]
+            print("Dia elegido: \n", "-Id Dia: "+str(indiceDia_db), "\n-Dia Semana: " + str(selected_dia[1]))
         
         #traigo horarios
-        while True:
+        
             horario = getHorarios(conexDB)
             client_socket.send(str(horario).encode())
             dataHorario= client_socket.recv(1024).decode().strip()
@@ -40,7 +43,7 @@ def handleClient(client_socket):
             # client_socket.send(str(disp).encode())
             lugares = int(disp[0])
             
-            if lugares < 15:
+            if lugares < 1:
                 nuevo_valor = addCantidad(conexDB,indiceDia_db, indiceHorario_db)
                 message = f"Si hay lugares disponibles\n"
                 client_socket.sendall(message.encode())
@@ -48,7 +51,7 @@ def handleClient(client_socket):
                 #client_socket.send(b"\nAhora le pediremos algunos datos personales para terminar con la reserva\n")
                 nombre, dni = agregarReserva(client_socket, indiceHorario_db, indiceDia_db)
                 reserva.append({"Nombre":nombre, "Dni": dni, "Dia":selected_dia[1], "Horario":selected_hora[1]})
-                break
+                validateOpcion1 = False
                 
             else:  
                 client_socket.sendall(b"No hay lugares disponibles, elija otro!\n")  
@@ -84,7 +87,6 @@ def handleClient(client_socket):
             else:
                 print("dni no existe")
             
-
             #cancelarReserva(client_socket)
             
 
