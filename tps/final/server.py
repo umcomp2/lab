@@ -57,7 +57,8 @@ def handleClient(client_socket):
             serializedReserva = pickle.dumps(reserva)
             client_socket.sendall(serializedReserva)
         client_socket.close()
-    
+
+
     #opcion: CANCELAR TURNO
     if selectedOpcion == 2:
         #traigo dni
