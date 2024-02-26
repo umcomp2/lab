@@ -20,7 +20,7 @@ def client():
         print(f"[INFO] Conexión establecida con el servidor PILATES UMA en {args.ip}:{args.port}")
         #string de datos de dias disponibles
         print("\n---!BIENVENIDO A NUESTRO SISTEMA DE RESERVA DE TURNOS!---")
-        print("\n1.SACAR TURNO\n2.CANCELAR TURNO")
+        print("\n1.SACAR TURNO\n2.CANCELAR TURNO\n3.SALIR DEL SISTEMA")
         opcion = int(input("\nElegir 1 o 2: "))
         client_socket.send(str(opcion).encode())
         while True: 
@@ -131,7 +131,11 @@ def client():
 
                     else: 
                         print("Dni invalido. Seleccione otro!")
-                break       
+                break  
+
+            if opcion == 3:
+                print("\nUsted va a salir del sistema! Que tenga buen dia!")
+                break
             else:
                 print("Esa no es una opcion!, Elegir otra..")
 

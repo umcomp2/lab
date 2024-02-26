@@ -89,7 +89,10 @@ def handleClient(client_socket):
                 print("dni no existe")
             
             #cancelarReserva(client_socket)
-            
+    if selectedOpcion == 3: 
+        print(f"\nCLIENTE {client_socket.getpeername()[0]}:{client_socket.getpeername()[1]} SALIENDO DEL SISTEMA!!!")
+
+
 
 def agregarReserva(client_socket, idHora, idDia):
     client_socket.sendall(b"Ingrese su nombre: ")
