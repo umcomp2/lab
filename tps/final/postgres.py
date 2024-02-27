@@ -148,6 +148,7 @@ def eliminarCantidad(dbConnection, idReserva):
     except Exception as e:
         print("Error al aumentar la disponibilidad:", e)
         pass
+    
 def dniExiste(dbConnection, dni):
     validate=True
     try:    
