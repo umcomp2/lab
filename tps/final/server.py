@@ -7,7 +7,7 @@ import time
 import pickle
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-i", "--ip", help="Dirección IP del servidor", type=str, default='localhost')
+parser.add_argument("-i", "--ip", help="Dirección IP del servidor", type=str)
 parser.add_argument("-p", "--puerto", help="Puerto del servidor", type=int, default=9999)
 args = parser.parse_args()
 
@@ -27,6 +27,15 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 msg = self.agregar_evento()
                 print("----"+ msg +"----")
                 self.request.sendall(msg.encode())
+            
+            else:
+                eventos = self.obtener_eventos()
+                self.enviar_eventos(eventos)
+                self.request.sendall(b"Escriba el numero del evento que desea eliminar:")
+                respuesta = self.request.recv(1024).strip().decode()
+                msj_task = self.borrar_evento(respuesta)
+                self.request.sendall(msj_task.encode())
+
 
         else:
             self.request.sendall(b"- Presione 1 para ver eventos disponibles \n - Presione 2 para ver sus compras")
@@ -52,6 +61,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                     cantidad_entradas = int(self.request.recv(1024).strip().decode())
                     self.request.sendall(b"Ingrese su numero de documento")
                     numero_dni = int(self.request.recv(1024).strip().decode())
+                    print(numero_dni)
                     mensaje_respuesta = self.comprar_entradas(id_evento, nombre_sector, cantidad_entradas, numero_dni)
                     self.request.sendall(mensaje_respuesta.encode())
 
@@ -63,10 +73,6 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                         break 
                     
             else:
-                # self.request.sendall(b"Ingrese su numero de DNI: ")
-                # respuesta_dni = self.request.recv(1024).strip().decode()
-                # compras = self.obtener_compras(respuesta_dni)
-                # self.enviar_compras(compras)
                 contador = 0
                 while contador == 0:
                     self.request.sendall(b"Ingrese su numero de DNI: ")
@@ -141,6 +147,10 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
     def comprar_entradas(self, evento_id, nombre_sector, cantidad_entradas, dni):
         mensaje_respuesta = comprar_entradas.delay(evento_id, nombre_sector, cantidad_entradas, dni).get()
         return mensaje_respuesta
+    
+    def borrar_evento(self, evento_id):
+        msj_respuesta = delete_event.delay(evento_id).get()
+        return msj_respuesta
     
 
 if __name__ == "__main__":

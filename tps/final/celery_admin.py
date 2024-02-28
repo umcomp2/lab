@@ -94,7 +94,7 @@ def comprar_entradas(evento_id, sector_nombre, cantidad_entradas, dni_comprador)
     create_compra_table(connection_db)
 
     try:
-        cursor.execute("SELECT nombre FROM eventos WHERE id = %s", (evento_id))
+        cursor.execute("SELECT nombre FROM eventos WHERE id = %s", (evento_id,))
         evento_nombre = cursor.fetchone()[0]
          # Traigo el id del sector
         cursor.execute("SELECT id FROM sectores WHERE evento_id = %s AND nombre = %s", (evento_id, sector_nombre))
@@ -103,6 +103,7 @@ def comprar_entradas(evento_id, sector_nombre, cantidad_entradas, dni_comprador)
             print("El sector especificado no existe.")
             return "El sector especificado no existe."
 
+        print(dni_comprador)
         # Query para hacer la compra
         cursor.execute("INSERT INTO Compra (dni_comprador, evento_id, sector_id, cantidad_entradas) VALUES (%s, %s, %s, %s)",
                        (dni_comprador, evento_id, sector_id, cantidad_entradas))
@@ -163,4 +164,44 @@ def buscar_compras_por_dni(dni):
         cursor.close()
         connection_db.close()
 
+@app.task
+def delete_event(evento_id):
+    connection_db = connect_to_db()
+    cursor = connection_db.cursor()
 
+    try:
+        #Pimero tengo que borrar las comrpas
+        cursor.execute("DELETE FROM compra WHERE evento_id = %s", (evento_id,))
+
+        # Eliminar las entradas relacionadas en la tabla sectores
+        cursor.execute("DELETE FROM sectores WHERE evento_id = %s", (evento_id,))
+        connection_db.commit()
+
+        # # Elimino las compras que tiene el id sector
+        # cursor.execute("DELETE FROM sectores WHERE evento_id = %s", (evento_id,))
+        # connection_db.commit()
+
+
+        # Eliminar la compra de la tabla de la tabla eventos
+        cursor.execute("DELETE FROM compra WHERE evento_id = %s", (evento_id,))
+        connection_db.commit()
+
+
+        # Eliminar el evento de la tabla de eventos
+        cursor.execute("DELETE FROM eventos WHERE id = %s", (evento_id,))
+        connection_db.commit()
+
+
+
+
+        print("Evento eliminado con éxito")
+        return "Evento eliminado con éxito"
+
+    except Exception as e:
+        print("Error al eliminar el evento:", e)
+        connection_db.rollback()
+        return "Error al eliminar el evento"
+
+    finally:
+        cursor.close()
+        connection_db.close()

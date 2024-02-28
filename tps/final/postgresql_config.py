@@ -29,7 +29,7 @@ def create_eventos_table(connection):
         connection.commit()
         print("Tabla 'eventos' creada exitosamente.")
 
-        # Crear la tabla 'sectores'
+        # Creo la tabla sectores
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS sectores (
                 id SERIAL PRIMARY KEY,

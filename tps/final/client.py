@@ -1,5 +1,3 @@
-
-  
 import argparse
 import socket
 import time
@@ -24,7 +22,7 @@ try:
         sock.sendall(msg_rol.encode())
     
     if msg_rol == "admin":
-        respuesta_si_no = int(input("Desea agregar un evento? 1(SI) 2(NO): "))
+        respuesta_si_no = int(input("-Si desea agrear un evento presione 1 \n-Si desea eliminar un evento presione 2 "))
         respuesta_si_no_serializada = pickle.dumps(respuesta_si_no)
         sock.sendall(respuesta_si_no_serializada)
         if respuesta_si_no == 1:
@@ -38,7 +36,12 @@ try:
                     print("\n" + pregunta_servidor)
                     exit(0)
         else:
-            exit(0)
+            while True:
+                data = sock.recv(1024)
+                print("---Respuesta del servidor----\n", data.decode())
+                rta = input("").encode()
+                sock.sendall(rta)
+                
             # while True:
             #     data = sock.recv(1024)
             #     print("---Respuesta del servidor----\n", data.decode())
