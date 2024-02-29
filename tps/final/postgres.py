@@ -32,7 +32,7 @@ def crear_tablas(dbConnection):
         dbConnection.commit()
         print("¡Tabla horarios creada exitosamente!")
 
-        cursor.execute("INSERT INTO horarios (horario) VALUES ('9:00'), ('10:00'), ('15:00'), ('16:00'), ('19:00')")
+        #cursor.execute("INSERT INTO horarios (horario) VALUES ('9:00'), ('10:00'), ('15:00'), ('16:00'), ('19:00')")
 
         
         # Crear tabla Semana
@@ -57,9 +57,9 @@ def crear_tablas(dbConnection):
             )
         """)
         # Insertar datos en tabla cantidad
-        for horario_id in range(1, 6):
-            for semana_id in range(1, 6):
-                cursor.execute("INSERT INTO cantidad (id_horario, id_dia_semana, cantidad) VALUES (%s, %s, 0)", (horario_id, semana_id))
+        # for horario_id in range(1, 6):
+        #     for semana_id in range(1, 6):
+        #         cursor.execute("INSERT INTO cantidad (id_horario, id_dia_semana, cantidad) VALUES (%s, %s, 0)", (horario_id, semana_id))
 
         dbConnection.commit()
         print("¡Tabla cantidad creada exitosamente!")
@@ -148,7 +148,7 @@ def eliminarCantidad(dbConnection, idReserva):
     except Exception as e:
         print("Error al aumentar la disponibilidad:", e)
         pass
-    
+
 def dniExiste(dbConnection, dni):
     validate=True
     try:    
@@ -168,9 +168,6 @@ def dniExiste(dbConnection, dni):
         
     except Exception as error:
         print("Error al conectar a la base de datos PostgreSQL:", error)
-
-
-
 
 def getReservasDni (dbConnection, dni):
     reservas = []
@@ -196,6 +193,47 @@ def getReservasDni (dbConnection, dni):
     except Exception as e:
         print("Error al obtener las reservas:", e)
         pass
+
+def addHorario(dbConnection, hora):
+    try:
+        cursor = dbConnection.cursor()
+        cursor.execute("INSERT INTO horarios (horario) VALUES (%s)", (hora,))
+        dbConnection.commit()
+        print("Horario agregado correctamente")
+    except Exception as e:
+        print("Error al obtener las reservas:", e)
+        pass
+
+def addDia(dbConnection, dia):
+    try:
+        cursor = dbConnection.cursor()
+        cursor.execute("INSERT INTO semana (dia_semana) VALUES (%s)", (dia,))
+        dbConnection.commit()
+        print("Horario agregado correctamente")
+    except Exception as e:
+        print("Error al obtener las reservas:", e)
+        pass  
+
+def addHoraInCantidad(dbConnection, hora):
+    try:
+        cursor = dbConnection.cursor()
+        cursor.execute("SELECT id FROM semana")  
+        idSemana = cursor.fetchall()
+        print(idSemana)
+        
+        cursor.execute("SELECT id FROM horarios WHERE horario=%s",(hora,)) 
+        idHorario = cursor.fetchall()
+        print(idHorario)
+        for d in idSemana:
+                cursor.execute("SELECT COUNT(*) FROM cantidad WHERE id_horario=%s AND id_dia_semana=%s", (idHorario[0], d[0]))
+                existencia = cursor.fetchone()[0]
+                if existencia == 0:
+                        cursor.execute("INSERT INTO cantidad (id_horario, id_dia_semana, cantidad) VALUES (%s, %s, 0)", (idHorario[0], d[0]))
+        dbConnection.commit()
+        print("Relaciones de horarios y días de la semana agregadas exitosamente.")
+       
+    except Exception as e:
+        print("Error al relacionar horario y dia:", e)
 
 
 
