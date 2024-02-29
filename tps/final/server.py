@@ -113,12 +113,17 @@ def handleClient(client_socket):
                     addHorario(conexDB, horaRecibida)
                     print("Horario: "+ horaRecibida)
                     addHoraInCantidad(conexDB, horaRecibida)
-            # if act == "2":
-            #     cantDias = client_socket.recv(1024).decode().strip()
-            #     for i in range(int(cantDias)):
-            #         diaRecibido = client_socket.recv(1024).decode().strip()
-            #         addDia(conexDB, diaRecibido)
-            #         print("Dia de la semana agregado: " + diaRecibido)
+            if act == "2":
+                getHorario = getHorarios(conexDB)
+                client_socket.send(str(getHorario).encode())
+                dataHorario= client_socket.recv(1024).decode().strip()
+                selected_hora = getHorario[int(dataHorario)]
+                indiceHorario_db = selected_hora[0]
+                print("Horario elegido:\n", "-Id Hora: "+str(indiceHorario_db), "\n-Horario " + str(selected_hora[1]))
+                deleteHoraInCantidad(conexDB, indiceHorario_db)
+            
+                #veo disp
+        
 def agregarReserva(client_socket, idHora, idDia):
     client_socket.sendall(b"Ingrese su nombre: ")
     nombreCliente = client_socket.recv(1024).decode().strip()
@@ -133,8 +138,6 @@ def cancelarReserva(client_socket, id_reserva):
     cancelarTurno.delay(id_reserva)
 
     
-
-
 def start_server(host, port):
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     #vincula el host con el puerto
@@ -149,14 +152,6 @@ def start_server(host, port):
         client_handler.start()
         
 
-
-
-
-
-
-
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     #declaro los args para la conexion
@@ -164,9 +159,9 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--port", help="port", type=int)
     args = parser.parse_args()
     conexDB = conexionDB()
-    # if conexDB:
-    #     crear_tablas(conexDB)
-    #     conexDB.close()
+    if conexDB:
+        crear_tablas(conexDB)
+        conexDB.close()
     start_server(args.ip, args.port)
 
    

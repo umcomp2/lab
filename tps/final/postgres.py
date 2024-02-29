@@ -236,4 +236,19 @@ def addHoraInCantidad(dbConnection, hora):
         print("Error al relacionar horario y dia:", e)
 
 
+def deleteHoraInCantidad(dbConnection, idHora):
+    try:
+        cursor = dbConnection.cursor()
+        cursor.execute("DELETE FROM cantidad WHERE id_horario=%s",(idHora,))
+        dbConnection.commit()
+        print("horario eliminado de la tabla cantidad")
+        cursor.execute("DELETE FROM horarios WHERE id=%s", (idHora,))
+        dbConnection.commit()
+        print("horario eliminado de la tabla horarios")
 
+
+    except Exception as e:
+        print("Error al eliminar el horario: ", str(e))
+    finally:
+        cursor.close()
+        dbConnection.close()

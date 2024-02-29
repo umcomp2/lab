@@ -156,7 +156,7 @@ def client():
         elif user == "admin":
             validate = True
             while validate:
-                print("\n1.AGREGAR HORARIO\n2.AGREGAR DIA\n3.DAR DE BAJA UN HORARIO\n3.DAR DE BAJA UN DIA\n3.VER RESERVAS CLIENTES")
+                print("\n1.AGREGAR HORARIO\n2.DAR DE BAJA UN HORARIO\n3.VER RESERVAS CLIENTES\n4.VER DISPONIBILIDAD\n5.SALIR")
                 opcion = int(input("Seleccione el indice correspondiente: "))
                 client_socket.send(str(opcion).encode())
                 if opcion == 1:
@@ -165,12 +165,23 @@ def client():
                     for i in range(horarios):
                         horario=str(input(f"Ingrese horario {i+1} (formato: 14:00): "))
                         client_socket.send(str(horario).encode())
-                # if opcion == 2:
-                #     dias = int(input("Cuantos dias de la semana quiere agregar: "))
-                #     client_socket.send(str(dias).encode())
-                #     for i in range(dias):
-                #         diaSemana=str(input(f"Ingrese el dia de la semana {i+1} (formato: Lunes, Martes): "))
-                #         client_socket.send(str(diaSemana).encode())
+                if opcion == 2:
+                    print("HORARIOS DISPONIBLES: \n")
+                    horarios = client_socket.recv(1024).decode()
+                    listaHorarios = eval(horarios)
+                    for index, hora in enumerate(listaHorarios):
+                        print(str(index+1) + "-" + str(hora[1]))
+                    validateHorario = True
+
+                    while validateHorario:
+                        try: 
+                            selected_hora = int(input("Seleccione el indice del horario: "))-1
+                            listaHorarios[(selected_hora)]
+                            validateHorario = False
+                        except:
+                            print("Indice incorrecto")
+
+                    client_socket.send(str(selected_hora).encode())
 
 
 
