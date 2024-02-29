@@ -182,7 +182,12 @@ def client():
                             print("Indice incorrecto")
 
                     client_socket.send(str(selected_hora).encode())
-
+                if opcion == 3:
+                    print("LISTA DE RESERVAS: \n")
+                    reservas = client_socket.recv(1024).decode()
+                    listaReservas = eval(reservas)
+                    for index, res in enumerate(listaReservas):
+                        print(str(index+1) + "-Horario: " + str(res[1]) +  " -Dia: " + str(res[2]) +" -Nombre: " + str(res[4]) + " -Dni: " + str(res[3]))
 
 
             # else:

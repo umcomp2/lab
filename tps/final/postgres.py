@@ -80,6 +80,8 @@ def crear_tablas(dbConnection):
         print("Error al crear tablas:", e)
         dbConnection.rollback() 
 
+
+
 def getDias(dbConnection):
     cursor = dbConnection.cursor()
     try:
@@ -194,6 +196,8 @@ def getReservasDni (dbConnection, dni):
         print("Error al obtener las reservas:", e)
         pass
 
+#funciones del administrador
+
 def addHorario(dbConnection, hora):
     try:
         cursor = dbConnection.cursor()
@@ -204,15 +208,15 @@ def addHorario(dbConnection, hora):
         print("Error al obtener las reservas:", e)
         pass
 
-def addDia(dbConnection, dia):
-    try:
-        cursor = dbConnection.cursor()
-        cursor.execute("INSERT INTO semana (dia_semana) VALUES (%s)", (dia,))
-        dbConnection.commit()
-        print("Horario agregado correctamente")
-    except Exception as e:
-        print("Error al obtener las reservas:", e)
-        pass  
+# def addDia(dbConnection, dia):
+#     try:
+#         cursor = dbConnection.cursor()
+#         cursor.execute("INSERT INTO semana (dia_semana) VALUES (%s)", (dia,))
+#         dbConnection.commit()
+#         print("Horario agregado correctamente")
+#     except Exception as e:
+#         print("Error al obtener las reservas:", e)
+#         pass  
 
 def addHoraInCantidad(dbConnection, hora):
     try:
@@ -252,3 +256,27 @@ def deleteHoraInCantidad(dbConnection, idHora):
     finally:
         cursor.close()
         dbConnection.close()
+
+def getReservas(dbConnection):
+    reservas = []
+    try:    
+        cursor = dbConnection.cursor()
+        cursor.execute("""
+                SELECT reservas.id,
+                (SELECT horario FROM horarios WHERE id = reservas.id_horario) AS nombre_horario,
+                (SELECT dia_semana FROM semana WHERE id = reservas.id_dia_semana) AS nombre_dia_semana,
+                reservas.dni,
+                reservas.nombre
+            FROM reservas
+            
+        """)
+        turno = cursor.fetchall()
+        for i in turno:
+
+            reservas.append(i)
+        
+        return reservas
+    
+    except Exception as e:
+        print("Error al obtener las reservas:", e)
+        

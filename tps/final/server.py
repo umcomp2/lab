@@ -121,6 +121,11 @@ def handleClient(client_socket):
                 indiceHorario_db = selected_hora[0]
                 print("Horario elegido:\n", "-Id Hora: "+str(indiceHorario_db), "\n-Horario " + str(selected_hora[1]))
                 deleteHoraInCantidad(conexDB, indiceHorario_db)
+            if act == "3":
+                reservas = getReservas(conexDB)
+                client_socket.send(str(reservas).encode())
+                print(reservas)
+
             
                 #veo disp
         
@@ -159,9 +164,9 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--port", help="port", type=int)
     args = parser.parse_args()
     conexDB = conexionDB()
-    if conexDB:
-        crear_tablas(conexDB)
-        conexDB.close()
+    # if conexDB:
+    #     crear_tablas(conexDB)
+    #     conexDB.close()
     start_server(args.ip, args.port)
 
    
