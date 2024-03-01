@@ -6,6 +6,7 @@ from celeryApp import *
 import socketserver
 import time
 import pickle
+import ipaddress
 
 
 def handleClient(client_socket):
@@ -126,8 +127,12 @@ def handleClient(client_socket):
                 client_socket.send(str(reservas).encode())
                 print(reservas)
 
+            if act =="4":
+                print(f"\nCLIENTE {client_socket.getpeername()[1]} SALIENDO DEL SISTEMA!!!")
+                validate=False
+
             
-                #veo disp
+                
         
 def agregarReserva(client_socket, idHora, idDia):
     client_socket.sendall(b"Ingrese su nombre: ")
@@ -144,7 +149,11 @@ def cancelarReserva(client_socket, id_reserva):
 
     
 def start_server(host, port):
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    ip = ipaddress.ip_network(host)
+    if ip.version ==6:
+        server = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+    else:    
+        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     #vincula el host con el puerto
     server.bind((host, port))
     server.listen(5)

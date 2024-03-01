@@ -2,6 +2,7 @@ import argparse
 import socket
 import pickle
 import time
+import ipaddress
 
 
 def client():
@@ -12,7 +13,12 @@ def client():
     parser.add_argument("-u", "--tipoUsuario", help="tipoUsuario", type=str)
 
     args = parser.parse_args()
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    ip = ipaddress.ip_network(args.ip)
+    if ip.version ==6:
+        client_socket = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+    else:    
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    #client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     
     try:
@@ -156,7 +162,7 @@ def client():
         elif user == "admin":
             validate = True
             while validate:
-                print("\n1.AGREGAR HORARIO\n2.DAR DE BAJA UN HORARIO\n3.VER RESERVAS CLIENTES\n4.VER DISPONIBILIDAD\n5.SALIR")
+                print("\n1.AGREGAR HORARIO\n2.DAR DE BAJA UN HORARIO\n3.VER RESERVAS CLIENTES\n4.SALIR")
                 opcion = int(input("Seleccione el indice correspondiente: "))
                 client_socket.send(str(opcion).encode())
                 if opcion == 1:
@@ -189,7 +195,8 @@ def client():
                     for index, res in enumerate(listaReservas):
                         print(str(index+1) + "-Horario: " + str(res[1]) +  " -Dia: " + str(res[2]) +" -Nombre: " + str(res[4]) + " -Dni: " + str(res[3]))
 
-
+                if opcion == 4:
+                    validate = False
             # else:
             #     print("Esa no es una opcion!, Elegir otra..")
     except ConnectionRefusedError:
