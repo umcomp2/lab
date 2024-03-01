@@ -8,15 +8,21 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--ip", help="ip", type=str)
 parser.add_argument("-p", "--puerto", help="puerto", type=int)
 parser.add_argument("-r", "--rol", help="Indica que el tipo de usuario", type=str, default="user")
+parser.add_argument("-pr", "--protocolo", help="Ipv6 o Ipv4", type=int)
 
 argumento = parser.parse_args()
 
 #Creo el socket
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+if argumento.protocolo == 4:
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    ip = "10.188.154.219"
+else:
+    sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+    ip = "::1"
 
 try:
     # Conectar al servidor
-    sock.connect((argumento.ip, argumento.puerto))
+    sock.connect((ip, argumento.puerto))
     if argumento.rol:
         msg_rol = argumento.rol.lower()
         sock.sendall(msg_rol.encode())
@@ -69,19 +75,6 @@ except Exception as e:
 finally:
     sock.close()
 
-                
-    # while True:
-    #     data = sock.recv(1024)
-    #     if data.startswith(b"RESP:"):
-    #         print(data[len(b"RESP:"):].decode())
-    #         rta = input("").encode()
-    #         sock.sendall(rta)
-    #     elif data.startswith(b"INFO:"):
-    #         print(data[len(b"INFO:"):].decode())
-        
-    #     else:
-    #         print("----Respuesta del servidor---")
-    #         print(data.decode())
         
         
 

@@ -5,18 +5,22 @@ import threading
 from celery_admin import *
 import time
 import pickle
+import socket
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--ip", help="Dirección IP del servidor", type=str)
 parser.add_argument("-p", "--puerto", help="Puerto del servidor", type=int, default=9999)
+parser.add_argument("-pr", "--protocolo", help="Ipv4 o Ipv6", type=int, default=9999)
+
 args = parser.parse_args()
 
 class MyTCPHandler(socketserver.BaseRequestHandler):
     def handle(self):
         
+        client_ip = self.client_address[0]
         cur_th = threading.get_native_id()
         tipo_usuario = self.request.recv(1024).strip().decode()
-        print(f"Nuevo cliente conectado como {tipo_usuario}" + " Th: " + str(cur_th) )
+        print(f"Nuevo cliente conectado como {tipo_usuario} Th: {cur_th} IP: {client_ip}")
 
         if tipo_usuario == 'admin':
             respuesta_si_no_serilizada = self.request.recv(1024)
@@ -152,12 +156,40 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
         msj_respuesta = delete_event.delay(evento_id).get()
         return msj_respuesta
     
+class ThreadTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
+    address_family = socket.AF_INET6
+    pass
+
+class ThreadTCPServerIPV4(socketserver.ThreadingMixIn, socketserver.TCPServer):
+    pass
+
 
 if __name__ == "__main__":
 
     conexion_db = connect_to_db();
-
-    server = socketserver.ThreadingTCPServer((args.ip, args.puerto), MyTCPHandler)
+    if args.protocolo == 4:
+        server = ThreadTCPServerIPV4(("10.188.154.219", args.puerto), MyTCPHandler)
+    else:
+        server = ThreadTCPServer(("::1", args.puerto), MyTCPHandler)  
     print("Servidor iniciado. Esperando conexiones...")
     server.serve_forever()
+     
+# Escuchar en IPv4
+    # server_ipv4 = ThreadTCPServerIPV4(("0.0.0.0", 2701), MyTCPHandler)
+    # ipv4_thread = threading.Thread(target=server_ipv4.serve_forever)
+    # # ipv4_thread.daemon = True
+    # # ipv4_thread.start()
+    # print("Servidor iniciado. Esperando conexiones...")
+
+    # server_ipv4.serve_forever()
+
+    # # Escuchar en IPv6
+    # server_ipv6 = ThreadTCPServer(("::", 2702), MyTCPHandler)
+    # ipv6_thread = threading.Thread(target=server_ipv6.serve_forever)
+    # # ipv6_thread.daemon = True
+    # # ipv6_thread.start()
+    # server_ipv6.serve_forever()
+
+    # print("Servidor iniciado. Esperando conexiones...")
+
     
