@@ -10,11 +10,10 @@ def new_event(nombre_evento, sectores):
     create_eventos_table(connection_db)
 
     try:
-        # Insertar el evento en la tabla de eventos
         cursor.execute("INSERT INTO eventos (nombre) VALUES (%s)", (nombre_evento,))
         connection_db.commit()
 
-        # Obtener el ID del evento recién insertado
+        # ID último elemento
         cursor.execute("SELECT lastval()")
         evento_id = cursor.fetchone()[0]
 
@@ -72,7 +71,6 @@ def get_sectores(evento_id):
     cursor = connection_db.cursor()
 
     try:
-        # Consultar los sectores del evento en la tabla de sectores
         cursor.execute("SELECT nombre, capacidad FROM sectores WHERE evento_id = %s", (evento_id,))
         sectores = cursor.fetchall()
         sectores_list = [{'nombre': sector[0], 'capacidad': sector[1]} for sector in sectores]
@@ -104,12 +102,12 @@ def comprar_entradas(evento_id, sector_nombre, cantidad_entradas, dni_comprador)
             return "El sector especificado no existe."
 
         print(dni_comprador)
-        # Query para hacer la compra
+    
         cursor.execute("INSERT INTO Compra (dni_comprador, evento_id, sector_id, cantidad_entradas) VALUES (%s, %s, %s, %s)",
                        (dni_comprador, evento_id, sector_id, cantidad_entradas))
         connection_db.commit()
 
-        # Verificar disponibilidad
+        # Verifico disponibilidad
         cursor.execute("SELECT capacidad FROM sectores WHERE evento_id = %s AND nombre = %s", (evento_id, sector_nombre))
         capacidad_sector = cursor.fetchone()[0]
         if capacidad_sector is None:
@@ -143,7 +141,7 @@ def buscar_compras_por_dni(dni):
     cursor = connection_db.cursor()
 
     try:
-        # Consulta para buscar las compras por DNI en la base de datos
+        #Busco por dni
         cursor.execute("SELECT eventos.nombre, sectores.nombre, compra.cantidad_entradas "
                        "FROM compra "
                        "JOIN eventos ON compra.evento_id = eventos.id "
@@ -177,10 +175,6 @@ def delete_event(evento_id):
         cursor.execute("DELETE FROM sectores WHERE evento_id = %s", (evento_id,))
         connection_db.commit()
 
-        # # Elimino las compras que tiene el id sector
-        # cursor.execute("DELETE FROM sectores WHERE evento_id = %s", (evento_id,))
-        # connection_db.commit()
-
 
         # Eliminar la compra de la tabla de la tabla eventos
         cursor.execute("DELETE FROM compra WHERE evento_id = %s", (evento_id,))
@@ -190,7 +184,6 @@ def delete_event(evento_id):
         # Eliminar el evento de la tabla de eventos
         cursor.execute("DELETE FROM eventos WHERE id = %s", (evento_id,))
         connection_db.commit()
-
 
 
 

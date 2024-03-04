@@ -65,11 +65,9 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                     cantidad_entradas = int(self.request.recv(1024).strip().decode())
                     self.request.sendall(b"Ingrese su numero de documento")
                     numero_dni = int(self.request.recv(1024).strip().decode())
-                    print(numero_dni)
                     mensaje_respuesta = self.comprar_entradas(id_evento, nombre_sector, cantidad_entradas, numero_dni)
                     self.request.sendall(mensaje_respuesta.encode())
 
-                    # Preguntar si desea realizar otra compra
                     self.request.sendall(b"Desea realizar otra compra? (si/no): ")
                     respuesta = self.request.recv(1024).strip().decode()
                     if respuesta.lower() != 'si':
@@ -95,7 +93,6 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                             self.request.sendall(mensajes_concatenados.encode())
                             self.request.sendall(b"Gracias por su compra!")
                             contador = 1
-                            # self.request.close()
                     except:
                         self.request.sendall(b"No se encontraron compras para el DNI proporcionado.")
 
@@ -173,7 +170,22 @@ if __name__ == "__main__":
         server = ThreadTCPServer(("::1", args.puerto), MyTCPHandler)  
     print("Servidor iniciado. Esperando conexiones...")
     server.serve_forever()
-     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Escuchar en IPv4
     # server_ipv4 = ThreadTCPServerIPV4(("0.0.0.0", 2701), MyTCPHandler)
     # ipv4_thread = threading.Thread(target=server_ipv4.serve_forever)
