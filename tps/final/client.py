@@ -1,7 +1,5 @@
 import argparse
 import socket
-import time
-import sys
 import pickle
 
 parser = argparse.ArgumentParser()
@@ -10,15 +8,16 @@ parser.add_argument("-p", "--puerto", help="puerto", type=int)
 parser.add_argument("-r", "--rol", help="Indica que el tipo de usuario", type=str, default="user")
 parser.add_argument("-pr", "--protocolo", help="Ipv6 o Ipv4", type=int)
 
+
 argumento = parser.parse_args()
 
 #Creo el socket
 if argumento.protocolo == 4:
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    ip = "10.188.154.219"
-else:
+    ip = argumento.ip
+elif argumento.protocolo == 6:
     sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
-    ip = "::1"
+    ip = argumento.ip
 
 try:
     # Conectar al servidor
