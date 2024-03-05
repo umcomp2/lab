@@ -152,10 +152,15 @@ def start_server(host, port):
     ip = ipaddress.ip_network(host)
     if ip.version ==6:
         server = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+        server.bind((host, port))
+        
     else:    
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server.bind((host, port))
+        
+        
     #vincula el host con el puerto
-    server.bind((host, port))
+    
     server.listen(5)
     print(f"[INFO] Servidor escuchando en {host}:{port}...")
 
