@@ -169,7 +169,14 @@ def client():
                     horarios = int(input("Cuantos horarios quiere agregar: "))
                     client_socket.send(str(horarios).encode())
                     for i in range(horarios):
-                        horario=str(input(f"Ingrese horario {i+1} (formato: 14:00): "))
+                        validateHora = True
+                        while validateHora:
+                            horario=input(f"Ingrese horario {i+1} (formato: 14:00): ")
+                            hora, minuto = map(int, horario.split(':'))
+                            if hora < 0 or hora > 23 or minuto < 0 or minuto > 59:
+                                validateHora=True
+                            else:
+                                validateHora = False    
                         client_socket.send(str(horario).encode())
                 if opcion == 2:
                     print("HORARIOS DISPONIBLES: \n")

@@ -1,15 +1,19 @@
 #conexion de base de datos
 
 import psycopg2
+from dotenv import load_dotenv
+import os
 
 def conexionDB():
-    dbname= 'pilatesdb2'
-    user = 'milicomputacion'
-    password = '1234'
-    host = 'localhost' 
-    port = '5432' #puerto predeterminado
-
+    load_dotenv()
+    dbname= os.getenv('DBNAME')
+    user = os.getenv('USERDB')
+    password = os.getenv('PASSWORD')
+    host = os.getenv('HOST')
+    port = os.getenv('PORT')
+    
     try:
+        print("conectando")
         dbConnection = psycopg2.connect(dbname=dbname, user=user, password=password, host=host, port=port)
         print("¡La conexion a la base de datos ha sido exitosa! ")
         return dbConnection
